@@ -441,6 +441,9 @@
     }
 
     let backupWritten = false;
+    if (previousRaw !== null && !validSavedRaw(previousRaw)) {
+      return failure('現有主存檔未通過完整性驗證；為避免覆蓋玩家資料，本次寫入已停止。請先使用安全備份復原。', true, false);
+    }
     if (previousRaw !== null && previousRaw !== nextText && validSavedRaw(previousRaw)) {
       try {
         storage.setItem(backupKey, previousRaw);
