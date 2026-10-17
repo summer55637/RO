@@ -86,7 +86,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v31/);
+  assert.match(serviceWorker, /ro-h5-shell-v32/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -154,7 +154,7 @@ function testMonsterEncounterMapHints() {
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
   assert.match(html, /MVP 2\.3/);
-  assert.match(sw, /ro-h5-shell-v31/);
+  assert.match(sw, /ro-h5-shell-v32/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -198,7 +198,7 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
   assert.match(html, /MVP 2\.3/);
-  assert.match(sw, /ro-h5-shell-v31/);
+  assert.match(sw, /ro-h5-shell-v32/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -216,7 +216,7 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
   assert.match(html, /MVP 2\.3/);
-  assert.match(sw, /ro-h5-shell-v31/);
+  assert.match(sw, /ro-h5-shell-v32/);
 }
 
 function testMonsterBestiaryProgression() {
