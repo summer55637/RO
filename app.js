@@ -7,6 +7,8 @@
   const LOCK_KEY = 'ro-h5-active-tab-v1';
   const DB_NAME = 'ro-h5-assets-v1';
   const DB_STORE = 'assets';
+  const DOWNLOAD_STATE_KEY = 'ro-h5-download-state-v1';
+  const MAX_DOWNLOAD_ATTEMPTS = 3;
   const ASSETS = window.ROWorld.assets;
   const STARTER_ASSETS = ASSETS.filter(function (asset) { return asset.requiredOnStart; });
 
@@ -24,6 +26,8 @@
   let pendingRenameSlot = null;
   let pendingDeleteSlot = null;
   let hiddenAt = 0;
+  let resourceBusy = false;
+  let lastNetworkOffline = (typeof navigator !== 'undefined' && navigator.onLine === false);
 
   function makeToken() {
     return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + '-' + Math.random().toString(36).slice(2);
@@ -62,6 +66,60 @@
 
   function setProgress(completed, total) {
     $('#install-progress-fill').style.width = (total ? Math.round(completed / total * 100) : 0) + '%';
+  }
+
+  function readDownloadStates() {
+    try {
+      const raw = localStorage.getItem(DOWNLOAD_STATE_KEY);
+      const value = raw ? JSON.parse(raw) : {};
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveDownloadState(asset, patch) {
+    try {
+      const states = readDownloadStates();
+      const old = states[asset.id] || {};
+      states[asset.id] = Object.assign({}, old, {
+        version: asset.version || '1.0.0',
+        updatedAt: Date.now()
+      }, patch);
+      localStorage.setItem(DOWNLOAD_STATE_KEY, JSON.stringify(states));
+    } catch (_) {
+      // Download bookkeeping must never block an otherwise verified asset.
+    }
+  }
+
+  function restoreDownloadStatus() {
+    const states = readDownloadStates();
+    ASSETS.forEach(function (asset) {
+      const state = states[asset.id];
+      if (state && state.version === (asset.version || '1.0.0') && state.status === 'retry-needed') {
+        setAssetStatus(asset, '需手動重試', 'error');
+      }
+    });
+  }
+
+  function updateNetworkStatus() {
+    const offline = (typeof navigator !== 'undefined' && navigator.onLine === false);
+    const status = $('#connection-status');
+    status.textContent = offline ? '離線（使用快取）' : '已連線';
+    status.classList.toggle('offline', offline);
+    if ($('#screen-install').classList.contains('active') && !resourceBusy) {
+      $('#btn-install').disabled = offline;
+      if (offline) {
+        setInstallMessage('目前離線，下載已暫停。已完成並驗證的素材會保留；恢復連線後可手動重試。', true);
+      } else if (lastNetworkOffline) {
+        setInstallMessage('已恢復連線。按下按鈕即可重試尚未完成的必要素材；已驗證的素材不需重新下載。', false);
+      }
+    }
+    lastNetworkOffline = offline;
+  }
+
+  function delay(ms) {
+    return new Promise(function (resolve) { window.setTimeout(resolve, ms); });
   }
 
   function openAssetDb() {
@@ -138,21 +196,93 @@
         try {
           await verifyBlob(asset, cached.blob);
           setAssetStatus(asset, '已驗證', 'ok');
+          saveDownloadState(asset, { status: 'ready', lastError: null, attemptsThisCycle: 0 });
           return cached.blob;
         } catch (_) {
           await dbDelete(asset.id);
         }
       }
-      setAssetStatus(asset, '下載中…');
-      const response = await fetch(asset.path, { cache: 'no-cache' });
-      if (!response.ok) throw new Error('下載 ' + asset.name + ' 失敗（HTTP ' + response.status + '）。');
-      const blob = await response.blob();
-      await verifyBlob(asset, blob);
-      await dbPut({ id: asset.id, blob: blob, size: blob.size, gitSha: asset.gitSha, savedAt: Date.now() });
-      setAssetStatus(asset, '已驗證', 'ok');
-      return blob;
+
+      const priorState = readDownloadStates()[asset.id] || {};
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        const offlineError = new Error('目前離線，無法下載「' + asset.name + '」。已驗證的其他素材會保留；恢復連線後再試。');
+        offlineError.retryable = false;
+        saveDownloadState(asset, {
+          status: 'retry-needed',
+          attemptsThisCycle: 0,
+          totalAttempts: Number(priorState.totalAttempts) || 0,
+          lastError: offlineError.message
+        });
+        setAssetStatus(asset, '等待連線', 'error');
+        throw offlineError;
+      }
+
+      let lastError = null;
+      let attempts = 0;
+      setAssetStatus(asset, '準備下載');
+      for (let attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt += 1) {
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+          lastError = new Error('網路中斷，下載已暫停。');
+          lastError.retryable = false;
+          break;
+        }
+        attempts = attempt;
+        setAssetStatus(asset, attempt === 1 ? '下載中…' : '重試 ' + attempt + '/' + MAX_DOWNLOAD_ATTEMPTS);
+        try {
+          const response = await fetch(asset.path, { cache: 'no-cache' });
+          if (!response.ok) {
+            const responseError = new Error('HTTP ' + response.status);
+            responseError.retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+            throw responseError;
+          }
+
+          const blob = await response.blob();
+          try {
+            await verifyBlob(asset, blob);
+          } catch (verificationError) {
+            verificationError.retryable = false;
+            throw verificationError;
+          }
+
+          try {
+            await dbPut({ id: asset.id, blob: blob, size: blob.size, gitSha: asset.gitSha, version: asset.version || '1.0.0', savedAt: Date.now() });
+          } catch (storageError) {
+            storageError.retryable = false;
+            throw storageError;
+          }
+
+          const previousTotal = Number(priorState.totalAttempts) || 0;
+          saveDownloadState(asset, {
+            status: 'ready',
+            attemptsThisCycle: attempt,
+            totalAttempts: previousTotal + attempt,
+            lastError: null
+          });
+          setAssetStatus(asset, '已驗證', 'ok');
+          return blob;
+        } catch (error) {
+          lastError = error;
+          if ((typeof navigator !== 'undefined' && navigator.onLine === false) || error.retryable === false || attempt >= MAX_DOWNLOAD_ATTEMPTS) break;
+          await delay(250 * attempt);
+        }
+      }
+
+      const previousTotal = Number(priorState.totalAttempts) || 0;
+      const offline = (typeof navigator !== 'undefined' && navigator.onLine === false);
+      const errorMessage = offline
+        ? '目前離線，下載已暫停。恢復連線後可手動重試。'
+        : (asset.name + ' 下載未完成（' + attempts + '/' + MAX_DOWNLOAD_ATTEMPTS + ' 次嘗試）：' + (lastError && lastError.message ? lastError.message : '未知錯誤') + '。可手動重試。');
+      saveDownloadState(asset, {
+        status: 'retry-needed',
+        attemptsThisCycle: attempts,
+        totalAttempts: previousTotal + attempts,
+        lastError: errorMessage
+      });
+      setAssetStatus(asset, offline ? '等待連線' : '需手動重試', 'error');
+      throw new Error(errorMessage);
     } catch (error) {
-      setAssetStatus(asset, '失敗', 'error');
+      if (!error || !error.message) error = new Error('素材準備失敗，請稍後手動重試。');
+      setAssetStatus(asset, (typeof navigator !== 'undefined' && navigator.onLine === false) ? '等待連線' : '需手動重試', 'error');
       throw error;
     }
   }
@@ -194,35 +324,30 @@
 
   async function prepareResources() {
     const button = $('#btn-install');
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setInstallMessage('目前離線，下載不會開始。已驗證的素材已保留；恢復連線後可手動重試。', true);
+      button.disabled = true;
+      return;
+    }
+    resourceBusy = true;
     button.disabled = true;
     button.textContent = '正在準備…';
     setProgress(0, STARTER_ASSETS.length);
-    setInstallMessage('正在準備第一張地圖的必要素材；同時最多下載 2 項，完成後會驗證大小與 Git blob 雜湊。', false);
+    setInstallMessage('正在準備第一張地圖的必要素材；同時最多下載 2 項。每項素材最多自動嘗試 3 次，驗證通過後才會寫入快取。', false);
     try {
       await ensureAssets(STARTER_ASSETS, true);
       await registerServiceWorker();
       enterSlotsWithLock(false);
     } catch (error) {
-      setInstallMessage((error && error.message ? error.message : '必要素材準備失敗。') + ' 請檢查網路狀態後重試。', true);
-      button.disabled = false;
-      button.textContent = '重新下載並驗證';
-      $('#connection-status').textContent = '尚未就緒';
-    }
-  }
-
-  async function loadCachedResources() {
-    try {
-      for (const asset of STARTER_ASSETS) {
-        const record = await dbGet(asset.id);
-        if (!record || !record.blob) return false;
-        await verifyBlob(asset, record.blob);
-        useAssetBlob(asset, record.blob);
-        setAssetStatus(asset, '已驗證', 'ok');
+      setInstallMessage((error && error.message ? error.message : '必要素材準備失敗。') + ' 已完成驗證的其他素材會保留。', true);
+      button.textContent = '手動重試下載';
+      $('#connection-status').textContent = (typeof navigator !== 'undefined' && navigator.onLine === false) ? '離線' : '下載未完成';
+    } finally {
+      resourceBusy = false;
+      if ($('#screen-install').classList.contains('active')) {
+        button.disabled = (typeof navigator !== 'undefined' && navigator.onLine === false);
       }
-      setProgress(STARTER_ASSETS.length, STARTER_ASSETS.length);
-      return true;
-    } catch (_) {
-      return false;
+      updateNetworkStatus();
     }
   }
 
@@ -276,8 +401,8 @@
     startAutosave();
     try {
       account = readAccount();
-      $('#connection-status').textContent = '素材已就緒';
       setScreen('screen-slots');
+      updateNetworkStatus();
       renderSlots();
     } catch (error) {
       releaseLock();
@@ -1124,6 +1249,8 @@
     $('#btn-lost-reload').addEventListener('click', function () { window.location.reload(); });
     $('#btn-error-reload').addEventListener('click', function () { window.location.reload(); });
     window.addEventListener('storage', onStorage);
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
     window.addEventListener('beforeunload', function () {
       if (character && activeSlot !== null && isLockOwner()) persistCurrent();
       stopBattleLoop();
@@ -1134,6 +1261,8 @@
 
   async function init() {
     bindEvents();
+    restoreDownloadStatus();
+    updateNetworkStatus();
     updateCreatePreview();
     try {
       const ready = await loadCachedResources();
