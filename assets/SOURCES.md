@@ -5,6 +5,7 @@
 - 根因：上游 images/README.md 與 tools/download_monster_images.js 把專案自訂的顯示序號當成實際 RO Mob ID 下載；例如 1001 被標成瘋兔，但 Mob DB 中 1001 是蠍子，瘋兔正確 ID 是 1063。程式目前改以正確 Mob ID 連到對應圖片。
 - Mob ID 依據：[rAthena pre-renewal mob_db.yml（固定 commit）](https://github.com/rathena/rathena/blob/975c87dfc27ab267b2ec0dddff77421b2e6ee87b/db/pre-re/mob_db.yml)。這是用於核對 Mob ID 的社群資料庫，不代表所有數值均等同台灣官方版本。
 - 圖片來源：[nba9001-sys/ro-idle 固定版本](https://github.com/nba9001-sys/ro-idle/tree/2348031f3797dbea1981f399288748378a283940)。Git blob SHA-1 與 bytes 由素材清單固定，下載器驗證後才啟用。
+- 首次下載畫面需與此清單同步：瘋兔為 Mob 1063（`1063.png`，598 bytes），綠棉蟲為 Mob 1007（`1007.png`，789 bytes）；UI 回歸測試會檢查名稱、檔名與大小。
 
 | 遊戲怪物 | Mob ID | 固定來源檔案 | bytes | Git blob SHA-1 |
 |---|---:|---|---:|---|

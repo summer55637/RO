@@ -47,6 +47,11 @@ function testMonsterArtworkIdentityMapping() {
   assert.match(appSource, /function getMonsterArtworkSource\(monster\)/);
   assert.match(appSource, /data:image\/svg\+xml;charset=utf-8/);
   assert.match(appSource, /getMonsterArtworkSource\(currentMonster\)/);
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(html, /瘋兔圖像<\/strong><small>1063\.png · 598 bytes<\/small>/, 'installer must identify the verified Lunatic Mob 1063 image');
+  assert.match(html, /綠棉蟲圖像<\/strong><small>1007\.png · 789 bytes<\/small>/, 'installer must identify the verified Fabre Mob 1007 image');
+  assert.doesNotMatch(html, /瘋兔圖像<\/strong><small>1001\.png/, 'installer must not label Scorpion Mob 1001 as Lunatic');
+  assert.doesNotMatch(html, /綠棉蟲圖像<\/strong><small>1003\.png/, 'installer must not label Test Egg Mob 1003 as Fabre');
   const sources = fs.readFileSync(path.join(__dirname, '..', 'assets', 'SOURCES.md'), 'utf8');
   assert.match(sources, /MVP 1\.5 怪物圖片 ID 稽核/);
   assert.match(sources, /975c87dfc27ab267b2ec0dddff77421b2e6ee87b/);
@@ -57,7 +62,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v20/);
+  assert.match(serviceWorker, /ro-h5-shell-v21/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -947,7 +952,7 @@ function testConsumableUseAndUiWiring() {
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
   assert.match(html, /MVP 1\.5/);
-  assert.match(sw, /ro-h5-shell-v20/);
+  assert.match(sw, /ro-h5-shell-v21/);
 }
 
 testMonsterArtworkIdentityMapping();
