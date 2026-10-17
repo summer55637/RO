@@ -11,7 +11,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v17/);
+  assert.match(serviceWorker, /ro-h5-shell-v18/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -86,8 +86,8 @@ function testBestiaryUiWiring() {
 
 function testEquipmentCardMechanics() {
   const catalog = core.getItemCatalog();
-  assert.equal(catalog.equipment.length, 4);
-  assert.equal(catalog.cards.length, 3);
+  assert.equal(catalog.equipment.length, 14);
+  assert.equal(catalog.cards.length, 6);
   const character = core.makeCharacter('GearTester', 'male', 'novice');
   const account = core.emptyAccount();
   const dagger = { instanceId: 'test-dagger', itemId: 'novice_dagger', cards: [] };
@@ -217,7 +217,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.2/);
+  assert.match(html, /MVP 1\.3/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -270,6 +270,84 @@ function testEquipmentSaleTransactions() {
   assert.equal(wornSale.ok, false, 'an instance still equipped by any character cannot be sold');
 }
 
+function testExpandedEquipmentCatalogAndDrops() {
+  const catalog = core.getItemCatalog();
+  assert.equal(catalog.equipment.length, 14);
+  assert.equal(catalog.cards.length, 6);
+  const equipmentIds = new Set(catalog.equipment.map(function (item) { return item.id; }));
+  const cardIds = new Set(catalog.cards.map(function (item) { return item.id; }));
+  const validSlots = new Set(['weapon', 'armor', 'shoes', 'accessory']);
+  catalog.equipment.forEach(function (item) {
+    assert.ok(validSlots.has(item.slot), item.id + ' must use an implemented equipment slot');
+    assert.ok(item.requiredLevel >= 1, item.id + ' must have a valid level requirement');
+    assert.ok(Array.isArray(item.allowedJobs) && item.allowedJobs.length > 0, item.id + ' must define job eligibility');
+    assert.ok(item.sellPrice > 0, item.id + ' must have a sale price');
+  });
+  Object.values(world.monsters).forEach(function (monster) {
+    (monster.drops || []).forEach(function (drop) {
+      if (drop.type === 'equipment') assert.ok(equipmentIds.has(drop.id), monster.id + ' references missing equipment drop ' + drop.id);
+      if (drop.type === 'card') assert.ok(cardIds.has(drop.id), monster.id + ' references missing card drop ' + drop.id);
+    });
+  });
+  ['main_gauche', 'iron_sword', 'hunter_bow', 'padded_armor', 'silk_robe', 'scale_armor', 'field_boots', 'swift_boots', 'brooch', 'coin_pouch'].forEach(function (id) {
+    assert.ok(equipmentIds.has(id), 'expanded equipment should include ' + id);
+  });
+  ['pupa_card', 'wolf_card', 'spore_card'].forEach(function (id) {
+    assert.ok(cardIds.has(id), 'expanded card catalog should include ' + id);
+  });
+
+  const thief = core.makeCharacter('NewGearThief', 'male', 'novice');
+  thief.jobId = 'thief'; thief.jobName = '盜賊'; thief.baseLevel = 3;
+  const account = core.emptyAccount();
+  account.equipmentInventory.push({ instanceId: 'main-gauche-thief', itemId: 'main_gauche', cards: [] });
+  assert.equal(core.equipItem(thief, account, 'main-gauche-thief').ok, true, 'eligible thief can equip the new short sword');
+  assert.equal(core.getEquipmentBonuses(thief).attackBonus, 4);
+
+  const mage = core.makeCharacter('RestrictedGearMage', 'female', 'novice');
+  mage.jobId = 'mage'; mage.jobName = '魔法師'; mage.baseLevel = 5;
+  account.equipmentInventory.push({ instanceId: 'iron-sword-mage', itemId: 'iron_sword', cards: [] });
+  const restricted = core.equipItem(mage, account, 'iron-sword-mage');
+  assert.equal(restricted.ok, false, 'equipment job requirements are enforced for new items');
+  assert.equal(account.equipmentInventory.some(function (item) { return item.instanceId === 'iron-sword-mage'; }), true);
+}
+
+function testEquipmentDodgeAndZenyBonuses() {
+  const evasive = core.makeCharacter('EvasiveGearTester', 'female', 'novice');
+  const plain = core.makeCharacter('PlainEvasionTester', 'female', 'novice');
+  [evasive, plain].forEach(function (hero) {
+    hero.baseLevel = 6;
+    hero.battle.map = 'payon_field'; hero.battle.paused = false;
+    hero.battle.currentMonsterId = 'wolf'; hero.battle.monsterHp = 1000; hero.battle.monsterMaxHp = 1000;
+    hero.battle.monsterAttackClock = 1;
+  });
+  evasive.equipment.shoes = { instanceId: 'swift-boots-test', itemId: 'swift_boots', cards: [] };
+  const rolls = [0.5, 0.5, 0.01];
+  let index = 0;
+  const evasiveResult = core.stepCombat(evasive, core.emptyAccount(), function () { return rolls[Math.min(index++, rolls.length - 1)]; });
+  const plainRolls = [0.5, 0.5, 0.01];
+  index = 0;
+  const plainResult = core.stepCombat(plain, core.emptyAccount(), function () { return plainRolls[Math.min(index++, plainRolls.length - 1)]; });
+  assert.equal(evasiveResult.dodged, true, 'swift boots should add dodge chance during actual monster attacks');
+  assert.equal(plainResult.dodged, false, 'the same random roll should not dodge without the equipment bonus');
+
+  const merchant = core.makeCharacter('ZenyGearTester', 'male', 'novice');
+  const merchantPlain = core.makeCharacter('ZenyGearBaseline', 'male', 'novice');
+  [merchant, merchantPlain].forEach(function (hero) {
+    hero.jobId = 'merchant'; hero.jobName = '商人';
+    hero.baseLevel = 99; hero.stats.str = 99;
+    hero.battle.map = 'morroc_desert'; hero.battle.paused = false;
+    hero.battle.currentMonsterId = 'orc'; hero.battle.monsterHp = 1; hero.battle.monsterMaxHp = 76;
+  });
+  merchant.equipment.accessory = { instanceId: 'coin-pouch-test', itemId: 'coin_pouch', cards: [] };
+  const gearAccount = core.emptyAccount();
+  const plainAccount = core.emptyAccount();
+  core.stepCombat(merchant, gearAccount, function () { return 0.99; });
+  core.stepCombat(merchantPlain, plainAccount, function () { return 0.99; });
+  assert.equal(core.getEquipmentBonuses(merchant).zenyBonus, 0.1);
+  assert.equal(gearAccount.gold, 18, 'merchant passive and coin pouch stack on kill Zeny');
+  assert.equal(plainAccount.gold, 16, 'the same merchant without the coin pouch receives less Zeny');
+}
+
 function testEquipmentUiWiring() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -285,7 +363,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.2/);
+  assert.match(html, /MVP 1\.3/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -771,7 +849,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.2/);
+  assert.match(html, /MVP 1\.3/);
 }
 
 testAutomaticUpdateStrategy();
@@ -803,5 +881,7 @@ testEquipmentRefinementProgression();
 testEquipmentRefinementCombatAndUi();
 testCardExtractionTransactions();
 testEquipmentSaleTransactions();
+testExpandedEquipmentCatalogAndDrops();
+testEquipmentDodgeAndZenyBonuses();
 
-console.log('RO H5 core tests passed (29 suites).');
+console.log('RO H5 core tests passed (31 suites).');

@@ -663,7 +663,7 @@
       }
 
       const baseGold = monster.zenyMin + Math.floor(random() * (monster.zenyMax - monster.zenyMin + 1));
-      const zenyBonus = (job ? job.zenyBonus : 0) + skillBonuses.zenyBonus;
+      const zenyBonus = (job ? job.zenyBonus : 0) + skillBonuses.zenyBonus + equipmentBonuses.zenyBonus;
       const gold = zenyBonus ? Math.round(baseGold * (1 + zenyBonus)) : baseGold;
       account.gold = Math.max(0, Number(account.gold) || 0) + gold;
       result.goldGained = gold;
@@ -723,7 +723,7 @@
     if (character.battle.monsterAttackClock >= 2) {
       character.battle.monsterAttackClock = 0;
       const agi = Math.max(1, Number(character.stats.agi) || 1);
-      const dodgeChance = Math.min(0.35, agi * 0.005 + (job ? job.dodgeBonus : 0));
+      const dodgeChance = Math.min(0.35, agi * 0.005 + (job ? job.dodgeBonus : 0) + equipmentBonuses.dodgeBonus);
       result.dodged = random() < dodgeChance;
       if (!result.dodged) {
         const rawDamage = monster.attackMin + Math.floor(random() * (monster.attackMax - monster.attackMin + 1));

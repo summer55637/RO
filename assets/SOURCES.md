@@ -1,5 +1,10 @@
 # 素材來源與完整性
 
+## MVP 1.3 裝備／卡片資料欄位參考
+
+- 參考 rAthena 道具資料格式文件 [`item_db.yml`](https://github.com/rathena/rathena/blob/d4b8e7b8f16061cc2496d377ac8f777ce72a4f39/doc/yaml/db/item_db.yml)，固定參考版本：`d4b8e7b8f16061cc2496d377ac8f777ce72a4f39`。該格式包含物品類型、買／賣價格、攻防數值、卡槽、職業可裝備條件、最低裝備等級等常用欄位；本專案按自己的簡化模型映射到 slot、requiredLevel、allowedJobs、effects、sellPrice。
+- 本次沒有匯入完整 rAthena 資料庫或二進位素材；14 件裝備、6 張卡片、售價、能力加成及掉落機率均為本專案重新編寫的原型資料。不得把社群資料庫視為台灣官方 PC RO 當前正式平衡／掉落權重。
+
 ## MVP 1.2 裝備出售與卡片取出規則
 
 - 本階段未新增二進位素材，也未引入完整外部道具資料庫。卡片移除沿用本專案自訂裝備 instance 的 `cards` 清單及帳號共用 `warehouse`。
