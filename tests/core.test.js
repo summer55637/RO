@@ -612,7 +612,11 @@ function testAssetManifestCoverage() {
     map.monsters.forEach(function (entry) {
       const monster = world.monsters[entry.id];
       assert.ok(monster, 'missing monster data: ' + entry.id);
-      assert.ok(assetIds.has(monster.assetId), 'missing monster image asset: ' + entry.id);
+      if (monster.assetFallback === 'vector') {
+        assert.equal(assetIds.has(monster.assetId), false, 'vector fallback must not point at missing or misidentified art: ' + entry.id);
+      } else {
+        assert.ok(assetIds.has(monster.assetId), 'missing monster image asset: ' + entry.id);
+      }
     });
   });
 }
