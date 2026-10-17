@@ -1,8 +1,8 @@
 # RO 純單機 H5 放置 RPG — 專案規畫總表
 
-- **文件版本：** V1.35
+- **文件版本：** V1.36
 - **整理日期：** 2026-10-18
-- **目前階段：** MVP 2.7 瘋兔／狼 ACT 攻擊動畫接入
+- **目前階段：** MVP 2.8 波利 Mob 1002 ACT 受擊動畫接入
 - **實作狀態：** 使用者已於 2026-10-17 授權開始實作
 - **GitHub 倉庫：** `summer55637/RO`（預設分支 `main`）
 - **現況盤點：** 目標倉庫初始僅含本規畫文件；nba9001-sys/ro-idle 是既有原型與素材／資料參考倉庫。
@@ -706,3 +706,12 @@
 - 將兩個攻擊動畫註冊為非必要、按需載入的怪物動畫素材。現有戰鬥事件會在怪物反擊或玩家閃避時播放，動畫失敗仍可回到同物種已驗證靜態圖／待機圖；不改變攻擊結算及傷害數值。
 - 回歸測試檢查 Mob ID、來源 ACT／SPR hash、action index、方向 0、每格唯一圖層、無未支援變換、sprite index 有效性、畫格數／時序、產物 bytes／hash 與戰鬥動畫 wiring。Service Worker shell cache 升至 v35。
 - 不更動存檔 key、角色欄位／進度、技能、裝備、卡片、共用倉庫、Zeny、掉落、地圖解鎖或帳號分頁鎖；亦不把這些 ACT／SPR 來源或原型平衡值宣稱為台灣官方現行資料。
+
+
+## 50. 波利 Mob 1002 受擊動畫（MVP 2.8，2026-10-18）
+
+- 沿用固定版 ragassets fixture 的配對 `poring.act`／`poring.spr`；依怪物 ACT action 編排，action 24 是受擊片段，本專案只接入此已核對動作，不擴大推定未驗證的死亡／其他物種動作。
+- 波利 action 24 有 5 格、每格 160ms。逐格驗證只有一個 direction 0 圖層、引用的 SPR 索引有效，且不使用未支援的旋轉／縮放變換。輸出 `assets/poring_hurt.svg` 為 28,191 bytes，Git blob SHA-1 `34ae789ab040f4e4b28bc5cedcdaf058fb2459ff`。
+- 新增非必要素材 manifest 與可重現匯出設定；在非致死命中時播放受擊動畫，致死命中仍使用既有擊倒視覺。進入／恢復地圖時按需載入，若失敗會回到同物種已驗證素材，不能阻擋戰鬥。
+- 回歸測試覆蓋來源 ACT／SPR 雜湊、action index、格數／時間、方向、圖層與 SPR 引用、SVG bytes／hash、manifest 物種對應及 runtime wiring。Service Worker shell cache 升至 v36。
+- 不更動任何存檔 key 或玩家資料；角色、技能、裝備、卡片、共用倉庫、Zeny、掉落與分頁鎖行為保持不變。

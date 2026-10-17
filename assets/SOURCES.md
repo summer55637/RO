@@ -367,3 +367,12 @@
 - 固定輸出 `assets/lunatic_attack.svg`：95,667 bytes，Git blob SHA-1 `4d1e7e2ca0ac737758adb7439f48545a3dadaed6`；`assets/wolf_attack.svg`：112,050 bytes，Git blob SHA-1 `54058111ce081c79625d91f1acc6f4dcc9ab7de0`。由 `tools/render_monster_act_spr.js` 產生，`npm test` 會執行產物重現檢查。
 - 兩者皆為非必要、按需下載的攻擊素材。若載入或完整性驗證失敗，原本怪物靜態圖／待機動畫仍為備援；沒有換用其他物種素材，也不會阻擋戰鬥或離線結算。
 - 僅增加視覺行為與回歸保護；玩家存檔、角色進度、裝備、卡片、共用倉庫、Zeny、掉落表及帳號分頁鎖均保持不變。
+
+
+## MVP 2.8 波利受擊動畫來源與完整性（2026-10-18）
+
+- 固定來源：[adsonpleal/ragassets 的 poring ACT／SPR fixture](https://github.com/adsonpleal/ragassets/tree/4de4fa747431979d35c747d7edd549a872efd9e1/gateway/internal/render/engine/testdata/fixtures/data/sprite/몬스터)。ACT `poring.act`：146,172 bytes，Git blob SHA-1 `26717393629e410910ff080d204e930d945328cd`；SPR `poring.spr`：42,859 bytes，Git blob SHA-1 `406b3e91bca7137e8f7a8abcd46468f3fb639ad7`。
+- 參照該專案的怪物 ACT 動作編排（idle action 0、walk 8、attack 16、hurt 24、dead 32），接入波利 Mob 1002 action 24 作受擊動畫。此處只使用本專案已配對並可重現的波利資料，不把 action index 單獨視作物種證據。
+- action 24 共 5 格、每格 160ms；每格僅含一個 direction 0 圖層，所有 sprite index 均可在該 SPR 找到，沒有旋轉／縮放變換。輸出 `assets/poring_hurt.svg`：28,191 bytes，Git blob SHA-1 `34ae789ab040f4e4b28bc5cedcdaf058fb2459ff`。
+- 素材為非必要按需載入。非致死命中才播放受擊片段；擊倒仍使用原有擊倒提示，動畫載入失敗不阻擋玩家結算。測試固定來源與輸出 hash，避免日後誤將其它 Mob 的動作掛到波利。
+- 此次只增加視覺及測試，未改角色或帳號存檔資料、戰鬥數值、掉落表、倉庫或 Zeny。

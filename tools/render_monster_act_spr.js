@@ -128,6 +128,25 @@ const MONSTERS = [
     outputSha: 'd550fe9a3edc83b241d882038657e6e6e1e3c916'
   },
   {
+    key: 'poring-hurt',
+    name: '波利',
+    animationType: 'hurt',
+    canvasWidth: 128,
+    mobId: 1002,
+    actPath: 'tools/samples/poring.act',
+    sprPath: 'tools/samples/poring.spr',
+    actSha: '26717393629e410910ff080d204e930d945328cd',
+    sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb639ad7',
+    actionIndex: 24,
+    frames: 5,
+    frameMs: 160,
+    scale: 2.8,
+    centerY: 102,
+    outputPath: 'assets/poring_hurt.svg',
+    outputBytes: 28191,
+    outputSha: '34ae789ab040f4e4b28bc5cedcdaf058fb2459ff'
+  },
+  {
     key: 'green-plant',
     name: '綠色植物',
     animationType: 'idle',
@@ -346,7 +365,8 @@ function renderSvg(config, actBytes, sprBytes) {
   }).join('');
   const groups = frameLayers.map((content, index) =>
     '<g id="frame-' + index + '" class="f' + index + '">' + content + '</g>').join('');
-  const animationLabel = config.animationType === 'attack' ? '攻擊逐格動畫' : '待機逐格動畫';
+  const animationLabel = config.animationType === 'attack' ? '攻擊逐格動畫' :
+    config.animationType === 'hurt' ? '受擊逐格動畫' : '待機逐格動畫';
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + canvasWidth + ' 128" role="img" aria-label="' +
     config.name + ' Mob ' + config.mobId + ' ' + animationLabel + '" data-mob-id="' + config.mobId +
     '" data-act-action-index="' + config.actionIndex + '" data-frame-count="' + frames.length +

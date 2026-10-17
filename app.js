@@ -935,6 +935,7 @@
         if (monster && monster.assetId) requiredIds.add(monster.assetId);
         if (monster && monster.animationAssetId) optionalAnimationIds.add(monster.animationAssetId);
         if (monster && monster.attackAnimationAssetId) optionalAnimationIds.add(monster.attackAnimationAssetId);
+        if (monster && monster.hurtAnimationAssetId) optionalAnimationIds.add(monster.hurtAnimationAssetId);
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       try { await ensureAssets(neededAssets, false); } catch (_) { /* Keep existing local image fallbacks usable. */ }
@@ -1136,6 +1137,7 @@
         if (monster && monster.assetId) requiredIds.add(monster.assetId);
         if (monster && monster.animationAssetId) optionalAnimationIds.add(monster.animationAssetId);
         if (monster && monster.attackAnimationAssetId) optionalAnimationIds.add(monster.attackAnimationAssetId);
+        if (monster && monster.hurtAnimationAssetId) optionalAnimationIds.add(monster.hurtAnimationAssetId);
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       await ensureAssets(neededAssets, false);
@@ -1281,6 +1283,10 @@
       const attackingMonster = window.ROCore.getMonster(result.monsterId || character.battle.currentMonsterId);
       if (attackingMonster) playMonsterActionAnimation(attackingMonster, 'attack');
     }
+    if (result.playerDamage && !result.killed) {
+      const hurtMonster = window.ROCore.getMonster(result.monsterId || character.battle.currentMonsterId);
+      if (hurtMonster) playMonsterActionAnimation(hurtMonster, 'hurt');
+    }
     const hero = $('#hero-sprite');
     const monster = $('#monster-actor');
     const heroInner = hero ? hero.querySelector('.hero-character') : null;
@@ -1338,9 +1344,14 @@
 
 
   function playMonsterActionAnimation(monster, action) {
-    if (!monster || action !== 'attack' || !monster.attackAnimationAssetId ||
-        !assetUrls[monster.attackAnimationAssetId] || !character || !character.battle || !character.battle.map ||
+    const actionConfig = {
+      attack: { asset: 'attackAnimationAssetId', frames: 'attackAnimationFrameCount', interval: 'attackAnimationFrameDurationMs' },
+      hurt: { asset: 'hurtAnimationAssetId', frames: 'hurtAnimationFrameCount', interval: 'hurtAnimationFrameDurationMs' }
+    }[action];
+    if (!monster || !actionConfig || !monster[actionConfig.asset] ||
+        !assetUrls[monster[actionConfig.asset]] || !character || !character.battle || !character.battle.map ||
         character.battle.currentMonsterId !== monster.id) return false;
+    const animationAssetId = monster[actionConfig.asset];
 
     if (monsterAnimationTimer) window.clearTimeout(monsterAnimationTimer);
     const runId = ++monsterAnimationRunId;
@@ -1348,16 +1359,16 @@
     const slotIndex = activeSlot;
     monsterAnimationOverride = {
       monsterId: monster.id,
-      assetId: monster.attackAnimationAssetId,
+      assetId: animationAssetId,
       characterId: characterId,
       slotIndex: slotIndex
     };
     const image = $('#monster-image');
-    const source = assetUrls[monster.attackAnimationAssetId];
+    const source = assetUrls[animationAssetId];
     if (image && image.getAttribute('src') !== source) image.src = source;
 
-    const frames = Math.max(1, Number(monster.attackAnimationFrameCount) || 1);
-    const interval = Math.max(40, Number(monster.attackAnimationFrameDurationMs) || 100);
+    const frames = Math.max(1, Number(monster[actionConfig.frames]) || 1);
+    const interval = Math.max(40, Number(monster[actionConfig.interval]) || 100);
     const duration = Math.max(200, Math.min(5000, frames * interval));
     monsterAnimationTimer = window.setTimeout(function () {
       if (runId !== monsterAnimationRunId) return;
