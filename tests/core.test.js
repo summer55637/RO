@@ -521,7 +521,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 0\.6/);
+  assert.match(html, /MVP 0\.7/);
 }
 
 testAutomaticUpdateStrategy();
