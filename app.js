@@ -2348,10 +2348,14 @@
 
   function closeOfflineReport() {
     if (character && character.pendingReport) {
+      const pendingReport = character.pendingReport;
       character.pendingReport = null;
-      persistCurrent();
+      if (!persistCurrent()) {
+        // Keep the report pending if acknowledging it could not be persisted.
+        character.pendingReport = pendingReport;
+      }
     }
-    $('#offline-dialog').close();
+    // The native method="dialog" form closes the dialog even if this handler fails.
   }
 
   function openRename(index) {
@@ -2509,7 +2513,7 @@
     $('#btn-music').addEventListener('click', toggleMusic);
     $('#btn-save').addEventListener('click', function () { if (persistCurrent()) showToast('已保存到本機'); });
     $$('.speed-button').forEach(function (button) { button.addEventListener('click', function () { changeSpeed(button.dataset.speed); }); });
-    $('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });
+    $$('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });
     $('#details-content').addEventListener('click', function (event) {
       const statButton = event.target.closest('[data-stat-key]');
       if (statButton && !statButton.disabled) {

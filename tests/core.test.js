@@ -86,7 +86,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v36/);
+  assert.match(serviceWorker, /ro-h5-shell-v37/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -181,7 +181,7 @@ function testMonsterEncounterMapHints() {
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
   assert.match(html, /MVP 2.8/);
-  assert.match(sw, /ro-h5-shell-v36/);
+  assert.match(sw, /ro-h5-shell-v37/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -235,7 +235,7 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
   assert.match(html, /MVP 2.8/);
-  assert.match(sw, /ro-h5-shell-v36/);
+  assert.match(sw, /ro-h5-shell-v37/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -253,7 +253,7 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
   assert.match(html, /MVP 2.8/);
-  assert.match(sw, /ro-h5-shell-v36/);
+  assert.match(sw, /ro-h5-shell-v37/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -1467,8 +1467,26 @@ function testConsumableUseAndUiWiring() {
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
   assert.match(html, /MVP 2.8/);
-  assert.match(sw, /ro-h5-shell-v36/);
+  assert.match(sw, /ro-h5-shell-v37/);
 }
+
+
+function testOfflineSettlementCanDismiss() {
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  const querySelectorOne = String.fromCharCode(36) + "('.detail-tab').forEach(";
+  const querySelectorAll = String.fromCharCode(36, 36) + "('.detail-tab').forEach(";
+  assert.ok(appSource.includes(querySelectorAll), 'event binding must use a NodeList so bootstrap does not stop early');
+  assert.equal(appSource.split('\n').some(function (line) { return line.trim().startsWith(querySelectorOne); }), false, 'querySelector result must not be treated as a collection');
+  assert.match(appSource, /\$\('#btn-offline-close'\)\.addEventListener\('click', closeOfflineReport\);/);
+  assert.match(appSource, /const pendingReport = character\.pendingReport;[\s\S]*if \(!persistCurrent\(\)\) \{[\s\S]*character\.pendingReport = pendingReport;/);
+  assert.match(html, /<form method="dialog"><button id="btn-offline-close" type="submit"/);
+  assert.match(html, /MVP 2\.8\.1/);
+  assert.match(sw, /ro-h5-shell-v37/);
+}
+
+testOfflineSettlementCanDismiss();
 
 testMonsterArtworkIdentityMapping();
 testAutomaticUpdateStrategy();
@@ -1515,4 +1533,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (44 suites).');
+console.log('RO H5 core tests passed (45 suites).');
