@@ -10,6 +10,17 @@
   const SLOT_COUNT = 3;
   const JOB_LEVEL_CAP = 10;
   const FIRST_JOB_LEVEL_CAP = 50;
+  // Material recipes and healing values are custom prototype data, not verified Taiwan PC RO values.
+  const CONSUMABLE_ITEMS = Object.freeze([
+    Object.freeze({ id: 'carrot_tonic', name: '胡蘿蔔補給', heal: 18, description: '以胡蘿蔔與空瓶製作的野外補給。' }),
+    Object.freeze({ id: 'jellopy_potion', name: '果凍治療藥', heal: 35, description: '利用果凍質塊與昆蟲外殼製作的回復藥。' }),
+    Object.freeze({ id: 'honey_potion', name: '蜂蜜藥水', heal: 65, description: '以蜂蜜與蘑菇孢子調配的較強回復藥。' })
+  ]);
+  const CRAFTING_RECIPES = Object.freeze([
+    Object.freeze({ id: 'carrot_tonic', name: '胡蘿蔔補給', ingredients: Object.freeze({ '胡蘿蔔': 2, '空瓶': 1 }) }),
+    Object.freeze({ id: 'jellopy_potion', name: '果凍治療藥', ingredients: Object.freeze({ '果凍質塊': 2, '昆蟲外殼': 1, '空瓶': 1 }) }),
+    Object.freeze({ id: 'honey_potion', name: '蜂蜜藥水', ingredients: Object.freeze({ '蜂蜜': 1, '蘑菇孢子': 2, '空瓶': 1 }) })
+  ]);
   const FIRST_JOBS = Object.freeze([
     Object.freeze({ id: 'swordsman', name: '劍士', description: '近身戰鬥取向，適合正面交鋒。', passive: '攻擊傷害 +2（原型）', damageBonus: 2, criticalBonus: 0, dodgeBonus: 0, killHeal: 0, zenyBonus: 0 }),
     Object.freeze({ id: 'mage', name: '魔法師', description: '以強力術法輸出為概念的職業原型。', passive: '攻擊傷害 +3（原型術法效果）', damageBonus: 3, criticalBonus: 0, dodgeBonus: 0, killHeal: 0, zenyBonus: 0 }),
@@ -221,6 +232,21 @@
   function getItemCatalog() {
     const catalog = WORLD.items || {};
     return { equipment: (catalog.equipment || []).slice(), cards: (catalog.cards || []).slice() };
+  }
+
+  function getConsumableCatalog() {
+    return {
+      consumables: CONSUMABLE_ITEMS.map(function (item) { return Object.assign({}, item); }),
+      recipes: CRAFTING_RECIPES.map(function (recipe) {
+        const product = CONSUMABLE_ITEMS.find(function (item) { return item.id === recipe.id; });
+        return {
+          id: recipe.id, name: recipe.name, outputId: recipe.id,
+          outputName: product ? product.name : recipe.name,
+          heal: product ? product.heal : 0,
+          ingredients: Object.assign({}, recipe.ingredients)
+        };
+      })
+    };
   }
 
   function ensureAccountEquipmentShape(account) {
@@ -588,6 +614,48 @@
     account.warehouse[itemName] = Math.max(0, Number(account.warehouse[itemName]) || 0) + quantity;
   }
 
+  function craftConsumable(account, recipeId, quantity) {
+    if (!account || typeof account !== 'object') return { ok: false, reason: '帳號資料尚未載入。' };
+    const recipe = CRAFTING_RECIPES.find(function (entry) { return entry.id === recipeId; });
+    if (!recipe) return { ok: false, reason: '找不到這項製作配方。' };
+    const count = quantity == null ? 1 : Number(quantity);
+    if (!Number.isSafeInteger(count) || count < 1 || count > 99) return { ok: false, reason: '一次只能製作 1 至 99 份。' };
+    if (!account.warehouse || typeof account.warehouse !== 'object' || Array.isArray(account.warehouse)) account.warehouse = {};
+    const requirements = Object.keys(recipe.ingredients).map(function (name) {
+      return { name: name, needed: recipe.ingredients[name] * count, available: Math.max(0, Number(account.warehouse[name]) || 0) };
+    });
+    const shortage = requirements.find(function (entry) { return entry.available < entry.needed; });
+    if (shortage) return { ok: false, reason: shortage.name + ' 不足，需要 ' + shortage.needed + ' 個，目前只有 ' + shortage.available + ' 個。' };
+    const product = CONSUMABLE_ITEMS.find(function (item) { return item.id === recipe.id; });
+    if (!product) return { ok: false, reason: '製作成品資料無效，沒有消耗材料。' };
+    // Validate every ingredient before changing the shared warehouse.
+    requirements.forEach(function (entry) {
+      const remaining = entry.available - entry.needed;
+      if (remaining > 0) account.warehouse[entry.name] = remaining;
+      else delete account.warehouse[entry.name];
+    });
+    addWarehouseItem(account, product.name, count);
+    return { ok: true, recipeName: recipe.name, itemId: product.id, itemName: product.name, quantity: count, heal: product.heal };
+  }
+
+  function useConsumable(character, account, itemId) {
+    if (!character || !account || typeof account !== 'object') return { ok: false, reason: '角色或帳號資料尚未載入。' };
+    const item = CONSUMABLE_ITEMS.find(function (entry) { return entry.id === itemId; });
+    if (!item) return { ok: false, reason: '找不到這項消耗品。' };
+    if (!account.warehouse || typeof account.warehouse !== 'object' || Array.isArray(account.warehouse)) account.warehouse = {};
+    const count = Math.max(0, Number(account.warehouse[item.name]) || 0);
+    if (count < 1) return { ok: false, reason: '共用倉庫沒有 ' + item.name + '。' };
+    const maxHp = Math.max(1, Math.floor(Number(character.maxHp) || 1));
+    const currentHp = Math.min(maxHp, Math.max(0, Number(character.hp) || 0));
+    if (currentHp >= maxHp) return { ok: false, reason: 'HP 已是滿值，不需要使用補給品。' };
+    const healed = Math.min(maxHp, currentHp + item.heal) - currentHp;
+    if (healed <= 0) return { ok: false, reason: '目前無法恢復 HP。' };
+    character.hp = currentHp + healed;
+    if (count > 1) account.warehouse[item.name] = count - 1;
+    else delete account.warehouse[item.name];
+    return { ok: true, itemName: item.name, healed: healed, remaining: count - 1 };
+  }
+
   function stepCombat(character, account, rng) {
     const random = typeof rng === 'function' ? rng : Math.random;
     const result = { playerDamage: 0, monsterDamage: 0, killed: false, monsterId: '', monsterName: '', critical: false, dodged: false, expGained: 0, jobExpGained: 0, goldGained: 0, healingGained: 0, recoveryGained: 0, skillHealingGained: 0, skillName: '', doubleAttack: false, drops: [], levelUps: [], jobCapped: false, playerDown: false };
@@ -786,6 +854,9 @@
     emptyAccount: emptyAccount,
     getItemDefinition: getItemDefinition,
     getItemCatalog: getItemCatalog,
+    getConsumableCatalog: getConsumableCatalog,
+    craftConsumable: craftConsumable,
+    useConsumable: useConsumable,
     ensureEquipmentShape: ensureEquipmentShape,
     getEquipmentBonuses: getEquipmentBonuses,
     getRefineCost: getRefineCost,

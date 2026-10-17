@@ -11,7 +11,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v18/);
+  assert.match(serviceWorker, /ro-h5-shell-v19/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -217,7 +217,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.3/);
+  assert.match(html, /MVP 1\.4/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -363,7 +363,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.3/);
+  assert.match(html, /MVP 1\.4/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -849,7 +849,55 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.3/);
+  assert.match(html, /MVP 1\.4/);
+}
+
+
+function testCraftingMaterialsAndTransactions() {
+  const catalog = core.getConsumableCatalog();
+  assert.equal(catalog.consumables.length, 3);
+  assert.equal(catalog.recipes.length, 3);
+  const account = core.emptyAccount();
+  account.warehouse = { '胡蘿蔔': 4, '空瓶': 2, '果凍質塊': 4, '昆蟲外殼': 2, '蜂蜜': 2, '蘑菇孢子': 4, '既有獸毛': 7 };
+  const crafted = core.craftConsumable(account, 'carrot_tonic', 2);
+  assert.equal(crafted.ok, true);
+  assert.equal(crafted.quantity, 2);
+  assert.equal(account.warehouse['胡蘿蔔'], undefined);
+  assert.equal(account.warehouse['空瓶'], undefined);
+  assert.equal(account.warehouse['胡蘿蔔補給'], 2);
+  assert.equal(account.warehouse['既有獸毛'], 7, 'unrelated warehouse items are preserved');
+  const beforeShortage = JSON.stringify(account);
+  assert.equal(core.craftConsumable(account, 'honey_potion', 2).ok, false);
+  assert.equal(JSON.stringify(account), beforeShortage, 'failed crafting must not partially consume materials');
+  assert.equal(core.craftConsumable(account, 'unknown_recipe', 1).ok, false);
+  assert.equal(core.craftConsumable(account, 'honey_potion', 100).ok, false);
+}
+
+function testConsumableUseAndUiWiring() {
+  const character = core.makeCharacter('PotionTester', 'male', 'novice');
+  character.maxHp = 100; character.hp = 10;
+  const account = core.emptyAccount();
+  account.warehouse['胡蘿蔔補給'] = 1; account.warehouse['蜂蜜藥水'] = 1;
+  const small = core.useConsumable(character, account, 'carrot_tonic');
+  assert.equal(small.ok, true); assert.equal(small.healed, 18); assert.equal(character.hp, 28);
+  assert.equal(account.warehouse['胡蘿蔔補給'], undefined);
+  character.hp = 80;
+  const strong = core.useConsumable(character, account, 'honey_potion');
+  assert.equal(strong.ok, true); assert.equal(strong.healed, 20); assert.equal(character.hp, 100);
+  const beforeFullHp = JSON.stringify(account);
+  assert.equal(core.useConsumable(character, account, 'honey_potion').ok, false, 'full HP must not waste an item');
+  assert.equal(JSON.stringify(account), beforeFullHp);
+  assert.equal(core.useConsumable(character, account, 'missing_item').ok, false);
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  assert.match(appSource, /function renderCraftingRecipes\(content\)/);
+  assert.match(appSource, /data-craft-recipe/);
+  assert.match(appSource, /data-use-consumable/);
+  assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
+  assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
+  assert.match(html, /MVP 1\.4/);
+  assert.match(sw, /ro-h5-shell-v19/);
 }
 
 testAutomaticUpdateStrategy();
@@ -883,5 +931,7 @@ testCardExtractionTransactions();
 testEquipmentSaleTransactions();
 testExpandedEquipmentCatalogAndDrops();
 testEquipmentDodgeAndZenyBonuses();
+testCraftingMaterialsAndTransactions();
+testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (31 suites).');
+console.log('RO H5 core tests passed (33 suites).');
