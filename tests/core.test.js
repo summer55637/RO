@@ -1382,7 +1382,7 @@ function testSoundEffectWiring() {
   assert.match(appSource, /function showMonsterDefeatEffect\(monsterName\)/);
   assert.match(appSource, /function showPlayerHitEffect\(damage, playerDown\)/);
   assert.match(appSource, /function playHeroSkillAnimation\(kind\)/);
-  assert.match(appSource, /if \(result\.killed\) showMonsterDefeatEffect\(result\.monsterName\)/);
+  assert.match(appSource, /if \(result\.killed\) \{\s*showMonsterDefeatEffect\(result\.monsterName\);\s*const nextMonster = window\.ROCore\.getMonster\(character\.battle\.currentMonsterId\);\s*if \(nextMonster\) playMonsterActionAnimation\(nextMonster, 'walk'\);\s*\}/);
   assert.match(html, /id="monster-defeat-effect"/);
   assert.match(html, /id="player-hit-effect"/);
   assert.match(css, /monsterIdleBreathe/);
