@@ -10,6 +10,8 @@
   const SLOT_COUNT = 3;
   const JOB_LEVEL_CAP = 10;
   const FIRST_JOB_LEVEL_CAP = 50;
+  const PORTABLE_SAVE_FORMAT = 'ro-h5-save';
+  const PORTABLE_SAVE_VERSION = 1;
   // Material recipes and healing values are custom prototype data, not verified Taiwan PC RO values.
   const CONSUMABLE_ITEMS = Object.freeze([
     Object.freeze({ id: 'carrot_tonic', name: '胡蘿蔔補給', heal: 18, description: '以胡蘿蔔與空瓶製作的野外補給。' }),
@@ -191,6 +193,169 @@
 
   function emptyAccount() {
     return { version: 1, updatedAt: Date.now(), slots: [null, null, null], gold: 0, warehouse: {}, equipmentInventory: [], speed: 1 };
+  }
+
+  function isRecord(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function preparePortableSave(input) {
+    function fail(reason) { return { ok: false, reason: reason }; }
+    if (!isRecord(input)) return fail('存檔檔案必須是有效的 JSON 物件。');
+
+    let rawAccount = input;
+    let legacyFormat = true;
+    if (Object.prototype.hasOwnProperty.call(input, 'format')) {
+      if (input.format !== PORTABLE_SAVE_FORMAT) {
+        return fail('無法辨識此存檔格式；本機存檔沒有變更。');
+      }
+      const formatVersion = Number(input.formatVersion);
+      if (!Number.isInteger(formatVersion) || formatVersion < 0) {
+        return fail('存檔格式版本無效；本機存檔沒有變更。');
+      }
+      if (formatVersion > PORTABLE_SAVE_VERSION) {
+        return fail('此存檔由較新版遊戲建立，請先更新遊戲再匯入。');
+      }
+      if (!isRecord(input.account)) return fail('存檔缺少帳號資料；本機存檔沒有變更。');
+      rawAccount = input.account;
+      legacyFormat = false;
+    }
+
+    if (!isRecord(rawAccount)) return fail('帳號存檔格式無效；本機存檔沒有變更。');
+    const sourceVersion = rawAccount.version == null ? 0 : Number(rawAccount.version);
+    if (!Number.isInteger(sourceVersion) || sourceVersion < 0) {
+      return fail('帳號存檔版本無效；本機存檔沒有變更。');
+    }
+    if (sourceVersion > 1) {
+      return fail('此帳號存檔版本比目前遊戲新，請先更新遊戲再匯入。');
+    }
+    if (!Array.isArray(rawAccount.slots) || rawAccount.slots.length !== SLOT_COUNT) {
+      return fail('存檔必須包含完整的 3 個角色槽；本機存檔沒有變更。');
+    }
+
+    let account;
+    try {
+      account = JSON.parse(JSON.stringify(rawAccount));
+    } catch (_) {
+      return fail('存檔內容無法安全讀取；本機存檔沒有變更。');
+    }
+
+    const now = Date.now();
+    account.version = 1;
+    account.updatedAt = Number.isFinite(Number(account.updatedAt)) && Number(account.updatedAt) > 0
+      ? Math.floor(Number(account.updatedAt)) : now;
+    if (account.gold == null) account.gold = 0;
+    else if (!Number.isFinite(Number(account.gold)) || Number(account.gold) < 0) {
+      return fail('共用 Zeny 數值無效；本機存檔沒有變更。');
+    } else account.gold = Math.floor(Number(account.gold));
+    account.speed = [1, 2, 3].includes(Number(account.speed)) ? Number(account.speed) : 1;
+
+    if (account.warehouse == null) account.warehouse = {};
+    if (!isRecord(account.warehouse)) return fail('共用倉庫資料格式無效；本機存檔沒有變更。');
+    Object.keys(account.warehouse).forEach(function (name) {
+      const quantity = Number(account.warehouse[name]);
+      if (!Number.isFinite(quantity) || quantity < 0) {
+        throw new Error('倉庫物品數量無效。');
+      }
+      account.warehouse[name] = Math.floor(quantity);
+    });
+
+    if (account.equipmentInventory == null) account.equipmentInventory = [];
+    if (!Array.isArray(account.equipmentInventory)) {
+      return fail('共用裝備背包格式無效；本機存檔沒有變更。');
+    }
+    const equipmentIds = new Set();
+    for (const instance of account.equipmentInventory) {
+      if (!isRecord(instance) || typeof instance.itemId !== 'string' || !instance.itemId) {
+        return fail('裝備背包含有無效物品；本機存檔沒有變更。');
+      }
+      if (typeof instance.instanceId !== 'string' || !instance.instanceId || equipmentIds.has(instance.instanceId)) {
+        instance.instanceId = 'equipment-import-' + now.toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+      }
+      equipmentIds.add(instance.instanceId);
+      if (instance.cards == null) instance.cards = [];
+      if (!Array.isArray(instance.cards) || instance.cards.some(function (id) { return typeof id !== 'string'; })) {
+        return fail('裝備卡槽資料無效；本機存檔沒有變更。');
+      }
+      const refineLevel = instance.refineLevel == null ? 0 : Number(instance.refineLevel);
+      if (!Number.isFinite(refineLevel) || refineLevel < 0) {
+        return fail('裝備精煉資料無效；本機存檔沒有變更。');
+      }
+      instance.refineLevel = Math.min(MAX_EQUIPMENT_REFINE_LEVEL, Math.floor(refineLevel));
+      if (instance.acquiredAt != null && !Number.isFinite(Number(instance.acquiredAt))) {
+        return fail('裝備取得時間無效；本機存檔沒有變更。');
+      }
+    }
+
+    const characterIds = new Set();
+    for (let index = 0; index < SLOT_COUNT; index += 1) {
+      const source = account.slots[index];
+      if (source == null) {
+        account.slots[index] = null;
+        continue;
+      }
+      if (!isRecord(source) || typeof source.id !== 'string' || !source.id ||
+          typeof source.name !== 'string' || !source.name.trim() || Array.from(source.name).length > 48) {
+        return fail('角色槽 ' + (index + 1) + ' 的識別碼或名稱無效；本機存檔沒有變更。');
+      }
+      const baseLevel = Number(source.baseLevel);
+      const jobLevel = Number(source.jobLevel);
+      if (!Number.isInteger(baseLevel) || baseLevel < 1 ||
+          !Number.isInteger(jobLevel) || jobLevel < 1) {
+        return fail('角色槽 ' + (index + 1) + ' 的等級資料無效；本機存檔沒有變更。');
+      }
+      if (characterIds.has(source.id)) return fail('多個角色槽使用了相同角色識別碼；本機存檔沒有變更。');
+      characterIds.add(source.id);
+      const objectFields = ['stats', 'skills', 'battle', 'personalItems', 'equipment', 'bestiary'];
+      for (const field of objectFields) {
+        if (source[field] != null && !isRecord(source[field])) {
+          return fail('角色槽 ' + (index + 1) + ' 的 ' + field + ' 資料無效；本機存檔沒有變更。');
+        }
+      }
+      if (source.logs != null && !Array.isArray(source.logs)) {
+        return fail('角色槽 ' + (index + 1) + ' 的戰鬥紀錄格式無效；本機存檔沒有變更。');
+      }
+      if (source.pendingReport != null && !isRecord(source.pendingReport)) {
+        return fail('角色槽 ' + (index + 1) + ' 的結算紀錄格式無效；本機存檔沒有變更。');
+      }
+      for (const key of ['baseExp', 'jobExp', 'statPoints', 'skillPoints', 'hp', 'maxHp', 'sp', 'maxSp', 'lastSavedAt']) {
+        if (source[key] != null && !Number.isFinite(Number(source[key]))) {
+          return fail('角色槽 ' + (index + 1) + ' 的數值欄位 ' + key + ' 無效；本機存檔沒有變更。');
+        }
+      }
+      const template = makeCharacter(source.name, source.gender, source.look);
+      const migrated = Object.assign(template, source);
+      migrated.stats = Object.assign({}, template.stats, isRecord(source.stats) ? source.stats : {});
+      migrated.skills = Object.assign({}, template.skills, isRecord(source.skills) ? source.skills : {});
+      migrated.battle = Object.assign({}, template.battle, isRecord(source.battle) ? source.battle : {});
+      migrated.personalItems = Object.assign({}, template.personalItems, isRecord(source.personalItems) ? source.personalItems : {});
+      migrated.equipment = Object.assign({}, template.equipment, isRecord(source.equipment) ? source.equipment : {});
+      migrated.bestiary = Object.assign({}, template.bestiary, isRecord(source.bestiary) ? source.bestiary : {});
+      migrated.logs = Array.isArray(source.logs) ? source.logs.slice(-24) : template.logs;
+      migrated.lastSavedAt = Number.isFinite(Number(source.lastSavedAt)) && Number(source.lastSavedAt) > 0
+        ? Math.floor(Number(source.lastSavedAt)) : now;
+      ensureEquipmentShape(migrated);
+      account.slots[index] = migrated;
+    }
+
+    return {
+      ok: true,
+      account: account,
+      legacyFormat: legacyFormat,
+      migrated: legacyFormat || sourceVersion !== 1 || !rawAccount.warehouse || !rawAccount.equipmentInventory
+    };
+  }
+
+  function createPortableSave(account, gameVersion) {
+    const prepared = preparePortableSave(account);
+    if (!prepared.ok) throw new Error(prepared.reason);
+    return {
+      format: PORTABLE_SAVE_FORMAT,
+      formatVersion: PORTABLE_SAVE_VERSION,
+      gameVersion: String(gameVersion || ''),
+      exportedAt: new Date().toISOString(),
+      account: prepared.account
+    };
   }
 
   function normalizeNameKey(value) {
@@ -883,6 +1048,10 @@
     MAX_OFFLINE_SECONDS: MAX_OFFLINE_SECONDS,
     MAX_EQUIPMENT_REFINE_LEVEL: MAX_EQUIPMENT_REFINE_LEVEL,
     SLOT_COUNT: SLOT_COUNT,
+    PORTABLE_SAVE_FORMAT: PORTABLE_SAVE_FORMAT,
+    PORTABLE_SAVE_VERSION: PORTABLE_SAVE_VERSION,
+    createPortableSave: createPortableSave,
+    preparePortableSave: preparePortableSave,
     JOB_LEVEL_CAP: JOB_LEVEL_CAP,
     FIRST_JOB_LEVEL_CAP: FIRST_JOB_LEVEL_CAP,
     FIRST_JOBS: FIRST_JOBS,
