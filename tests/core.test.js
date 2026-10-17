@@ -892,6 +892,7 @@ function testMonsterActSprExportReproducibility() {
   assert.match(output, /Verified wolf-attack: Mob 1013, action 16, 7 frames at 120ms\/frame/);
   assert.match(output, /Verified poring-idle: Mob 1002, action 0, 4 frames at 160ms\/frame/);
   assert.match(output, /Verified poring-attack: Mob 1002, action 16, 28 frames at 40ms\/frame/);
+  assert.match(output, /Verified poring-hurt: Mob 1002, action 24, 5 frames at 160ms\/frame/);
   assert.match(output, /Verified green-plant: Mob 1080, action 0, 12 frames at 160ms\/frame/);
   assert.match(output, /Verified static fallback green-plant: Mob 1080/);
   const toolSource = fs.readFileSync(toolPath, 'utf8');
@@ -1077,6 +1078,64 @@ function testLunaticWolfAttackAnimations() {
     assert.match(svg, /攻擊逐格動畫/);
     assert.equal((svg.match(/id="frame-/g) || []).length, want.frames);
   });
+}
+
+
+function testPoringHurtAnimation() {
+  const tool = require(path.join(__dirname, '..', 'tools', 'render_monster_act_spr.js'));
+  const asset = world.assets.find(function (item) { return item.id === 'poring_hurt_anim'; });
+  const poring = world.monsters.poring;
+  assert.ok(asset, 'missing Poring hurt animation manifest entry');
+  assert.equal(poring.sourceMobId, 1002);
+  assert.equal(poring.hurtAnimationAssetId, 'poring_hurt_anim');
+  assert.equal(poring.hurtAnimationActionIndex, 24);
+  assert.equal(poring.hurtAnimationFrameCount, 5);
+  assert.equal(poring.hurtAnimationFrameDurationMs, 160);
+  assert.equal(asset.sourceMobId, 1002);
+  assert.equal(asset.animationType, 'hurt');
+  assert.equal(asset.actActionIndex, 24);
+  assert.equal(asset.frameCount, 5);
+  assert.equal(asset.frameDurationMs, 160);
+  assert.equal(asset.requiredOnStart, false);
+  assert.equal(asset.sourceRepository, 'adsonpleal/ragassets');
+  assert.equal(asset.sourceCommit, '4de4fa747431979d35c747d7edd549a872efd9e1');
+  assert.equal(asset.sourceActSha, '26717393629e410910ff080d204e930d945328cd');
+  assert.equal(asset.sourceSprSha, '406b3e91bca7137e8f7a8abcd46468f3fb639ad7');
+  assert.equal(asset.bytes, 28191);
+  assert.equal(asset.gitSha, '34ae789ab040f4e4b28bc5cedcdaf058fb2459ff');
+  const actBytes = fs.readFileSync(path.join(__dirname, '..', 'tools', 'samples', 'poring.act'));
+  const sprBytes = fs.readFileSync(path.join(__dirname, '..', 'tools', 'samples', 'poring.spr'));
+  assert.equal(tool.gitBlobSha(actBytes), asset.sourceActSha);
+  assert.equal(tool.gitBlobSha(sprBytes), asset.sourceSprSha);
+  const act = tool.parseAct(actBytes);
+  const spr = tool.parseSpr(sprBytes);
+  assert.equal(act.actions[24].length, 5);
+  assert.equal(Math.round(act.speeds[24] * 40), 160);
+  act.actions[24].forEach(function (layers, index) {
+    assert.equal(layers.length, 1, 'Poring hurt frame must have one layer: ' + index);
+    assert.equal(layers[0].direction, 0, 'Poring hurt frame must use verified direction 0');
+    assert.ok(spr.sprites[layers[0].spriteIndex], 'Poring hurt must use a valid paired SPR frame');
+    assert.equal(Math.abs(layers[0].rotation), 0);
+    assert.ok(Math.abs(layers[0].scaleX - 1) < 0.001);
+    assert.ok(Math.abs(layers[0].scaleY - 1) < 0.001);
+  });
+  const file = fs.readFileSync(path.join(__dirname, '..', 'assets', 'poring_hurt.svg'));
+  assert.equal(file.length, 28191);
+  const sha = crypto.createHash('sha1').update(Buffer.concat([
+    Buffer.from('blob ' + file.length + '\0'), file
+  ])).digest('hex');
+  assert.equal(sha, '34ae789ab040f4e4b28bc5cedcdaf058fb2459ff');
+  const svg = file.toString('utf8');
+  assert.match(svg, /data-mob-id="1002"/);
+  assert.match(svg, /data-act-action-index="24"/);
+  assert.match(svg, /data-frame-count="5"/);
+  assert.match(svg, /data-frame-duration-ms="160"/);
+  assert.match(svg, /受擊逐格動畫/);
+  assert.equal((svg.match(/id="frame-/g) || []).length, 5);
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(appSource, /hurt: \{ asset: 'hurtAnimationAssetId'/);
+  assert.match(appSource, /playMonsterActionAnimation\(hurtMonster, 'hurt'\)/);
+  assert.match(appSource, /monster\.hurtAnimationAssetId\) optionalAnimationIds\.add\(monster\.hurtAnimationAssetId\)/);
 }
 
 function testCriticalEffectManifest() {
@@ -1419,6 +1478,7 @@ testMonsterActSprExportReproducibility();
 testGreenPlantMob1080ActSprIdentity();
 testPoringIdleAndAttackAnimations();
 testLunaticWolfAttackAnimations();
+testPoringHurtAnimation();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
 testSoundEffectManifest();
@@ -1455,4 +1515,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (43 suites).');
+console.log('RO H5 core tests passed (44 suites).');
