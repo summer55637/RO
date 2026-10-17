@@ -1749,7 +1749,7 @@ function testPortableSaveUiWiring() {
   assert.match(coreSource, /回讀比對失敗/);
   const selectionHandler = appSource.split('async function handleSaveFileSelection(event)')[1].split('function cancelImportSave()')[0];
   assert.doesNotMatch(selectionHandler, /localStorage\.setItem/, 'choosing/parsing a file must not write over the local save');
-  assert.match(appSource, /localStorage\.setItem\(SAVE_KEY, serialized\)/, 'storage is written only in the final commit path');
+  assert.match(coreSource, /storage\.setItem\(saveKey, nextText\)/, 'account writes must pass through the tested storage transaction helper');
 }
 
 
