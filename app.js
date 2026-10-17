@@ -1466,12 +1466,14 @@
         head.append(emblem, copy);
         card.appendChild(head);
         if (discovered) {
-          const habitats = (window.ROWorld.maps || []).filter(function (map) {
-            return (map.monsters || []).some(function (entry) { return entry.id === id; });
-          }).map(function (map) { return map.name; });
+          const habitats = window.ROCore.getMonsterEncounterMaps(id, character.baseLevel);
           const habitatLine = document.createElement('p');
           habitatLine.className = 'bestiary-entry-meta';
-          habitatLine.textContent = '出沒地點：' + (habitats.length ? habitats.join('、') : '資料整理中');
+          habitatLine.textContent = '出沒／預估遇敵率（原型設定）：' + (habitats.length ? habitats.map(function (entry) {
+            const percent = Math.round(entry.probability * 1000) / 10;
+            const access = entry.unlocked ? '可進入' : '需 Base Lv. ' + entry.unlockLevel;
+            return entry.mapName + ' ' + percent + '%（' + access + '）';
+          }).join('、') : '資料整理中');
           card.appendChild(habitatLine);
           const drops = Array.isArray(monster.drops) ? monster.drops : [];
           const dropLine = document.createElement('p');
