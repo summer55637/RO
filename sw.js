@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'ro-h5-shell-v37';
+const CACHE_NAME = 'ro-h5-shell-v38';
 const SHELL_FILES = ['./', './index.html', './style.css', './world-data.js', './core.js', './app.js'];
 const SHELL_PATHS = new Set(SHELL_FILES.map(function (file) {
   return new URL(file, self.registration.scope).pathname;
