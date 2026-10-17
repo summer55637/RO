@@ -85,7 +85,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v30/);
+  assert.match(serviceWorker, /ro-h5-shell-v31/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -153,7 +153,7 @@ function testMonsterEncounterMapHints() {
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
   assert.match(html, /MVP 2\.3/);
-  assert.match(sw, /ro-h5-shell-v30/);
+  assert.match(sw, /ro-h5-shell-v31/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -197,7 +197,7 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
   assert.match(html, /MVP 2\.3/);
-  assert.match(sw, /ro-h5-shell-v30/);
+  assert.match(sw, /ro-h5-shell-v31/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -215,7 +215,7 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
   assert.match(html, /MVP 2\.3/);
-  assert.match(sw, /ro-h5-shell-v30/);
+  assert.match(sw, /ro-h5-shell-v31/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -822,6 +822,15 @@ function testMonsterIdleAnimationAssets() {
   assert.match(appSource, /if \(optionalAnimationAssets\.length\)/, 'animation failure must not block map entry');
   assert.match(appSource, /getAttribute\('src'\) !== monsterArtworkSource/, 'do not restart the SVG timeline every battle tick');
   assert.match(appSource, /同一物種的已驗證靜態圖/);
+  const savedVisualStart = appSource.indexOf('async function ensureSavedBattleVisuals(target)');
+  const savedVisualEnd = appSource.indexOf('\n  function handleCreate', savedVisualStart);
+  assert.ok(savedVisualStart >= 0 && savedVisualEnd > savedVisualStart, 'saved battle visual loader must exist');
+  const savedBattleVisuals = appSource.slice(savedVisualStart, savedVisualEnd);
+  assert.match(savedBattleVisuals, /optionalAnimationIds/, 'resuming a saved battle should discover animation assets');
+  assert.match(savedBattleVisuals, /optionalAnimationAssets = ASSETS\.filter/, 'saved battles should find animation assets');
+  assert.match(savedBattleVisuals, /ensureAssets\(\[asset\], false\)/, 'animation downloads stay optional and independent');
+  assert.match(savedBattleVisuals, /character\.id !== targetCharacterId/, 'async loads must not change a different active character');
+  assert.match(savedBattleVisuals, /renderGame\(\)/, 'refresh the resumed battle when animation is ready');
   const sources = fs.readFileSync(path.join(__dirname, '..', 'assets', 'SOURCES.md'), 'utf8');
   assert.match(sources, /MVP 2\.3 真實怪物待機動畫素材指紋/);
 }
@@ -1155,7 +1164,7 @@ function testConsumableUseAndUiWiring() {
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
   assert.match(html, /MVP 2\.3/);
-  assert.match(sw, /ro-h5-shell-v30/);
+  assert.match(sw, /ro-h5-shell-v31/);
 }
 
 testMonsterArtworkIdentityMapping();
