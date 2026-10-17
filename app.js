@@ -623,6 +623,7 @@
     if (saveConflictDetected) return;
     saveConflictDetected = true;
     conflictLatestRaw = currentRaw;
+    if (account && character && activeSlot !== null) account.slots[activeSlot] = character;
     $('#save-conflict-banner').classList.remove('hidden');
     $('#save-status').textContent = '存檔衝突：寫入已暫停';
   }
@@ -633,10 +634,13 @@
 
   function readAccount() {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (character && activeSlot !== null && lastPersistedRaw !== undefined && raw !== lastPersistedRaw) {
-      markSaveConflict(raw);
-      // Keep the active tab's in-memory data so it can be exported as a recovery copy.
-      if (account) return account;
+    if (character && activeSlot !== null) {
+      if (saveConflictDetected) return account || window.ROCore.emptyAccount();
+      if (lastPersistedRaw !== undefined && raw !== lastPersistedRaw) {
+        markSaveConflict(raw);
+        // Keep the active tab's in-memory data so it can be exported as a recovery copy.
+        if (account) return account;
+      }
     }
     if (!raw) {
       if ((!character || activeSlot === null) && !saveConflictDetected) lastPersistedRaw = null;
@@ -1474,7 +1478,11 @@
   }
 
   function returnToSlots() {
-    
+    if (saveConflictDetected) {
+      showToast('存檔衝突時請先下載恢復備份，再使用「載入最新存檔」。');
+      $('#save-conflict-banner').classList.remove('hidden');
+      return;
+    }
     if (!window.confirm('返回角色選擇？目前角色會先保存。')) return;
     stopBattleLoop();
     stopMapMusic();
