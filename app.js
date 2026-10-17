@@ -4,9 +4,6 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
   const SAVE_KEY = 'ro-h5-account-v1';
-  const LOCK_KEY = 'ro-h5-active-tab-v1';
-  const LOCK_STALE_AFTER_MS = 12000;
-  const LOCK_RECHECK_INTERVAL_MS = 2500;
   const DB_NAME = 'ro-h5-assets-v1';
   const DB_STORE = 'assets';
   const DOWNLOAD_STATE_KEY = 'ro-h5-download-state-v1';
@@ -64,12 +61,8 @@
   let account = null;
   let activeSlot = null;
   let character = null;
-  let sessionToken = makeToken();
-  let hasControl = false;
   let battleTimer = null;
-  let heartbeatTimer = null;
   let autosaveTimer = null;
-  let lockRecheckTimer = null;
   let assetDb = null;
   let assetUrls = {};
   let activeDetail = 'status';
@@ -78,10 +71,6 @@
   let hiddenAt = 0;
   let resourceBusy = false;
   let lastNetworkOffline = (typeof navigator !== 'undefined' && navigator.onLine === false);
-
-  function makeToken() {
-    return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) + '-' + Math.random().toString(36).slice(2);
-  }
 
   function formatNumber(value) {
     return Math.floor(Number(value) || 0).toLocaleString('en-US');
@@ -567,7 +556,7 @@
     try {
       await ensureAssets(STARTER_ASSETS, true);
       await registerServiceWorker();
-      enterSlotsWithLock(false);
+      enterSlots();
     } catch (error) {
       setInstallMessage((error && error.message ? error.message : '必要素材準備失敗。') + ' 已完成驗證的其他素材會保留。', true);
       button.textContent = '手動重試下載';
@@ -596,72 +585,7 @@
     try { return JSON.parse(value); } catch (_) { return null; }
   }
 
-  function readLock() {
-    try {
-      const raw = localStorage.getItem(LOCK_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) { return null; }
-  }
-
-  function lockAgeMs(lock, now) {
-    if (!lock) return LOCK_STALE_AFTER_MS;
-    const updatedAt = Number(lock.updatedAt);
-    if (!Number.isFinite(updatedAt) || updatedAt <= 0) return LOCK_STALE_AFTER_MS;
-    const age = Number(now || Date.now()) - updatedAt;
-    // A clock adjustment can make an obsolete heartbeat look like it came from the future.
-    if (age < -LOCK_STALE_AFTER_MS) return LOCK_STALE_AFTER_MS;
-    return Math.max(0, age);
-  }
-
-  function clearLockRecheck() {
-    if (lockRecheckTimer) window.clearTimeout(lockRecheckTimer);
-    lockRecheckTimer = null;
-  }
-
-  function scheduleLockRecheck() {
-    clearLockRecheck();
-    lockRecheckTimer = window.setTimeout(function () {
-      lockRecheckTimer = null;
-      if ($('#screen-lock').classList.contains('active')) enterSlotsWithLock(false);
-    }, LOCK_RECHECK_INTERVAL_MS);
-  }
-
-  function isLockOwner() {
-    if (!hasControl) return false;
-    const lock = readLock();
-    return Boolean(lock && lock.token === sessionToken);
-  }
-
-  function acquireLock(force) {
-    const now = Date.now();
-    const current = readLock();
-    if (current && current.token !== sessionToken && lockAgeMs(current, now) < LOCK_STALE_AFTER_MS && !force) return false;
-    const generation = current && Number.isFinite(current.generation) ? current.generation + 1 : 1;
-    localStorage.setItem(LOCK_KEY, JSON.stringify({ token: sessionToken, updatedAt: now, generation: generation }));
-    hasControl = true;
-    return true;
-  }
-
-  function enterSlotsWithLock(force) {
-    let acquired = false;
-    try { acquired = acquireLock(Boolean(force)); } catch (error) {
-      fatal(error.message || '無法取得帳號操作權。');
-      return;
-    }
-    if (!acquired) {
-      const lock = readLock();
-      const age = lockAgeMs(lock, Date.now());
-      const stale = age >= LOCK_STALE_AFTER_MS;
-      $('#lock-message').textContent = stale
-        ? '已偵測到上一個分頁停止回應，正在自動恢復操作權…'
-        : '若另一個分頁仍在遊玩，為保護存檔會暫時阻止同時寫入；若它已關閉或無回應，本頁會自動重新檢查並接管，不必等待 60 秒。';
-      $('#btn-takeover').textContent = stale ? '立即接管逾時分頁' : '確認接管操作權';
-      scheduleLockRecheck();
-      setScreen('screen-lock');
-      return;
-    }
-    clearLockRecheck();
-    startHeartbeat();
+  function enterSlots() {
     startAutosave();
     try {
       account = readAccount();
@@ -669,54 +593,15 @@
       updateNetworkStatus();
       renderSlots();
     } catch (error) {
-      releaseLock();
       fatal(error.message || '存檔無法安全讀取。');
     }
-  }
-
-  function startHeartbeat() {
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
-    heartbeatTimer = setInterval(function () {
-      if (!hasControl) return;
-      const current = readLock();
-      if (!current || current.token !== sessionToken) {
-        loseControl();
-        return;
-      }
-      try {
-        current.updatedAt = Date.now();
-        localStorage.setItem(LOCK_KEY, JSON.stringify(current));
-      } catch (_) { loseControl(); }
-    }, 2000);
   }
 
   function startAutosave() {
     if (autosaveTimer) clearInterval(autosaveTimer);
     autosaveTimer = setInterval(function () {
-      if (!isLockOwner()) {
-        if (hasControl) loseControl();
-        return;
-      }
       if (character && activeSlot !== null) persistCurrent();
     }, 5000);
-  }
-
-  function releaseLock() {
-    clearLockRecheck();
-    if (!isLockOwner()) { hasControl = false; return; }
-    try { localStorage.removeItem(LOCK_KEY); } catch (_) { /* 關閉時盡力釋放 */ }
-    hasControl = false;
-  }
-
-  function loseControl() {
-    clearLockRecheck();
-    hasControl = false;
-    stopBattleLoop();
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
-    if (autosaveTimer) clearInterval(autosaveTimer);
-    heartbeatTimer = null;
-    autosaveTimer = null;
-    setScreen('screen-lost');
   }
 
   function readAccount() {
@@ -736,10 +621,6 @@
   }
 
   function writeAccount() {
-    if (!isLockOwner()) {
-      loseControl();
-      return false;
-    }
     try {
       account.updatedAt = Date.now();
       localStorage.setItem(SAVE_KEY, JSON.stringify(account));
@@ -753,7 +634,7 @@
   }
 
   function persistCurrent() {
-    if (!isLockOwner() || !account) return false;
+    if (!account) return false;
     if (character && activeSlot !== null) {
       character.lastSavedAt = Date.now();
       account.slots[activeSlot] = character;
@@ -1051,7 +932,7 @@
 
   function handleCreate(event) {
     event.preventDefault();
-    if (!isLockOwner()) return loseControl();
+    
     account = readAccount();
     const validation = window.ROCore.validateCharacterName($('#create-name').value, existingNames(activeSlot));
     $('#create-name-message').textContent = validation.reason || '名稱可以使用。';
@@ -1083,7 +964,7 @@
   }
 
   async function openSlot(index) {
-    if (!isLockOwner()) return loseControl();
+    
     account = readAccount();
     const item = account.slots[index];
     if (!item) return openCreate(index);
@@ -1101,14 +982,14 @@
     if (!writeAccount()) return;
     if (character.battle && character.battle.map) {
       await ensureSavedBattleVisuals(character);
-      if (!isLockOwner()) return loseControl();
+      
       setScreen('screen-battle');
       activeDetail = 'status';
       renderGame();
       startBattleLoop();
     } else {
       await ensurePlayerSprite(character);
-      if (!isLockOwner()) return loseControl();
+      
       renderCamp();
       setScreen('screen-camp');
     }
@@ -1194,7 +1075,7 @@
   }
 
   async function enterMap(mapId) {
-    if (!character || !isLockOwner()) return loseControl();
+    if (!character) return;
     const map = window.ROCore.getMap(mapId);
     if (!map) {
       $('#map-load-message').textContent = '找不到這張地圖的資料。';
@@ -1217,7 +1098,7 @@
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       await ensureAssets(neededAssets, false);
       await ensurePlayerSprite(character);
-      if (!isLockOwner()) return loseControl();
+      
       if (!window.ROCore.startMap(character, map.id)) throw new Error('目前等級尚未符合地圖需求。');
       character.lastSavedAt = Date.now();
       const monster = window.ROCore.getMonster(character.battle.currentMonsterId);
@@ -1237,7 +1118,7 @@
   }
 
   function returnToCamp() {
-    if (!character || !isLockOwner()) return;
+    if (!character) return;
     if (!window.confirm('返回安全營地？已獲得的經驗、Zeny 與掉落會保留；目前未完成的怪物戰鬥將重置。')) return;
     stopBattleLoop();
     stopMapMusic();
@@ -1253,7 +1134,7 @@
   }
 
   function returnToSlots() {
-    if (!isLockOwner()) return loseControl();
+    
     if (!window.confirm('返回角色選擇？目前角色會先保存。')) return;
     stopBattleLoop();
     stopMapMusic();
@@ -1267,9 +1148,9 @@
 
   function startBattleLoop() {
     stopBattleLoop();
-    if (!character || !character.battle || !character.battle.map || character.battle.paused || !isLockOwner()) return;
+    if (!character || !character.battle || !character.battle.map || character.battle.paused) return;
     battleTimer = setInterval(function () {
-      if (!isLockOwner()) return loseControl();
+      
       const rounds = account.speed || 1;
       for (let index = 0; index < rounds; index += 1) {
         const result = window.ROCore.stepCombat(character, account);
@@ -1622,7 +1503,7 @@
   }
 
   function allocateSkillPoint(skillId) {
-    if (!character || activeSlot === null || !isLockOwner()) return loseControl();
+    if (!character || activeSlot === null) return;
     account = readAccount();
     const latest = account.slots[activeSlot];
     if (!latest) return;
@@ -1688,7 +1569,7 @@
   }
 
   function allocateStatPoint(key) {
-    if (!character || activeSlot === null || !isLockOwner()) return loseControl();
+    if (!character || activeSlot === null) return;
     account = readAccount();
     const latest = account.slots[activeSlot];
     if (!latest) return;
@@ -1708,7 +1589,7 @@
 
   async function changeCharacterJob(jobId) {
     if (!character || activeSlot === null) return;
-    if (!isLockOwner()) return loseControl();
+    
 
     try {
       account = readAccount();
@@ -1754,7 +1635,7 @@
     showToast('轉職成功：' + character.jobName);
     const promotedCharacterId = character.id;
     await ensurePlayerSprite(character);
-    if (character && character.id === promotedCharacterId && isLockOwner()) renderGame();
+    if (character && character.id === promotedCharacterId) renderGame();
   }
 
   function setDetail(name) {
@@ -1767,7 +1648,7 @@
   }
 
   function changeSpeed(value) {
-    if (!isLockOwner()) return loseControl();
+    
     const speed = Number(value);
     if (![1, 2, 3].includes(speed)) return;
     account = readAccount();
@@ -1784,7 +1665,7 @@
   }
 
   function togglePause() {
-    if (!character || !isLockOwner()) return;
+    if (!character) return;
     character.battle.paused = !character.battle.paused;
     character.lastSavedAt = Date.now();
     persistCurrent();
@@ -1853,7 +1734,7 @@
   }
 
   function confirmRename() {
-    if (!isLockOwner() || pendingRenameSlot === null) return loseControl();
+    if (pendingRenameSlot === null) return;
     account = readAccount();
     const validation = window.ROCore.validateCharacterName($('#rename-name').value, existingNames(pendingRenameSlot));
     if (!validation.ok || account.gold < 50000) {
@@ -1896,7 +1777,7 @@
   }
 
   function confirmDelete() {
-    if (!isLockOwner() || pendingDeleteSlot === null) return loseControl();
+    if (pendingDeleteSlot === null) return;
     account = readAccount();
     const item = account.slots[pendingDeleteSlot];
     if (!item || $('#delete-name').value !== item.name || !$('#delete-check').checked) return checkDeleteInput();
@@ -1922,7 +1803,7 @@
     if (!document.hidden) {
       if (!hiddenAt) return;
       hiddenAt = 0;
-      if (!isLockOwner()) return loseControl();
+      
       if (character && activeSlot !== null) {
         try {
           account = readAccount();
@@ -1947,28 +1828,13 @@
       return;
     }
     hiddenAt = Date.now();
-    if (character && activeSlot !== null && isLockOwner()) persistCurrent();
-  }
-
-  function onStorage(event) {
-    if (event.key !== LOCK_KEY) return;
-    const lock = event.newValue ? safeJson(event.newValue) : null;
-    if (hasControl && (!lock || lock.token !== sessionToken)) {
-      loseControl();
-    } else if (!hasControl && !lock && $('#screen-lock').classList.contains('active')) {
-      enterSlotsWithLock(false);
-    }
+    if (character && activeSlot !== null) persistCurrent();
   }
 
   function fatal(message) {
-    clearLockRecheck();
     stopBattleLoop();
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
     if (autosaveTimer) clearInterval(autosaveTimer);
-    heartbeatTimer = null;
     autosaveTimer = null;
-    if (isLockOwner()) releaseLock();
-    else hasControl = false;
     $('#fatal-message').textContent = message;
     setScreen('screen-error');
   }
@@ -2014,17 +1880,13 @@
     $('#delete-check').addEventListener('change', checkDeleteInput);
     $('#btn-delete-cancel').addEventListener('click', function () { $('#delete-dialog').close(); pendingDeleteSlot = null; });
     $('#btn-delete-confirm').addEventListener('click', confirmDelete);
-    $('#btn-takeover').addEventListener('click', function () { clearLockRecheck(); enterSlotsWithLock(true); });
-    $('#btn-lock-recheck').addEventListener('click', function () { enterSlotsWithLock(false); });
     $('#btn-lost-reload').addEventListener('click', function () { window.location.reload(); });
     $('#btn-error-reload').addEventListener('click', function () { window.location.reload(); });
-    window.addEventListener('storage', onStorage);
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
     window.addEventListener('beforeunload', function () {
-      if (character && activeSlot !== null && isLockOwner()) persistCurrent();
+      if (character && activeSlot !== null) persistCurrent();
       stopBattleLoop();
-      releaseLock();
     });
     document.addEventListener('visibilitychange', handleVisibility);
   }
@@ -2042,7 +1904,7 @@
       const ready = await loadCachedResources();
       if (ready) {
         setInstallMessage('已找到必要素材快取，驗證通過。', false);
-        enterSlotsWithLock(false);
+        enterSlots();
       } else {
         setScreen('screen-install');
         setInstallMessage('首次使用請按下按鈕下載並驗證必要素材。', false);
