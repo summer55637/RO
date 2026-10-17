@@ -163,7 +163,7 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.match(appSource, /assetId && assetUrls\[assetId\]/, 'bestiary must use only already validated, cached asset URLs');
   assert.match(appSource, /monster\.id === 'thief_bug' && monster\.assetFallback === 'vector'/);
   assert.match(appSource, /Never let a missing portrait silently fall back to the Poring image/);
-  assert.match(appSource, /Mob ID '\+ \(monster\.sourceMobId \|\| '未核對'\)/, 'discovered monsters show their Mob ID');
+  assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
   assert.match(html, /MVP 1\.9/);
