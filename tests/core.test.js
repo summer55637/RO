@@ -9,14 +9,23 @@ const core = require('../core.js');
 function testAutomaticUpdateStrategy() {
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v11/);
+  assert.match(serviceWorker, /ro-h5-shell-v12/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/, 'open tabs should reload after a shell update');
   assert.match(appSource, /updateViaCache: 'none'/, 'service worker script updates should bypass HTTP cache');
   assert.match(appSource, /registration\.update\(\)/, 'check for service worker updates on each launch');
+  assert.match(appSource, /const LOCK_STALE_AFTER_MS = 12000/);
+  assert.match(appSource, /const LOCK_RECHECK_INTERVAL_MS = 2500/);
+  assert.match(appSource, /function lockAgeMs\(lock, now\)/);
+  assert.match(appSource, /function scheduleLockRecheck\(\)/);
+  assert.match(appSource, /scheduleLockRecheck\(\);/);
+  assert.match(appSource, /if \(\$\('#screen-lock'\)\.classList\.contains\('active'\)\) enterSlotsWithLock\(false\)/);
+  assert.match(html, /正在確認存檔操作權/);
+  assert.doesNotMatch(html, /另一個分頁正在使用存檔/);
 }
 
 function testNameRules() {
