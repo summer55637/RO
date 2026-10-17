@@ -747,3 +747,11 @@
 - 在角色選擇頁與安全停止畫面新增「還原上一次安全備份」入口。沒有通過驗證的備份時按鈕停用；實際還原前會提示可能回退數秒，並要求玩家確認。成功後回到角色選擇頁、重新讀取並驗證存檔；失敗時保留備份並顯示原因。
 - 這是單一上一版備份，不是長期歷史版本或遠端備份。若瀏覽器同時寫入競爭發生在最後一次比對與提交之間，仍無法由 `localStorage` 保證消除，因此保留衝突偵測及單一分頁修改建議。
 - 新增交易測試：備份寫入失敗、主存檔部分寫入後拋錯、備份寫入期間其他分頁更新、舊基準值防覆蓋，以及拒絕覆蓋已損壞主存檔。Service Worker shell cache 升至 v40；遊戲顯示版本升為 MVP 3.1。玩家角色、技能、裝備、卡片、共用倉庫、Zeny、等級與地圖進度欄位均未改動。
+
+
+## 55. 波利／狼進場移動動畫（MVP 3.2，2026-10-18）
+
+- 新增兩個非必要、按需載入的怪物移動素材。波利 Mob 1002 使用固定版 [adsonpleal/ragassets ACT／SPR fixture](https://github.com/adsonpleal/ragassets/tree/4de4fa747431979d35c747d7edd549a872efd9e1/gateway/internal/render/engine/testdata/fixtures/data/sprite/몬스터) 的 action 8：10 格、每格 40ms；狼 Mob 1013 使用固定版 [PyRO-Tools](https://github.com/MyGodIsHe/pyro-tools/tree/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data) 的 action 8：8 格、每格 80ms。
+- 已核對 ACT／SPR 配對的來源 commit、Git blob SHA、畫格索引、方向 0、每格單一圖層、sprite 引用與無旋轉／縮放變換。產物 assets/poring_walk.svg 為 50,257 bytes（Git blob SHA-1 4d84a80fa54aed07db0eb4ceb8ffb1592adad1c9）；assets/wolf_walk.svg 為 140,374 bytes（Git blob SHA-1 0180f648a1d44961d2561a1d90006b1e6e45be03）。
+- 擊倒後以核心已選出的下一隻怪物 ID 尋找相符的移動動畫，播放一小段時間後還原該怪物既有待機圖。若素材未載入或驗證失敗，仍使用原有的同物種靜態／待機素材，不阻擋戰鬥；不改變傷害、EXP、掉落、Zeny 或離線結算規則。
+- 新增可重現輸出與物種／action／frame／時間／hash／runtime wiring 回歸測試，Service Worker shell cache 升至 v41。沒有修改 ro-h5-account-v1、ro-h5-account-backup-v1、存檔格式或玩家既有進度欄位。
