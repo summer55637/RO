@@ -155,7 +155,7 @@ const MONSTERS = [
     actPath: 'tools/samples/poring.act',
     sprPath: 'tools/samples/poring.spr',
     actSha: '26717393629e410910ff080d204e930d945328cd',
-    sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb2459ff',
+    sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb639ad7',
     actionIndex: 8,
     frames: 10,
     frameMs: 40,
