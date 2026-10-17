@@ -10,7 +10,7 @@ function testAutomaticUpdateStrategy() {
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v10/);
+  assert.match(serviceWorker, /ro-h5-shell-v11/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -399,6 +399,17 @@ function testSoundEffectWiring() {
   assert.match(html, /aria-pressed="true"/);
   assert.match(css, /skill-fx-magic/);
   assert.match(css, /skill-hit-poison/);
+  assert.match(appSource, /function showMonsterDefeatEffect\(monsterName\)/);
+  assert.match(appSource, /function showPlayerHitEffect\(damage, playerDown\)/);
+  assert.match(appSource, /function playHeroSkillAnimation\(kind\)/);
+  assert.match(appSource, /if \(result\.killed\) showMonsterDefeatEffect\(result\.monsterName\)/);
+  assert.match(html, /id="monster-defeat-effect"/);
+  assert.match(html, /id="player-hit-effect"/);
+  assert.match(css, /monsterIdleBreathe/);
+  assert.match(css, /monsterDefeatBurst/);
+  assert.match(css, /playerHitFloat/);
+  assert.match(css, /heroCastMagic/);
+  assert.match(css, /prefers-reduced-motion:reduce/);
 }
 function testSkillTreeProgression() {
   const expectedJobs = ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'];
@@ -521,7 +532,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 0\.7/);
+  assert.match(html, /MVP 0\.8/);
 }
 
 testAutomaticUpdateStrategy();

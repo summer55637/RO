@@ -83,3 +83,35 @@
 @keyframes monsterSkillHeavy{0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(7px) scale(.91)}65%{transform:translateY(-3px) scale(1.03)}}
 @keyframes monsterSkillPoison{0%,100%{transform:translateX(0);filter:brightness(1)}25%{transform:translateX(-5px);filter:brightness(1.5) hue-rotate(65deg)}70%{transform:translateX(4px);filter:brightness(.8) hue-rotate(100deg)}}
 @media(prefers-reduced-motion:reduce){.scene-effect.skill-fx-slash.show::before,.scene-effect.skill-fx-slash.show::after,.scene-effect.skill-fx-magic.show::before,.scene-effect.skill-fx-magic.show::after,.scene-effect.skill-fx-arrow.show::before,.scene-effect.skill-fx-arrow.show::after,.scene-effect.skill-fx-heavy.show::before,.scene-effect.skill-fx-heavy.show::after,.scene-effect.skill-fx-poison.show::before,.scene-effect.skill-fx-poison.show::after,.scene-effect.skill-fx-heal.show::before,.scene-effect.skill-fx-heal.show::after{animation-duration:.01ms}}
+
+
+/* MVP 0.8: clearer monster life-cycle and incoming-damage feedback. */
+.monster-actor img{transform-origin:center bottom;animation:monsterIdleBreathe 2.3s ease-in-out infinite}
+.monster-actor.hit img{animation:monsterHitFlash .22s ease-out;filter:brightness(1.85) sepia(.35) drop-shadow(0 0 8px rgba(255,210,190,.8))}
+@keyframes monsterIdleBreathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.025)}}
+@keyframes monsterHitFlash{0%,100%{transform:translateX(0) scale(1);filter:brightness(1)}28%{transform:translateX(-5px) scale(.93);filter:brightness(2) sepia(.5)}62%{transform:translateX(3px) scale(1.02)}}
+.monster-defeat-effect{position:absolute;right:calc(16% + 1px);bottom:82px;width:132px;height:108px;display:grid;place-items:center;z-index:10;opacity:0;pointer-events:none;color:#fff4b0;font-size:15px;font-weight:900;text-align:center;text-shadow:0 0 8px #e9a348,0 2px 3px #351e13;transform:scale(.25) rotate(-12deg)}
+.monster-defeat-effect.show{animation:monsterDefeatBurst .62s cubic-bezier(.16,.78,.25,1) both}
+.monster-defeat-effect::before,.monster-defeat-effect::after{content:"";position:absolute;left:50%;top:50%;width:54px;height:54px;border:3px solid rgba(255,224,127,.95);border-radius:50%;box-shadow:0 0 12px rgba(255,174,64,.7);opacity:0;transform:translate(-50%,-50%) scale(.2)}
+.monster-defeat-effect::after{width:82px;height:82px;border-color:rgba(255,245,185,.8);border-style:dashed}
+.monster-defeat-effect.show::before{animation:defeatRing .58s ease-out both}
+.monster-defeat-effect.show::after{animation:defeatRing .62s .04s ease-out both}
+@keyframes monsterDefeatBurst{0%{opacity:0;transform:scale(.25) rotate(-12deg)}18%{opacity:1;transform:scale(1.15) rotate(4deg)}44%{opacity:1;transform:scale(1) rotate(0)}100%{opacity:0;transform:scale(1.22) translateY(-13px) rotate(5deg)}}
+@keyframes defeatRing{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}24%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.65)}}
+.player-hit-effect{position:absolute;left:calc(13% + 12px);bottom:125px;z-index:10;min-width:68px;opacity:0;pointer-events:none;text-align:center;color:#ffb5a9;font-size:15px;font-weight:900;text-shadow:0 0 7px #8a2c2c,0 1px 3px #1d1212;transform:translateY(9px) scale(.7)}
+.player-hit-effect.show{animation:playerHitFloat .58s ease-out both}
+.player-hit-effect.down{color:#fff0b0;text-shadow:0 0 8px #d75a49,0 1px 3px #1d1212}
+@keyframes playerHitFloat{0%{opacity:0;transform:translateY(9px) scale(.7)}18%{opacity:1;transform:translateY(0) scale(1.12)}70%{opacity:1;transform:translateY(-10px) scale(1)}100%{opacity:0;transform:translateY(-25px) scale(.92)}}
+.hero-character.skill-cast-slash{animation:heroCastSlash .38s ease-out}
+.hero-character.skill-cast-magic{animation:heroCastMagic .42s ease-out;filter:drop-shadow(0 0 9px rgba(116,197,255,.95))}
+.hero-character.skill-cast-arrow{animation:heroCastArrow .34s ease-out}
+.hero-character.skill-cast-heavy{animation:heroCastHeavy .38s ease-out;filter:drop-shadow(0 0 8px rgba(255,174,78,.9))}
+.hero-character.skill-cast-poison{animation:heroCastPoison .4s ease-out;filter:drop-shadow(0 0 8px rgba(177,116,232,.95))}
+.hero-character.skill-cast-heal{animation:heroCastHeal .42s ease-out;filter:drop-shadow(0 0 9px rgba(117,228,156,.95))}
+@keyframes heroCastSlash{0%,100%{transform:translateX(0) rotate(0)}35%{transform:translateX(10px) rotate(-7deg)}70%{transform:translateX(3px) rotate(4deg)}}
+@keyframes heroCastMagic{0%,100%{transform:scale(1);filter:brightness(1)}35%{transform:scale(.94);filter:brightness(1.5)}65%{transform:scale(1.06)}}
+@keyframes heroCastArrow{0%,100%{transform:translateX(0)}36%{transform:translateX(8px) rotate(3deg)}65%{transform:translateX(-2px)}}
+@keyframes heroCastHeavy{0%,100%{transform:translateY(0) scale(1)}38%{transform:translateY(4px) scale(.92)}70%{transform:translateY(-3px) scale(1.04)}}
+@keyframes heroCastPoison{0%,100%{transform:translateX(0);filter:brightness(1)}35%{transform:translateX(3px);filter:brightness(1.35) hue-rotate(50deg)}70%{transform:translateX(-2px);filter:brightness(1.1) hue-rotate(90deg)}}
+@keyframes heroCastHeal{0%,100%{transform:translateY(0);filter:brightness(1)}32%{transform:translateY(-4px);filter:brightness(1.35)}68%{transform:translateY(-2px);filter:brightness(1.15)}}
+@media(prefers-reduced-motion:reduce){.monster-actor img{animation:none}.monster-defeat-effect.show,.monster-defeat-effect.show::before,.monster-defeat-effect.show::after,.player-hit-effect.show,.hero-character.skill-cast-slash,.hero-character.skill-cast-magic,.hero-character.skill-cast-arrow,.hero-character.skill-cast-heavy,.hero-character.skill-cast-poison,.hero-character.skill-cast-heal{animation-duration:.01ms}}
