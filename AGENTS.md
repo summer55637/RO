@@ -22,7 +22,7 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.6 is merged into `main` at commit `21bd563fa8079017d93026c2da77c4db0e686e91` and deployed to GitHub Pages. In addition to the MVP 0.5 assets and sound effects, the game now has prototype skill trees for novice and all six first-job classes, job-level skill points, skill prerequisites, passive bonuses and auto-cast skills. Service Worker shell cache is v9; app shell remains network-first with offline fallback, launch-time update checks, and automatic tab reload on upgrades. CI and the MVP 0.6 deployment passed. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
+MVP 0.7 is being developed from `main` commit `9def3b576f14d3f7f84d458a84c05bf493226c0b`, following the merged MVP 0.6 skill-tree milestone. This feature branch adds class/skill-specific sound effects, CSS skill-impact visuals, and lazy-loaded map background music; existing local saves remain unchanged. Service Worker shell cache is v10 in the MVP 0.7 feature branch. The latest verified main deployment before this milestone succeeded. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
