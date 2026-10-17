@@ -741,7 +741,7 @@
     }
     if (result.monsterDamage) appendCharacterLog('受到' + result.monsterName + ' ' + result.monsterDamage + ' 點傷害。', result.playerDown ? 'warning' : '');
     if (result.killed) {
-      let message = '擊倒' + result.monsterName + '：Base EXP +4、Job EXP +' + result.jobExpGained + '、' + result.goldGained + ' Zeny。';
+      let message = '擊倒' + result.monsterName + '：Base EXP +' + result.expGained + '、Job EXP +' + result.jobExpGained + '、' + result.goldGained + ' Zeny。';
       if (result.drops.length) message += ' 掉落：' + result.drops.join('、') + '。';
       appendCharacterLog(message, 'important');
       if (result.levelUps.length) appendCharacterLog('Base 等級提升至 ' + result.levelUps[result.levelUps.length - 1] + '。', 'important');
