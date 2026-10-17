@@ -44,6 +44,7 @@
     character.jobLevel = 1;
     character.jobExp = 0;
     character.jobNotice = false;
+    character.jobCapReached = false;
     return { ok: true, jobId: job.id, jobName: job.name };
   }
 
@@ -127,6 +128,7 @@
       personalItems: {},
       logs: [],
       jobNotice: false,
+      jobCapReached: false,
       pendingReport: null,
       lastSavedAt: now
     };
@@ -288,8 +290,11 @@
       }
       if (character.jobLevel >= getJobLevelCap(character)) {
         character.jobExp = 0;
-        if (!character.jobNotice) result.jobCapped = true;
-        character.jobNotice = true;
+        if (!character.jobCapReached) {
+          result.jobCapped = true;
+          character.jobNotice = true;
+          character.jobCapReached = true;
+        }
       }
 
       const nextMonster = chooseMonster(character.battle.map, random);
