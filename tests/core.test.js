@@ -190,6 +190,14 @@ function testFirstJobCombatPassives() {
   assert.equal(capped.jobLevel, 50);
   assert.equal(capped.jobExp, 0);
   assert.equal(capResult.jobCapped, true);
+  assert.equal(capped.jobCapReached, true);
+
+  capped.jobNotice = false; // The player has inspected the job panel.
+  capped.battle.monsterHp = 1;
+  capped.battle.monsterMaxHp = 1;
+  const repeatCapResult = core.stepCombat(capped, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(repeatCapResult.jobCapped, false);
+  assert.equal(capped.jobNotice, false, 'dismissed cap notice should stay dismissed');
 }
 
 function testAssetManifestCoverage() {
