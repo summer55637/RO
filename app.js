@@ -1007,9 +1007,11 @@
       kills: (oldReport.kills || 0) + (newReport.kills || 0),
       levelUps: (oldReport.levelUps || []).concat(newReport.levelUps || []),
       drops: Object.assign({}, oldReport.drops || {}),
+      equipmentDrops: Object.assign({}, oldReport.equipmentDrops || {}),
       jobCapped: Boolean(oldReport.jobCapped || newReport.jobCapped)
     };
     Object.keys(newReport.drops || {}).forEach(function (key) { merged.drops[key] = (merged.drops[key] || 0) + newReport.drops[key]; });
+    Object.keys(newReport.equipmentDrops || {}).forEach(function (key) { merged.equipmentDrops[key] = (merged.equipmentDrops[key] || 0) + newReport.equipmentDrops[key]; });
     return merged;
   }
 
@@ -1879,7 +1881,8 @@
       ['Job EXP', '+' + formatNumber(report.jobExpGained)],
       ['共用 Zeny', '+' + formatNumber(report.goldGained)],
       ['Base 等級', (report.levelUps && report.levelUps.length ? 'Lv. ' + report.levelUps[0] + (report.levelUps.length > 1 ? ' → ' + report.levelUps[report.levelUps.length - 1] : '') : '無變化')],
-      ['掉落', Object.keys(report.drops || {}).length ? Object.entries(report.drops).map(function (entry) { return entry[0] + ' ×' + entry[1]; }).join('、') : '無物品']
+      ['材料／卡片', Object.keys(report.drops || {}).length ? Object.entries(report.drops).map(function (entry) { return entry[0] + ' ×' + entry[1]; }).join('、') : '無物品'],
+      ['裝備', Object.keys(report.equipmentDrops || {}).length ? Object.entries(report.equipmentDrops).map(function (entry) { return entry[0] + ' ×' + entry[1]; }).join('、') : '無裝備']
     ].forEach(function (row) {
       const card = document.createElement('div');
       card.className = 'summary-stat';
