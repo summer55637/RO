@@ -211,6 +211,26 @@ function testAssetManifestCoverage() {
     assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
     assert.ok(asset.bytes > 0);
   });
+  const spriteGroups = world.playerSpriteFrames;
+  assert.equal(Object.keys(spriteGroups).length, 14, 'all six first jobs plus novice need both gender groups');
+  let totalFrames = 0;
+  Object.entries(spriteGroups).forEach(function (entry) {
+    const group = entry[0];
+    const frameIds = entry[1];
+    assert.ok(frameIds.length >= 6 && frameIds.length <= 9, 'unexpected frame count for ' + group);
+    assert.equal(frameIds[0], 'player_' + group, 'frame zero must reuse the existing preview asset');
+    frameIds.forEach(function (id, index) {
+      assert.ok(assetIds.has(id), 'missing animation frame asset: ' + id);
+      const asset = world.assets.find(function (candidate) { return candidate.id === id; });
+      assert.ok(asset.assetKind === 'character-frame' || asset.assetKind === 'character');
+      assert.equal(asset.approvalStatus, 'owner-authorized');
+      if (index > 0) assert.equal(asset.spriteGroup, group);
+      totalFrames += 1;
+    });
+  });
+  assert.equal(totalFrames, 120, 'all available frames from the 14 source folders should be registered');
+  assert.ok(world.playerAnimationFrameIntervalMs >= 80);
+  assert.equal(world.animationSource, 'nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940');
   world.maps.forEach(function (map) {
     assert.ok(assetIds.has(map.backgroundAssetId), 'missing map background asset: ' + map.id);
     map.monsters.forEach(function (entry) {
@@ -248,7 +268,24 @@ function testExpandedWorldContent() {
   assert.equal(character.battle.currentMonsterId, 'thief_bug');
 }
 
+function testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences() {
+  const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
+  Object.entries(world.playerSpriteFrames).forEach(function (entry) {
+    entry[1].forEach(function (assetId, index) {
+      const asset = assetMap.get(assetId);
+      assert.ok(asset, 'sprite references missing asset: ' + assetId);
+      assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
+      assert.ok(asset.bytes > 0);
+      if (index > 0) {
+        assert.ok(asset.path.includes('/2348031f3797dbea1981f399288748378a283940/images/frames/'));
+        assert.equal(asset.assetKind, 'character-frame');
+      }
+    });
+  });
+}
+
 testAssetManifestCoverage();
+testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testExpandedWorldContent();
 testFirstJobPromotion();
 testFirstJobCombatPassives();
@@ -259,4 +296,4 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (10 suites).');
+console.log('RO H5 core tests passed (11 suites).');

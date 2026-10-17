@@ -10,6 +10,9 @@
   const DOWNLOAD_STATE_KEY = 'ro-h5-download-state-v1';
   const MAX_DOWNLOAD_ATTEMPTS = 3;
   const ASSETS = window.ROWorld.assets;
+  const PLAYER_SPRITE_FRAMES = window.ROWorld.playerSpriteFrames || {};
+  const PLAYER_ANIMATION_FRAME_INTERVAL = Math.max(80, Number(window.ROWorld.playerAnimationFrameIntervalMs) || 140);
+  let playerAnimationTimer = null;
   const STARTER_ASSETS = ASSETS.filter(function (asset) { return asset.requiredOnStart; });
 
   let account = null;
@@ -582,8 +585,16 @@
 
   function updateCreatePreview() {
     const gender = selectedRadio('gender') || 'male';
-    $('#create-avatar').innerHTML = playerSvg(gender);
+    const previewCharacter = { jobId: 'novice', gender: gender };
+    syncPlayerSprite($('#create-avatar'), previewCharacter);
     $('#create-preview-title').textContent = gender === 'female' ? '初心者標準造型（女性）' : '初心者標準造型（男性）';
+    if (!$('#screen-install').classList.contains('active')) {
+      ensurePlayerSprite(previewCharacter).then(function () {
+        if ($('#screen-create').classList.contains('active') && selectedRadio('gender') === gender) {
+          syncPlayerSprite($('#create-avatar'), previewCharacter);
+        }
+      }).catch(function () { /* Built-in SVG preview remains available. */ });
+    }
   }
 
   function playerSvg(gender) {
@@ -628,24 +639,78 @@
     return 'player_' + target.jobId + '_' + gender;
   }
 
-  function playerSpriteMarkup(target) {
+  function playerSpriteGroupKey(target) {
+    if (!target || !Object.prototype.hasOwnProperty.call(PLAYER_SPRITE_JOBS, target.jobId)) return '';
+    return target.jobId + '_' + (target.gender === 'female' ? 'female' : 'male');
+  }
+
+  function playerSpriteFrameIds(target) {
+    const group = playerSpriteGroupKey(target);
+    const frames = group ? PLAYER_SPRITE_FRAMES[group] : null;
+    if (Array.isArray(frames) && frames.length) return frames;
     const assetId = playerSpriteAssetId(target);
+    return assetId ? [assetId] : [];
+  }
+
+  function playerSpriteMarkup(target) {
+    const group = playerSpriteGroupKey(target);
+    const frameIds = playerSpriteFrameIds(target);
+    const assetId = frameIds[0] || playerSpriteAssetId(target);
     const url = assetId ? assetUrls[assetId] : '';
     if (!url) return playerSvg(target && target.gender);
     const label = PLAYER_SPRITE_JOBS[target.jobId] + (target.gender === 'female' ? '（女性）' : '（男性）');
-    return '<img class="ro-character-frame" src="' + url + '" alt="' + label + '">';
+    return '<img class="ro-character-frame" data-player-sprite-group="' + group + '" data-player-frame-index="0" src="' + url + '" alt="' + label + '">';
+  }
+
+  function syncPlayerSprite(container, target) {
+    if (!container) return;
+    const group = playerSpriteGroupKey(target);
+    const frameIds = playerSpriteFrameIds(target);
+    const firstId = frameIds[0] || '';
+    const firstUrl = firstId ? assetUrls[firstId] : '';
+    const currentImage = container.querySelector('img.ro-character-frame[data-player-sprite-group]');
+    if (!firstUrl) {
+      if (container.dataset.playerSpriteGroup !== group || !container.querySelector('svg')) {
+        container.innerHTML = playerSvg(target && target.gender);
+        container.dataset.playerSpriteGroup = group;
+      }
+      return;
+    }
+    if (container.dataset.playerSpriteGroup === group && currentImage) return;
+    container.innerHTML = playerSpriteMarkup(target);
+    container.dataset.playerSpriteGroup = group;
+  }
+
+  function advancePlayerSprites() {
+    if (document.hidden) return;
+    document.querySelectorAll('img.ro-character-frame[data-player-sprite-group]').forEach(function (image) {
+      const frameIds = PLAYER_SPRITE_FRAMES[image.dataset.playerSpriteGroup];
+      if (!Array.isArray(frameIds) || frameIds.length < 2) return;
+      const current = Number(image.dataset.playerFrameIndex) || 0;
+      for (let step = 1; step <= frameIds.length; step += 1) {
+        const nextIndex = (current + step) % frameIds.length;
+        const url = assetUrls[frameIds[nextIndex]];
+        if (!url) continue;
+        image.dataset.playerFrameIndex = String(nextIndex);
+        if (image.src !== url) image.src = url;
+        return;
+      }
+    });
   }
 
   async function ensurePlayerSprite(target) {
-    const assetId = playerSpriteAssetId(target);
-    if (!assetId || assetUrls[assetId]) return Boolean(assetId && assetUrls[assetId]);
-    const asset = ASSETS.find(function (entry) { return entry.id === assetId; });
-    if (!asset) return false;
+    const frameIds = playerSpriteFrameIds(target);
+    if (!frameIds.length) return false;
+    const assets = frameIds.map(function (id) {
+      return ASSETS.find(function (entry) { return entry.id === id; });
+    }).filter(Boolean);
+    if (!assets.length) return false;
+    if (frameIds.every(function (id) { return Boolean(assetUrls[id]); })) return true;
     try {
-      await ensureAssets([asset], false);
-      return Boolean(assetUrls[assetId]);
+      await ensureAssets(assets, false);
+      return frameIds.every(function (id) { return Boolean(assetUrls[id]); });
     } catch (_) {
-      // Character art is optional: use the built-in SVG fallback if it cannot be downloaded.
+      // Character art is optional: use the built-in SVG fallback if any frame fails to download.
       return false;
     }
   }
@@ -749,7 +814,7 @@
 
   function renderCamp() {
     if (!character) return;
-    $('#camp-avatar').innerHTML = playerSpriteMarkup(character);
+    syncPlayerSprite($('#camp-avatar'), character);
     $('#camp-name').textContent = character.name;
     $('#camp-job').textContent = character.jobName + ' · Job Lv. ' + character.jobLevel;
     $('#camp-level').textContent = String(character.baseLevel);
@@ -947,16 +1012,15 @@
     $('#hud-job').textContent = character.jobName + ' · Job Lv. ' + character.jobLevel;
     const currentMap = window.ROCore.getMap(character.battle.map);
     $('#battle-map-name').textContent = currentMap ? currentMap.name : '安全營地';
-    $('#battle-avatar').innerHTML = playerSpriteMarkup(character);
+    syncPlayerSprite($('#battle-avatar'), character);
     const hero = $('#hero-sprite');
-    const visualKey = (character.jobId || 'novice') + '-' + (character.gender === 'female' ? 'female' : 'male');
-    const spriteAssetId = playerSpriteAssetId(character);
-    const spriteUrl = spriteAssetId ? (assetUrls[spriteAssetId] || '') : '';
-    if (hero.dataset.visualKey !== visualKey || hero.dataset.spriteUrl !== spriteUrl) {
-      hero.innerHTML = '<div class="hero-character">' + playerSpriteMarkup(character) + '</div>';
-      hero.dataset.visualKey = visualKey;
-      hero.dataset.spriteUrl = spriteUrl;
+    let heroSprite = hero.querySelector('.hero-character');
+    if (!heroSprite) {
+      heroSprite = document.createElement('div');
+      heroSprite.className = 'hero-character';
+      hero.replaceChildren(heroSprite);
     }
+    syncPlayerSprite(heroSprite, character);
     const currentMonster = window.ROCore.getMonster(character.battle.currentMonsterId);
     $('#scene-background').src = assetUrls[(currentMap && currentMap.backgroundAssetId) || 'field'] || './assets/field.jpg';
     $('.monster-label strong').textContent = currentMonster ? currentMonster.name : '怪物';
@@ -1480,6 +1544,7 @@
 
   async function init() {
     bindEvents();
+    if (!playerAnimationTimer) playerAnimationTimer = window.setInterval(advancePlayerSprites, PLAYER_ANIMATION_FRAME_INTERVAL);
     restoreDownloadStatus();
     updateNetworkStatus();
     updateCreatePreview();
