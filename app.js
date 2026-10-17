@@ -617,6 +617,7 @@
     parsed.gold = Math.max(0, Number(parsed.gold) || 0);
     parsed.speed = [1, 2, 3].includes(Number(parsed.speed)) ? Number(parsed.speed) : 1;
     if (!parsed.warehouse || typeof parsed.warehouse !== 'object' || Array.isArray(parsed.warehouse)) parsed.warehouse = {};
+    if (!Array.isArray(parsed.equipmentInventory)) parsed.equipmentInventory = [];
     return parsed;
   }
 
@@ -1381,6 +1382,140 @@
     });
     content.appendChild(list);
   }
+  function handleEquipInventoryItem(instanceId) {
+    if (!character || !account) return;
+    const result = window.ROCore.equipItem(character, account, instanceId);
+    if (!result.ok) { showToast(result.reason || '裝備失敗'); return; }
+    persistCurrent();
+    renderGame();
+    showToast(result.swappedName ? '已裝備 ' + result.itemName + '，原裝備已放回共用背包' : '已裝備 ' + result.itemName);
+  }
+
+  function handleUnequipSlot(slot) {
+    if (!character || !account) return;
+    const result = window.ROCore.unequipItem(character, account, slot);
+    if (!result.ok) { showToast(result.reason || '卸下裝備失敗'); return; }
+    persistCurrent();
+    renderGame();
+    showToast('已卸下 ' + result.itemName);
+  }
+
+  function handleSocketCard(slot, cardId, cardName) {
+    if (!character || !account) return;
+    if (!window.confirm('確定將「' + cardName + '」鑲嵌到這件裝備？本原型目前無法取出卡片；卸下裝備時卡片會隨裝備保留。')) return;
+    const result = window.ROCore.socketCard(character, account, slot, cardId);
+    if (!result.ok) { showToast(result.reason || '鑲嵌失敗'); return; }
+    persistCurrent();
+    renderGame();
+    showToast('已將 ' + result.cardName + ' 鑲嵌至 ' + result.itemName);
+  }
+
+  function renderEquipment(content) {
+    window.ROCore.ensureEquipmentShape(character);
+    if (!Array.isArray(account.equipmentInventory)) account.equipmentInventory = [];
+    const catalog = window.ROCore.getItemCatalog();
+    const allGear = catalog.equipment || [];
+    const allCards = catalog.cards || [];
+    const slotNames = { weapon: '武器', armor: '鎧甲', shoes: '鞋子', accessory: '飾品' };
+    const definition = function (id) { return window.ROCore.getItemDefinition(id); };
+    const cardInventory = allCards.map(function (card) {
+      return { item: card, count: Math.max(0, Number(account.warehouse[card.name]) || 0) };
+    }).filter(function (entry) { return entry.count > 0; });
+    const bonuses = window.ROCore.getEquipmentBonuses(character);
+    addDetailHeading(content, '裝備欄位');
+    ['weapon', 'armor', 'shoes', 'accessory'].forEach(function (slot) {
+      const instance = character.equipment[slot];
+      const item = instance && definition(instance.itemId);
+      const row = document.createElement('article');
+      row.className = 'equipment-slot';
+      const head = document.createElement('div');
+      head.className = 'equipment-slot-head';
+      const copy = document.createElement('div');
+      copy.className = 'equipment-copy';
+      const title = document.createElement('strong');
+      title.textContent = slotNames[slot];
+      const name = document.createElement('span');
+      name.textContent = item ? item.name : '尚未裝備';
+      copy.append(title, name);
+      head.appendChild(copy);
+      if (instance && item) {
+        const stats = document.createElement('small');
+        stats.className = 'equipment-stats';
+        stats.textContent = item.description || '裝備效果依目前原型資料計算。';
+        copy.appendChild(stats);
+        const cardList = document.createElement('p');
+        cardList.className = 'equipment-cards';
+        const names = (instance.cards || []).map(function (cardId) { const card = definition(cardId); return card ? card.name : cardId; });
+        const slotCount = Math.max(0, Number(item.cardSlots) || 0);
+        cardList.textContent = '卡槽：' + names.length + ' / ' + slotCount + (names.length ? ' · ' + names.join('、') : '');
+        row.append(head, cardList);
+        const controls = document.createElement('div');
+        controls.className = 'equipment-actions';
+        if (names.length < slotCount && cardInventory.length) {
+          cardInventory.forEach(function (entry) {
+            controls.appendChild(makeButton('鑲嵌 ' + entry.item.name + ' ×' + entry.count, 'button button-secondary equipment-action', function () {
+              handleSocketCard(slot, entry.item.id, entry.item.name);
+            }));
+          });
+        } else if (names.length < slotCount) {
+          const empty = document.createElement('small'); empty.className = 'field-help'; empty.textContent = '共用倉庫尚無可用卡片。'; controls.appendChild(empty);
+        }
+        controls.appendChild(makeButton('卸下', 'button button-quiet equipment-action', function () { handleUnequipSlot(slot); }));
+        row.appendChild(controls);
+      } else {
+        head.appendChild(document.createElement('span'));
+        row.appendChild(head);
+      }
+      content.appendChild(row);
+    });
+    addDetailHeading(content, '套裝效果（原型）');
+    addDetailRow(content, '攻擊加成', '+' + formatNumber(bonuses.attackBonus));
+    addDetailRow(content, '防禦減傷', formatNumber(bonuses.defenseBonus));
+    addDetailRow(content, '爆擊率加成', '+' + (bonuses.criticalBonus * 100).toFixed(1) + '%');
+    addDetailHeading(content, '共用背包：裝備');
+    const inventoryList = document.createElement('div');
+    inventoryList.className = 'equipment-inventory';
+    const inventory = account.equipmentInventory.slice();
+    inventory.sort(function (left, right) {
+      const a = definition(left && left.itemId); const b = definition(right && right.itemId);
+      return String(a ? a.name : left && left.itemId).localeCompare(String(b ? b.name : right && right.itemId), 'zh-Hant');
+    });
+    if (!inventory.length) {
+      const empty = document.createElement('p'); empty.className = 'field-help'; empty.textContent = '尚未取得裝備。擊倒波利、綠棉蟲、瘋兔或盜蟲有機會獲得裝備。'; inventoryList.appendChild(empty);
+    } else {
+      inventory.forEach(function (instance) {
+        const item = definition(instance && instance.itemId);
+        if (!item) return;
+        const row = document.createElement('article'); row.className = 'equipment-inventory-item';
+        const copy = document.createElement('div'); copy.className = 'equipment-copy';
+        const name = document.createElement('strong'); name.textContent = item.name; copy.appendChild(name);
+        const details = document.createElement('small'); details.textContent = (slotNames[item.slot] || '裝備') + ' · ' + (item.description || '原型裝備'); copy.appendChild(details);
+        if (instance.cards && instance.cards.length) {
+          const cardLine = document.createElement('small'); cardLine.textContent = '已鑲嵌：' + instance.cards.map(function (id) { const card = definition(id); return card ? card.name : id; }).join('、'); copy.appendChild(cardLine);
+        }
+        row.appendChild(copy);
+        row.appendChild(makeButton('裝備', 'button button-secondary equipment-action', function () { handleEquipInventoryItem(instance.instanceId); }));
+        inventoryList.appendChild(row);
+      });
+    }
+    content.appendChild(inventoryList);
+    addDetailHeading(content, '共用背包：卡片');
+    const cardsList = document.createElement('div'); cardsList.className = 'equipment-inventory';
+    if (!cardInventory.length) {
+      const empty = document.createElement('p'); empty.className = 'field-help'; empty.textContent = '尚未取得卡片。擊倒對應怪物有機會獲得卡片。'; cardsList.appendChild(empty);
+    } else {
+      cardInventory.forEach(function (entry) {
+        const row = document.createElement('div'); row.className = 'equipment-inventory-item';
+        const name = document.createElement('strong'); name.textContent = entry.item.name;
+        const quantity = document.createElement('span'); quantity.className = 'equipment-quantity'; quantity.textContent = '× ' + formatNumber(entry.count);
+        row.append(name, quantity); cardsList.appendChild(row);
+      });
+    }
+    content.appendChild(cardsList);
+    const note = document.createElement('p'); note.className = 'field-help';
+    note.textContent = '裝備、卡片數值與掉落率是本遊戲的原型設定，並非已核實的台灣官方 PC RO 平衡數值。裝備屬帳號共用資產；卡片鑲嵌後會隨裝備保存。';
+    content.appendChild(note);
+  }
   function renderDetails() {
     const content = $('#details-content');
     $$('.detail-tab').forEach(function (button) { button.classList.toggle('active', button.dataset.detail === activeDetail); });
@@ -1431,6 +1566,8 @@
         });
       }
       content.appendChild(list);
+    } else if (activeDetail === 'equipment') {
+      renderEquipment(content);
     } else if (activeDetail === 'bestiary') {
       renderBestiary(content);
     } else if (activeDetail === 'skills') {
@@ -1842,6 +1979,11 @@
     if (!item || $('#delete-name').value !== item.name || !$('#delete-check').checked) return checkDeleteInput();
     Object.entries(item.personalItems || {}).forEach(function (entry) {
       account.warehouse[entry[0]] = (Number(account.warehouse[entry[0]]) || 0) + Math.max(0, Number(entry[1]) || 0);
+    });
+    if (!Array.isArray(account.equipmentInventory)) account.equipmentInventory = [];
+    ['weapon', 'armor', 'shoes', 'accessory'].forEach(function (slot) {
+      const equipped = item.equipment && item.equipment[slot];
+      if (equipped && typeof equipped === 'object' && equipped.itemId) account.equipmentInventory.push(equipped);
     });
     account.slots[pendingDeleteSlot] = null;
     if (!writeAccount()) return;
