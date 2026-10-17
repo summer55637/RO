@@ -1,5 +1,31 @@
 # 素材來源與完整性
 
+## MVP 1.5 怪物圖片 ID 稽核
+
+- 根因：上游 images/README.md 與 tools/download_monster_images.js 把專案自訂的顯示序號當成實際 RO Mob ID 下載；例如 1001 被標成瘋兔，但 Mob DB 中 1001 是蠍子，瘋兔正確 ID 是 1063。程式目前改以正確 Mob ID 連到對應圖片。
+- Mob ID 依據：[rAthena pre-renewal mob_db.yml（固定 commit）](https://github.com/rathena/rathena/blob/975c87dfc27ab267b2ec0dddff77421b2e6ee87b/db/pre-re/mob_db.yml)。這是用於核對 Mob ID 的社群資料庫，不代表所有數值均等同台灣官方版本。
+- 圖片來源：[nba9001-sys/ro-idle 固定版本](https://github.com/nba9001-sys/ro-idle/tree/2348031f3797dbea1981f399288748378a283940)。Git blob SHA-1 與 bytes 由素材清單固定，下載器驗證後才啟用。
+
+| 遊戲怪物 | Mob ID | 固定來源檔案 | bytes | Git blob SHA-1 |
+|---|---:|---|---:|---|
+| 波利 Poring | 1002 | [1002.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1002.png) | 708 | 9205f4b39eaea3eb175e0eabdcc6ba10ec296641 |
+| 瘋兔 Lunatic | 1063 | [1063.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1063.png) | 598 | ae31b3bd6c29aeea5985f5b585ab0c9bb8eaa8fa |
+| 綠棉蟲 Fabre | 1007 | [1007.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1007.png) | 789 | e9f3ef887164c0c7d0aa883e82d61f49b2379d59 |
+| 蛹 Pupa | 1008 | [1008.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1008.png) | 771 | 6603da0bdf588b3f74381442fe0dc82aa574ef2c |
+| 狼 Wolf | 1013 | [1013.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1013.png) | 1,892 | b597c222615da8a15634eeaf3da1833945ec9910 |
+| 蜂兵 Hornet | 1004 | [1004.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1004.png) | 942 | 32d3c7d9cd9e71064a7e9b074b52293bc8bc97b0 |
+| 哥布林 Goblin | 1122 | [1122.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1122.png) | 1,286 | 739efe8c25378c55afcc754ef42b820c2e1d3b8a |
+| 半獸人戰士 Orc Warrior | 1023 | [1023.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1023.png) | 3,359 | 98b9797413239e1f4e9055a2baf48e07cfda1da3 |
+| 柳精 Willow | 1010 | [1010.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1010.png) | 7,673 | df0b18eb2c2ab52b8e4d07dd470bb9f63bffe652 |
+| 孢子 Spore | 1014 | [1014.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1014.png) | 1,617 | 17a0870a9c6b6e8d43dbc33cdc8171fce318b4c3 |
+| 波波利 Poporing | 1031 | [1031.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1031.png) | 709 | 86f8e4f14bff569963e0a98c546e4234e6e0009e |
+| 大嘴鳥 Peco Peco | 1019 | [1019.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1019.png) | 2,545 | f84f9c624b23241cd5669851fa33ad2fe5fcf331 |
+| 小雞 Picky | 1049 | [1049.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1049.png) | 409 | 67b06c12d629885ad9c3cd7bf893370840d14e8e |
+| 禿鷹 Condor | 1009 | [1009.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1009.png) | 4,181 | f8029dca4c909a67650986ca272180872d587214 |
+
+- 盜蟲 Thief Bug：Mob ID 是 1051，但固定圖片包沒有 images/monsters/1051.png。盜蟲因此先使用自製向量圖，不載入 Mob 1015（殭屍）；這是臨時後備，不冒稱為 RO 原始素材。
+- 錯誤舊檔：原本標成 lunatic.png 的位元組其實來自 Mob 1001（蠍子）；原 fabre.png 來自 Mob 1003；原 thief_bug.png 來自 Mob 1015（殭屍）。現在重新命名為 scorpion.png、testegg.png、zombie.png，且不再對應給錯誤怪物。
+
 ## MVP 1.4 材料與消耗品原型
 
 - 本階段沒有新增圖片、音效或其他二進位素材；製作配方直接消耗 world-data.js 中既有怪物會掉落的材料名稱，成品保存在既有共用 warehouse。
@@ -36,11 +62,11 @@
 | 本專案路徑 | 來源路徑 | 原始大小 | Git blob SHA |
 |---|---|---:|---|
 | assets/field.jpg | [images/maps/field.jpg](https://github.com/nba9001-sys/ro-idle/blob/main/images/maps/field.jpg) | 164,403 bytes | 138cef2baecce252bf9095f856927d0573642394 |
-| assets/poring.png | [images/monsters/1002.png](https://github.com/nba9001-sys/ro-idle/blob/main/images/monsters/1002.png) | 708 bytes | 9205f4b39eaea3eb175e0eabdcc6ba10ec296641 |
-| assets/lunatic.png | [images/monsters/1001.png](https://github.com/nba9001-sys/ro-idle/blob/main/images/monsters/1001.png) | 4,929 bytes | 538cb55daf931cc39ba677c32930e288b64d3ae1 |
-| assets/fabre.png | [images/monsters/1003.png](https://github.com/nba9001-sys/ro-idle/blob/main/images/monsters/1003.png) | 330 bytes | 63091a44b7bdae2fcd59b8753ba5c4e5f04f9d37 |
-| assets/pupa.png | [images/monsters/1008.png](https://github.com/nba9001-sys/ro-idle/blob/main/images/monsters/1008.png) | 771 bytes | 6603da0bdf588b3f74381442fe0dc82aa574ef2c |
-| assets/thief_bug.png | [images/monsters/1015.png](https://github.com/nba9001-sys/ro-idle/blob/main/images/monsters/1015.png) | 1,906 bytes | ef27e37d53ddb15fad6e551e34868083df407d54 |
+| assets/poring.png | [images/monsters/1002.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1002.png) | 708 bytes | 9205f4b39eaea3eb175e0eabdcc6ba10ec296641 |
+| assets/scorpion.png | [images/monsters/1001.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1001.png) | 4,929 bytes | 538cb55daf931cc39ba677c32930e288b64d3ae1 |
+| assets/testegg.png | [images/monsters/1003.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1003.png) | 330 bytes | 63091a44b7bdae2fcd59b8753ba5c4e5f04f9d37 |
+| assets/pupa.png | [images/monsters/1008.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1008.png) | 771 bytes | 6603da0bdf588b3f74381442fe0dc82aa574ef2c |
+| assets/zombie.png | [images/monsters/1015.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1015.png) | 1,906 bytes | ef27e37d53ddb15fad6e551e34868083df407d54 |
 
 第一張地圖必要素材合計 170,370 bytes（約 167 KiB）；第二張地圖的蛹與盜蟲素材合計 2,677 bytes，於首次進入該地圖時才下載。
 
@@ -52,18 +78,22 @@
 
 ### 怪物圖像
 
+下表已按 MVP 1.5 實際 Mob ID 更正；所有 URL 均固定至原始 commit。
+
 | 遊戲資產 ID | 上游路徑 | bytes | Git blob SHA |
 |---|---|---:|---|
-| wolf | [1004.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1004.png) | 942 | `32d3c7d9cd9e71064a7e9b074b52293bc8bc97b0` |
-| hornet | [1005.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1005.png) | 2,538 | `692209109b70578cdd3d4914aa03de2c464885b7` |
-| goblin | [1006.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1006.png) | 1,784 | `b998113c83d4c6719783f50409a80fc391abcfa9` |
-| orc | [1007.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1007.png) | 789 | `e9f3ef887164c0c7d0aa883e82d61f49b2379d59` |
-| willow | [1009.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1009.png) | 4,181 | `f8029dca4c909a67650986ca272180872d587214` |
-| spore | [1010.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1010.png) | 7,673 | `df0b18eb2c2ab52b8e4d07dd470bb9f63bffe652` |
-| poporing | [1011.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1011.png) | 746 | `1ea107008c80a57c3bf6a0aca881af905cca81b1` |
-| pecopeco | [1012.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1012.png) | 1,069 | `5bbc57e564dc5b34dacda5e74449d6f71a7aa8ec` |
-| picky | [1013.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1013.png) | 1,892 | `b597c222615da8a15634eeaf3da1833945ec9910` |
-| condor | [1024.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1024.png) | 1,013 | `1b77b3c4eb7d24ba90301497200074e772297684` |
+| lunatic | [1063.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1063.png) | 598 | `ae31b3bd6c29aeea5985f5b585ab0c9bb8eaa8fa` |
+| fabre | [1007.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1007.png) | 789 | `e9f3ef887164c0c7d0aa883e82d61f49b2379d59` |
+| wolf | [1013.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1013.png) | 1,892 | `b597c222615da8a15634eeaf3da1833945ec9910` |
+| hornet | [1004.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1004.png) | 942 | `32d3c7d9cd9e71064a7e9b074b52293bc8bc97b0` |
+| goblin | [1122.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1122.png) | 1,286 | `739efe8c25378c55afcc754ef42b820c2e1d3b8a` |
+| orc | [1023.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1023.png) | 3,359 | `98b9797413239e1f4e9055a2baf48e07cfda1da3` |
+| willow | [1010.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1010.png) | 7,673 | `df0b18eb2c2ab52b8e4d07dd470bb9f63bffe652` |
+| spore | [1014.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1014.png) | 1,617 | `17a0870a9c6b6e8d43dbc33cdc8171fce318b4c3` |
+| poporing | [1031.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1031.png) | 709 | `86f8e4f14bff569963e0a98c546e4234e6e0009e` |
+| pecopeco | [1019.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1019.png) | 2,545 | `f84f9c624b23241cd5669851fa33ad2fe5fcf331` |
+| picky | [1049.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1049.png) | 409 | `67b06c12d629885ad9c3cd7bf893370840d14e8e` |
+| condor | [1009.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1009.png) | 4,181 | `f8029dca4c909a67650986ca272180872d587214` |
 
 ### 地圖背景
 

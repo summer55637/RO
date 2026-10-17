@@ -6,12 +6,58 @@ const path = require('node:path');
 const world = require('../world-data.js');
 const core = require('../core.js');
 
+
+function testMonsterArtworkIdentityMapping() {
+  // IDs below are canonical mob IDs from pinned rAthena mob_db.yml; sprite filenames and hashes must follow that ID.
+  const expected = {
+    poring: { id: 1002, bytes: 708, sha: '9205f4b39eaea3eb175e0eabdcc6ba10ec296641' },
+    lunatic: { id: 1063, bytes: 598, sha: 'ae31b3bd6c29aeea5985f5b585ab0c9bb8eaa8fa' },
+    fabre: { id: 1007, bytes: 789, sha: 'e9f3ef887164c0c7d0aa883e82d61f49b2379d59' },
+    pupa: { id: 1008, bytes: 771, sha: '6603da0bdf588b3f74381442fe0dc82aa574ef2c' },
+    wolf: { id: 1013, bytes: 1892, sha: 'b597c222615da8a15634eeaf3da1833945ec9910' },
+    hornet: { id: 1004, bytes: 942, sha: '32d3c7d9cd9e71064a7e9b074b52293bc8bc97b0' },
+    goblin: { id: 1122, bytes: 1286, sha: '739efe8c25378c55afcc754ef42b820c2e1d3b8a' },
+    orc: { id: 1023, bytes: 3359, sha: '98b9797413239e1f4e9055a2baf48e07cfda1da3' },
+    willow: { id: 1010, bytes: 7673, sha: 'df0b18eb2c2ab52b8e4d07dd470bb9f63bffe652' },
+    spore: { id: 1014, bytes: 1617, sha: '17a0870a9c6b6e8d43dbc33cdc8171fce318b4c3' },
+    poporing: { id: 1031, bytes: 709, sha: '86f8e4f14bff569963e0a98c546e4234e6e0009e' },
+    pecopeco: { id: 1019, bytes: 2545, sha: 'f84f9c624b23241cd5669851fa33ad2fe5fcf331' },
+    picky: { id: 1049, bytes: 409, sha: '67b06c12d629885ad9c3cd7bf893370840d14e8e' },
+    condor: { id: 1009, bytes: 4181, sha: 'f8029dca4c909a67650986ca272180872d587214' }
+  };
+  const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
+  Object.entries(expected).forEach(function (entry) {
+    const monsterId = entry[0], want = entry[1];
+    const monster = world.monsters[monsterId], asset = assetMap.get(monsterId);
+    assert.ok(monster, 'missing monster ' + monsterId);
+    assert.ok(asset, 'missing artwork manifest entry ' + monsterId);
+    assert.equal(monster.sourceMobId, want.id, monsterId + ' canonical Mob ID mismatch');
+    assert.equal(monster.assetId, monsterId, monsterId + ' should use its own artwork');
+    assert.equal(asset.sourceMobId, want.id, monsterId + ' asset Mob ID mismatch');
+    assert.equal(asset.sourcePath, 'images/monsters/' + want.id + '.png', monsterId + ' source path mismatch');
+    assert.equal(asset.bytes, want.bytes, monsterId + ' source bytes mismatch');
+    assert.equal(asset.gitSha, want.sha, monsterId + ' source hash mismatch');
+    if (asset.sourceRepository) assert.ok(asset.path.endsWith('/' + asset.sourcePath), monsterId + ' download URL mismatch');
+    else assert.equal(asset.path, './assets/' + monsterId + '.png', monsterId + ' local path mismatch');
+  });
+  assert.equal(world.monsters.thief_bug.sourceMobId, 1051);
+  assert.equal(world.monsters.thief_bug.assetFallback, 'vector');
+  assert.equal(assetMap.has('thief_bug'), false, 'Thief Bug must not use Zombie Mob 1015');
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(appSource, /function getMonsterArtworkSource\(monster\)/);
+  assert.match(appSource, /data:image\/svg\+xml;charset=utf-8/);
+  assert.match(appSource, /getMonsterArtworkSource\(currentMonster\)/);
+  const sources = fs.readFileSync(path.join(__dirname, '..', 'assets', 'SOURCES.md'), 'utf8');
+  assert.match(sources, /MVP 1\.5 怪物圖片 ID 稽核/);
+  assert.match(sources, /975c87dfc27ab267b2ec0dddff77421b2e6ee87b/);
+}
+
 function testAutomaticUpdateStrategy() {
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v19/);
+  assert.match(serviceWorker, /ro-h5-shell-v20/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -217,7 +263,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.4/);
+  assert.match(html, /MVP 1\.5/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -363,7 +409,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.4/);
+  assert.match(html, /MVP 1\.5/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -849,7 +895,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.4/);
+  assert.match(html, /MVP 1\.5/);
 }
 
 
@@ -896,10 +942,11 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 1\.4/);
-  assert.match(sw, /ro-h5-shell-v19/);
+  assert.match(html, /MVP 1\.5/);
+  assert.match(sw, /ro-h5-shell-v20/);
 }
 
+testMonsterArtworkIdentityMapping();
 testAutomaticUpdateStrategy();
 testAssetManifestCoverage();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
@@ -934,4 +981,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (33 suites).');
+console.log('RO H5 core tests passed (34 suites).');
