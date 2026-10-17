@@ -576,7 +576,7 @@ function testMapAndMonsterProgression() {
       assert.ok(world.monsters[entry.id], map.id + ' references a known monster');
     });
   });
-  assert.equal(core.getMapMonsterEncounterRates('novice_ground').find(function (entry) { return entry.id === 'poring'; }).probability, 0.4);
+  assert.equal(core.getMapMonsterEncounterRates('novice_ground').find(function (entry) { return entry.id === 'poring'; }).probability, 40 / 110, 'Poring chance reflects the Green Plant prototype weight');
   assert.equal(core.startMap(character, 'prt_fild01', function () { return 0; }), false);
   assert.equal(core.startMap(character, 'novice_ground', function () { return 0; }), true);
   assert.equal(character.battle.currentMonsterId, 'poring');
