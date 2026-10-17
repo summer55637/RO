@@ -6,6 +6,12 @@
 
 # 素材來源與完整性
 
+## MVP 1.4 材料與消耗品原型
+
+- 本階段沒有新增圖片、音效或其他二進位素材；製作配方直接消耗 world-data.js 中既有怪物會掉落的材料名稱，成品保存在既有共用 warehouse。
+- 目前提供 3 種自訂補給品：胡蘿蔔補給（胡蘿蔔 ×2、空瓶 ×1，最多恢復 18 HP）、果凍治療藥（果凍質塊 ×2、昆蟲外殼 ×1、空瓶 ×1，最多恢復 35 HP）、蜂蜜藥水（蜂蜜 ×1、蘑菇孢子 ×2、空瓶 ×1，最多恢復 65 HP）。
+- 配方與恢復值是本遊戲的原型平衡設定；未直接匯入 rAthena 或台灣官方 PC RO 道具／配方資料，不代表正式伺服器實際數值。
+
 ## MVP 1.3 裝備／卡片資料欄位參考
 
 - 參考 rAthena 道具資料格式文件 [`item_db.yml`](https://github.com/rathena/rathena/blob/d4b8e7b8f16061cc2496d377ac8f777ce72a4f39/doc/yaml/db/item_db.yml)，固定參考版本：`d4b8e7b8f16061cc2496d377ac8f777ce72a4f39`。該格式包含物品類型、買／賣價格、攻防數值、卡槽、職業可裝備條件、最低裝備等級等常用欄位；本專案按自己的簡化模型映射到 slot、requiredLevel、allowedJobs、effects、sellPrice。
