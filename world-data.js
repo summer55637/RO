@@ -10,12 +10,12 @@
     assetApprovalStatus: 'owner-authorized',
     assetApprovalNote: '專案擁有者已確認取得 RO 素材使用授權；正式授權文件由專案擁有者另行保存。',
     assets: [
-      { id: 'field', path: './assets/field.jpg', version: '1.0.0', bytes: 164403, gitSha: '138cef2baecce252bf9095f856927d0573642394', statusId: 'asset-status-field', name: '新手原野背景', dependencies: ['map:novice_ground', 'map:prt_fild01'], approvalStatus: 'owner-authorized' },
-      { id: 'poring', path: './assets/poring.png', version: '1.0.0', bytes: 708, gitSha: '9205f4b39eaea3eb175e0eabdcc6ba10ec296641', statusId: 'asset-status-poring', name: '波利圖像', dependencies: ['monster:poring'], approvalStatus: 'owner-authorized' },
-      { id: 'lunatic', path: './assets/lunatic.png', version: '1.0.0', bytes: 4929, gitSha: '538cb55daf931cc39ba677c32930e288b64d3ae1', statusId: 'asset-status-lunatic', name: '瘋兔圖像', dependencies: ['monster:lunatic'], approvalStatus: 'owner-authorized' },
-      { id: 'fabre', path: './assets/fabre.png', version: '1.0.0', bytes: 330, gitSha: '63091a44b7bdae2fcd59b8753ba5c4e5f04f9d37', statusId: 'asset-status-fabre', name: '綠棉蟲圖像', dependencies: ['monster:fabre'], approvalStatus: 'owner-authorized' },
-      { id: 'pupa', path: './assets/pupa.png', version: '1.0.0', bytes: 771, gitSha: '6603da0bdf588b3f74381442fe0dc82aa574ef2c', statusId: 'asset-status-pupa', name: '蛹圖像', dependencies: ['monster:pupa'], approvalStatus: 'owner-authorized' },
-      { id: 'thief_bug', path: './assets/thief_bug.png', version: '1.0.0', bytes: 1906, gitSha: 'ef27e37d53ddb15fad6e551e34868083df407d54', statusId: 'asset-status-thief_bug', name: '盜蟲圖像', dependencies: ['monster:thief_bug'], approvalStatus: 'owner-authorized' }
+      { id: 'field', requiredOnStart: true, path: './assets/field.jpg', version: '1.0.0', bytes: 164403, gitSha: '138cef2baecce252bf9095f856927d0573642394', statusId: 'asset-status-field', name: '新手原野背景', dependencies: ['map:novice_ground', 'map:prt_fild01'], approvalStatus: 'owner-authorized' },
+      { id: 'poring', requiredOnStart: true, path: './assets/poring.png', version: '1.0.0', bytes: 708, gitSha: '9205f4b39eaea3eb175e0eabdcc6ba10ec296641', statusId: 'asset-status-poring', name: '波利圖像', dependencies: ['monster:poring'], approvalStatus: 'owner-authorized' },
+      { id: 'lunatic', requiredOnStart: true, path: './assets/lunatic.png', version: '1.0.0', bytes: 4929, gitSha: '538cb55daf931cc39ba677c32930e288b64d3ae1', statusId: 'asset-status-lunatic', name: '瘋兔圖像', dependencies: ['monster:lunatic'], approvalStatus: 'owner-authorized' },
+      { id: 'fabre', requiredOnStart: true, path: './assets/fabre.png', version: '1.0.0', bytes: 330, gitSha: '63091a44b7bdae2fcd59b8753ba5c4e5f04f9d37', statusId: 'asset-status-fabre', name: '綠棉蟲圖像', dependencies: ['monster:fabre'], approvalStatus: 'owner-authorized' },
+      { id: 'pupa', requiredOnStart: false, path: './assets/pupa.png', version: '1.0.0', bytes: 771, gitSha: '6603da0bdf588b3f74381442fe0dc82aa574ef2c', statusId: 'asset-status-pupa', name: '蛹圖像', dependencies: ['monster:pupa'], approvalStatus: 'owner-authorized' },
+      { id: 'thief_bug', requiredOnStart: false, path: './assets/thief_bug.png', version: '1.0.0', bytes: 1906, gitSha: 'ef27e37d53ddb15fad6e551e34868083df407d54', statusId: 'asset-status-thief_bug', name: '盜蟲圖像', dependencies: ['monster:thief_bug'], approvalStatus: 'owner-authorized' }
     ],
     monsters: {
       poring: { id: 'poring', name: '波利', assetId: 'poring', maxHp: 18, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 5, drops: [{ id: 'jellopy', name: '果凍質塊', chance: 0.35 }, { id: 'fluff', name: '獸毛', chance: 0.08 }] },
