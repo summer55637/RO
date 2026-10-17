@@ -1429,12 +1429,41 @@
 
   function handleSocketCard(slot, cardId, cardName) {
     if (!character || !account) return;
-    if (!window.confirm('確定將「' + cardName + '」鑲嵌到這件裝備？本原型目前無法取出卡片；卸下裝備時卡片會隨裝備保留。')) return;
+    if (!window.confirm('確定將「' + cardName + '」鑲嵌到這件裝備？之後可以安全取出並放回共用倉庫。')) return;
     const result = window.ROCore.socketCard(character, account, slot, cardId);
     if (!result.ok) { showToast(result.reason || '鑲嵌失敗'); return; }
     persistCurrent();
     renderGame();
     showToast('已將 ' + result.cardName + ' 鑲嵌至 ' + result.itemName);
+  }
+
+  function handleRemoveSocketedCard(instanceId, cardIndex, cardName) {
+    if (!character || !account) return;
+    if (!window.confirm('確定取出「' + cardName + '」並放回共用倉庫？\n卡片效果會立即移除；裝備本身及精煉等級都會保留。')) return;
+    const result = window.ROCore.removeSocketedCard(character, account, instanceId, cardIndex);
+    if (!result.ok) { showToast(result.reason || '取出卡片失敗'); return; }
+    persistCurrent();
+    renderGame();
+    showToast('已取出 ' + result.cardName + '，並放回共用倉庫');
+  }
+
+  function handleSellEquipment(instanceId) {
+    if (!character || !account) return;
+    if (activeSlot !== null && Array.isArray(account.slots)) account.slots[activeSlot] = character;
+    const instance = (account.equipmentInventory || []).find(function (entry) { return entry && entry.instanceId === instanceId; });
+    const item = instance && window.ROCore.getItemDefinition(instance.itemId);
+    if (!instance || !item) { showToast('找不到可出售的裝備。'); return; }
+    const price = Math.max(0, Math.floor(Number(item.sellPrice) || 0));
+    if (Array.isArray(instance.cards) && instance.cards.length) {
+      showToast('請先取出這件裝備上的卡片，再出售。');
+      return;
+    }
+    if (!window.confirm('確定出售「' + item.name + '」？\n可獲得 ' + formatNumber(price) + ' Zeny。精煉費不退還，售價依裝備原型基礎價計算。')) return;
+    const result = window.ROCore.sellEquipment(character, account, instanceId);
+    if (!result.ok) { showToast(result.reason || '出售裝備失敗'); return; }
+    persistCurrent();
+    renderGame();
+    showToast('已出售 ' + result.itemName + '（+' + formatNumber(result.salePrice) + ' Zeny）');
   }
 
   function renderEquipment(content) {
@@ -1479,6 +1508,12 @@
         row.append(head, cardList);
         const controls = document.createElement('div');
         controls.className = 'equipment-actions';
+        (Array.isArray(instance.cards) ? instance.cards : []).forEach(function (cardId, cardIndex) {
+          const card = definition(cardId);
+          controls.appendChild(makeButton('取出 ' + (card ? card.name : cardId), 'button button-quiet equipment-action', function () {
+            handleRemoveSocketedCard(instance.instanceId, cardIndex, card ? card.name : cardId);
+          }));
+        });
         if (currentRefineLevel < window.ROCore.MAX_EQUIPMENT_REFINE_LEVEL) {
           const targetLevel = currentRefineLevel + 1;
           const refineCost = window.ROCore.getRefineCost(targetLevel);
@@ -1528,11 +1563,25 @@
         const copy = document.createElement('div'); copy.className = 'equipment-copy';
         const name = document.createElement('strong'); name.textContent = item.name + (Number(instance.refineLevel) > 0 ? ' +' + Number(instance.refineLevel) : ''); copy.appendChild(name);
         const details = document.createElement('small'); details.textContent = (slotNames[item.slot] || '裝備') + ' · 精煉 +' + Math.max(0, Number(instance.refineLevel) || 0) + ' · ' + (item.description || '原型裝備'); copy.appendChild(details);
-        if (instance.cards && instance.cards.length) {
+        const hasCards = Array.isArray(instance.cards) && instance.cards.length > 0;
+        if (hasCards) {
           const cardLine = document.createElement('small'); cardLine.textContent = '已鑲嵌：' + instance.cards.map(function (id) { const card = definition(id); return card ? card.name : id; }).join('、'); copy.appendChild(cardLine);
         }
         row.appendChild(copy);
+        if (hasCards) {
+          instance.cards.forEach(function (cardId, cardIndex) {
+            const card = definition(cardId);
+            row.appendChild(makeButton('取出 ' + (card ? card.name : cardId), 'button button-quiet equipment-action', function () {
+              handleRemoveSocketedCard(instance.instanceId, cardIndex, card ? card.name : cardId);
+            }));
+          });
+        }
         row.appendChild(makeButton('裝備', 'button button-secondary equipment-action', function () { handleEquipInventoryItem(instance.instanceId); }));
+        const salePrice = Math.max(0, Math.floor(Number(item.sellPrice) || 0));
+        const sellButton = makeButton('出售（' + formatNumber(salePrice) + ' Z）', 'button button-quiet equipment-action', function () { handleSellEquipment(instance.instanceId); });
+        sellButton.disabled = hasCards || salePrice <= 0;
+        sellButton.title = hasCards ? '請先取出這件裝備上的卡片再出售。' : '依裝備原型基礎售價換取 Zeny；精煉費不退還。';
+        row.appendChild(sellButton);
         inventoryList.appendChild(row);
       });
     }
@@ -1551,7 +1600,7 @@
     }
     content.appendChild(cardsList);
     const note = document.createElement('p'); note.className = 'field-help';
-    note.textContent = '裝備、卡片數值與掉落率是本遊戲的原型設定，並非已核實的台灣官方 PC RO 平衡數值。裝備屬帳號共用資產；卡片鑲嵌後會隨裝備保存。';
+    note.textContent = '裝備、卡片數值、出售價格與掉落率是本遊戲的原型設定，並非已核實的台灣官方 PC RO 平衡數值。卡片可以從已裝備或背包內的裝備取出並返還共用倉庫；出售裝備前須先取出卡片。';
     content.appendChild(note);
   }
   function renderDetails() {
