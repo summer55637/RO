@@ -857,13 +857,14 @@
       window.setTimeout(function () { if (monster.isConnected) monster.classList.remove('hit'); }, 240);
     }
     if (result.playerDamage) {
-      appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。');
+      appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。' + (result.critical ? ' 爆擊！' : ''));
       const effect = $('#scene-effect');
-      effect.textContent = '-' + result.playerDamage;
+      effect.textContent = (result.critical ? '爆擊 ' : '-') + result.playerDamage;
       effect.classList.remove('show');
       void effect.offsetWidth;
       effect.classList.add('show');
     }
+    if (result.dodged) appendCharacterLog('閃避了' + result.monsterName + '的攻擊。');
     if (result.monsterDamage) appendCharacterLog('受到' + result.monsterName + ' ' + result.monsterDamage + ' 點傷害。', result.playerDown ? 'warning' : '');
     if (result.killed) {
       let message = '擊倒' + result.monsterName + '：Base EXP +' + result.expGained + '、Job EXP +' + result.jobExpGained + '、' + result.goldGained + ' Zeny。';
@@ -932,11 +933,21 @@
         ['職業', character.jobName],
         ['Base 等級', character.baseLevel],
         ['Job 等級', character.jobLevel + ' / ' + window.ROCore.JOB_LEVEL_CAP],
-        ['力量 STR', character.stats.str],
-        ['敏捷 AGI', character.stats.agi],
-        ['體質 VIT', character.stats.vit],
         ['未分配能力點', character.statPoints]
       ].forEach(function (row) { addDetailRow(content, row[0], row[1]); });
+      addDetailHeading(content, '能力值分配');
+      [
+        ['str', '力量 STR'],
+        ['agi', '敏捷 AGI'],
+        ['vit', '體質 VIT'],
+        ['int', '智力 INT'],
+        ['dex', '靈巧 DEX'],
+        ['luk', '幸運 LUK']
+      ].forEach(function (entry) { addStatAllocationRow(content, entry[0], entry[1]); });
+      const statNote = document.createElement('p');
+      statNote.className = 'field-help';
+      statNote.textContent = '加點後不可撤回。點數成本目前採經典 RO 參考公式；正式台灣 PC 版本仍待核對。STR／DEX／AGI／LUK 的戰鬥影響皆為測試版簡化效果。';
+      content.appendChild(statNote);
     } else if (activeDetail === 'warehouse') {
       addDetailHeading(content, '帳號共用倉庫');
       addDetailRow(content, '共用 Zeny', formatNumber(account.gold));
@@ -997,6 +1008,55 @@
     right.textContent = String(value);
     row.append(left, right);
     parent.appendChild(row);
+  }
+
+  function addStatAllocationRow(parent, key, label) {
+    const value = Math.max(1, Number(character.stats[key]) || 1);
+    const cost = window.ROCore.statPointCost(value);
+    const row = document.createElement('div');
+    row.className = 'stat-allocation-row';
+
+    const name = document.createElement('span');
+    name.className = 'stat-allocation-name';
+    name.textContent = label;
+
+    const number = document.createElement('strong');
+    number.className = 'stat-allocation-value';
+    number.textContent = String(value);
+
+    const price = document.createElement('span');
+    price.className = 'stat-allocation-cost';
+    price.textContent = '需 ' + cost + ' 點';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'stat-up-button';
+    button.textContent = '+';
+    button.dataset.statKey = key;
+    button.setAttribute('aria-label', '增加 ' + label);
+    button.disabled = value >= window.ROCore.STAT_CAP || (Number(character.statPoints) || 0) < cost;
+
+    row.append(name, number, price, button);
+    parent.appendChild(row);
+  }
+
+  function allocateStatPoint(key) {
+    if (!character || activeSlot === null || !isLockOwner()) return loseControl();
+    account = readAccount();
+    const latest = account.slots[activeSlot];
+    if (!latest) return;
+    character = latest;
+    const result = window.ROCore.allocateStat(character, key);
+    if (!result.ok) {
+      showToast(result.reason || '無法分配能力點。');
+      renderGame();
+      return;
+    }
+    const labels = { str: 'STR 力量', agi: 'AGI 敏捷', vit: 'VIT 體質', int: 'INT 智力', dex: 'DEX 靈巧', luk: 'LUK 幸運' };
+    appendCharacterLog(labels[key] + ' ' + result.oldValue + ' → ' + result.newValue + '，消耗 ' + result.cost + ' 點能力點。', 'important');
+    character.lastSavedAt = Date.now();
+    if (!writeAccount()) return;
+    renderGame();
   }
 
   function setDetail(name) {
@@ -1235,7 +1295,11 @@
     $('#btn-pause').addEventListener('click', togglePause);
     $('#btn-save').addEventListener('click', function () { if (persistCurrent()) showToast('已保存到本機'); });
     $$('.speed-button').forEach(function (button) { button.addEventListener('click', function () { changeSpeed(button.dataset.speed); }); });
-    $$('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });
+    $('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });
+    $('#details-content').addEventListener('click', function (event) {
+      const button = event.target.closest('[data-stat-key]');
+      if (button && !button.disabled) allocateStatPoint(button.dataset.statKey);
+    });
     $('#btn-offline-close').addEventListener('click', closeOfflineReport);
     $('#rename-name').addEventListener('input', checkRenameInput);
     $('#btn-rename-cancel').addEventListener('click', function () { $('#rename-dialog').close(); pendingRenameSlot = null; });
