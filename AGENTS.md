@@ -22,7 +22,7 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.6 skill trees are being developed on `feat/first-job-skill-trees`; do not call this deployed until PR CI and the GitHub Pages deployment both pass. The currently deployed main before this milestone is MVP 0.5 and includes 14 character animation groups (120 frames), a verified 15-frame critical-hit effect, and three lazy-loaded/verified sound effects with a persistent toggle. MVP 0.6 adds prototype skill trees for novice and six first-job classes, job-level skill points, passive bonuses, and auto-cast combat skills; target Service Worker shell cache is v9.
+MVP 0.6 is merged into `main` at commit `21bd563fa8079017d93026c2da77c4db0e686e91` and deployed to GitHub Pages. In addition to the MVP 0.5 assets and sound effects, the game now has prototype skill trees for novice and all six first-job classes, job-level skill points, skill prerequisites, passive bonuses and auto-cast skills. Service Worker shell cache is v9; app shell remains network-first with offline fallback, launch-time update checks, and automatic tab reload on upgrades. CI and the MVP 0.6 deployment passed. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
