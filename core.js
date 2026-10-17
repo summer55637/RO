@@ -653,7 +653,9 @@
     const seconds = Math.min(MAX_OFFLINE_SECONDS, Math.max(0, Math.floor(Number(elapsedSeconds) || 0)));
     const oldGold = Number(account.gold) || 0;
     const oldWarehouse = Object.assign({}, account.warehouse || {});
-    const report = { durationSeconds: seconds, expGained: 0, jobExpGained: 0, goldGained: 0, kills: 0, levelUps: [], drops: {}, jobCapped: false };
+    ensureAccountEquipmentShape(account);
+    const oldEquipmentIds = new Set(account.equipmentInventory.map(function (item) { return item && item.instanceId; }).filter(Boolean));
+    const report = { durationSeconds: seconds, expGained: 0, jobExpGained: 0, goldGained: 0, kills: 0, levelUps: [], drops: {}, equipmentDrops: {}, jobCapped: false };
     for (let index = 0; index < seconds; index += 1) {
       const step = stepCombat(character, account, rng);
       report.expGained += step.expGained;
@@ -667,6 +669,12 @@
     names.forEach(function (name) {
       const gained = (Number(account.warehouse[name]) || 0) - (Number(oldWarehouse[name]) || 0);
       if (gained > 0) report.drops[name] = gained;
+    });
+    account.equipmentInventory.forEach(function (instance) {
+      if (!instance || !instance.instanceId || oldEquipmentIds.has(instance.instanceId)) return;
+      const item = getItemDefinition(instance.itemId);
+      if (!item || item.type !== 'equipment') return;
+      report.equipmentDrops[item.name] = (report.equipmentDrops[item.name] || 0) + 1;
     });
     return report;
   }
