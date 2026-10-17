@@ -6,3 +6,6 @@
 .map-list{display:grid;gap:10px}.map-option:disabled{opacity:.48;cursor:not-allowed;filter:saturate(.65)}.map-option:disabled:hover{background:rgba(9,14,19,.3);border-color:rgba(217,185,112,.25)}.map-option:disabled .map-arrow{color:#9a9fa0}.map-option .map-copy span{line-height:1.65}
 
 .connection-status.offline{color:#efaaa2;border-color:rgba(231,126,120,.45);background:rgba(231,126,120,.06)}
+
+.stat-allocation-row{display:grid;grid-template-columns:minmax(86px,1fr) 32px 58px 28px;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.045);font-size:10px}.stat-allocation-name{color:#c5d0d3}.stat-allocation-value{color:#f0dba3;text-align:center;font-variant-numeric:tabular-nums}.stat-allocation-cost{color:var(--muted);text-align:right;font-size:9px;white-space:nowrap}.stat-up-button{min-width:26px;min-height:25px;border:1px solid rgba(217,185,112,.4);border-radius:6px;background:rgba(217,185,112,.09);color:var(--gold-light);font-weight:900}.stat-up-button:hover:not(:disabled){background:rgba(217,185,112,.2)}.stat-up-button:disabled{opacity:.3;cursor:not-allowed}
+@media(max-width:560px){.stat-allocation-row{grid-template-columns:minmax(86px,1fr) 28px 54px 28px}}
