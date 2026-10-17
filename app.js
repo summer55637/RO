@@ -1348,6 +1348,17 @@
     if (!preserveFocusedBestiaryControl) renderDetails();
   }
 
+  function getVerifiedMonsterArtworkSource(monster) {
+    if (!monster) return '';
+    const assetId = monster.assetId ? monster.assetId : '';
+    // Only use sprite URLs created from assets that have already passed the manifest's byte/hash validation.
+    if (assetId && assetUrls[assetId]) return assetUrls[assetId];
+    // The Thief Bug has a dedicated SVG fallback until a Mob 1051 bitmap can be pinned and verified.
+    if (monster.id === 'thief_bug' && monster.assetFallback === 'vector') return getMonsterArtworkSource(monster);
+    // Never let a missing portrait silently fall back to the Poring image.
+    return '';
+  }
+
   function renderBestiary(content) {
     const monsterData = window.ROWorld.monsters || {};
     const monsterIds = Object.keys(monsterData).sort(function (left, right) {
@@ -1453,17 +1464,39 @@
         card.className = 'bestiary-entry' + (discovered ? '' : ' undiscovered');
         const head = document.createElement('div');
         head.className = 'bestiary-entry-head';
-        const emblem = document.createElement('span');
-        emblem.className = 'bestiary-emblem';
-        emblem.textContent = discovered ? '✦' : '?';
+        let portrait;
+        if (discovered) {
+          portrait = document.createElement('span');
+          portrait.className = 'bestiary-portrait';
+          const artworkSource = getVerifiedMonsterArtworkSource(monster);
+          if (artworkSource) {
+            const image = document.createElement('img');
+            image.src = artworkSource;
+            image.alt = (monster.name || id) + ' · Mob ID ' + (monster.sourceMobId || '未核對');
+            image.loading = 'lazy';
+            portrait.appendChild(image);
+          } else {
+            const placeholder = document.createElement('span');
+            placeholder.className = 'bestiary-portrait-placeholder';
+            placeholder.textContent = '未載入';
+            placeholder.setAttribute('aria-label', '尚無已驗證的怪物縮圖');
+            portrait.appendChild(placeholder);
+          }
+        } else {
+          portrait = document.createElement('span');
+          portrait.className = 'bestiary-emblem';
+          portrait.textContent = '?';
+        }
         const copy = document.createElement('div');
         copy.className = 'bestiary-copy';
         const title = document.createElement('strong');
         title.textContent = discovered ? (monster.name || id) : '??? 未遭遇';
         const meta = document.createElement('small');
-        meta.textContent = discovered ? '擊倒 ' + formatNumber(count) + ' 隻 · HP ' + formatNumber(monster.maxHp) : '擊倒此怪物後解鎖資料';
+        meta.textContent = discovered
+          ? 'Mob ID ' + (monster.sourceMobId || '未核對') + ' · 擊倒 ' + formatNumber(count) + ' 隻 · HP ' + formatNumber(monster.maxHp)
+          : '擊倒此怪物後解鎖資料';
         copy.append(title, meta);
-        head.append(emblem, copy);
+        head.append(portrait, copy);
         card.appendChild(head);
         if (discovered) {
           const habitats = window.ROCore.getMonsterEncounterMaps(id, character.baseLevel);
