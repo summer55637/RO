@@ -15,14 +15,14 @@ An upstream repository's own license applies only to material its author can lic
 - The owner has authorized the assistant to decide ordinary engineering details and continue implementing without asking for approval on each small step.
 - Work directly against `summer55637/RO`; use feature branches, run automated checks, merge successful work, and verify the GitHub Pages deployment.
 - Search GitHub and Google/web for useful assets and official/current data when needed; record the source and version used.
-- Preserve existing saves, validated asset caching, map progression, and account-tab locking. Do not overwrite player data as part of updates.
+- Preserve existing saves, validated asset caching, and map progression. The owner explicitly requested removal of account-tab locking; do not reintroduce its blocking screen unless asked. Multiple live tabs may overwrite shared localStorage data, so document this risk. Do not overwrite or reset player data as part of updates.
 - Separate prototype balance values from verified Taiwan PC RO rules in code/docs.
 - After each milestone, update `README.md`, `PROJECT_PLAN.md`, and `assets/SOURCES.md` where relevant.
 - Current public target: `https://summer55637.github.io/RO/`.
 
 ## Current state
 
-The current `main` commit before the active fix is `71c18b3ba4873e4a4c62b1d5d0d10eb0731c4168`, with MVP 0.8 deployed and Service Worker shell cache v11. The active branch `fix/stale-tab-lock-recovery` repairs stale account-tab locks: it expires inactive heartbeats after 12 seconds and auto-rechecks every 2.5 seconds while the lock screen is displayed. The account lock remains in place for a live tab; the fix does not delete or migrate player saves. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
+The current `main` commit is `871ad55df89058559d8f4ad9e33cdd63045e4e91`, with MVP 0.8 deployed and Service Worker shell cache v12. The owner has now explicitly requested complete removal of the account-tab lock. The implementation removes the lock screen, takeover flow, read-only-tab enforcement, and lock heartbeats without changing the account save key or player data. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
