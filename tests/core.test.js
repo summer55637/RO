@@ -86,7 +86,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v34/);
+  assert.match(serviceWorker, /ro-h5-shell-v35/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -180,8 +180,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 2\.6/);
-  assert.match(sw, /ro-h5-shell-v34/);
+  assert.match(html, /MVP 2.7/);
+  assert.match(sw, /ro-h5-shell-v35/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -234,8 +234,8 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 2\.6/);
-  assert.match(sw, /ro-h5-shell-v34/);
+  assert.match(html, /MVP 2.7/);
+  assert.match(sw, /ro-h5-shell-v35/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -252,8 +252,8 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
-  assert.match(html, /MVP 2\.6/);
-  assert.match(sw, /ro-h5-shell-v34/);
+  assert.match(html, /MVP 2.7/);
+  assert.match(sw, /ro-h5-shell-v35/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -427,7 +427,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 2\.6/);
+  assert.match(html, /MVP 2.7/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -573,7 +573,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 2\.6/);
+  assert.match(html, /MVP 2.7/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -887,7 +887,9 @@ function testMonsterActSprExportReproducibility() {
     timeout: 30000
   });
   assert.match(output, /Verified lunatic: Mob 1063, action 2, 12 frames at 80ms\/frame/);
+  assert.match(output, /Verified lunatic-attack: Mob 1063, action 18, 19 frames at 40ms\/frame/);
   assert.match(output, /Verified wolf: Mob 1013, action 0, 15 frames at 120ms\/frame/);
+  assert.match(output, /Verified wolf-attack: Mob 1013, action 16, 7 frames at 120ms\/frame/);
   assert.match(output, /Verified poring-idle: Mob 1002, action 0, 4 frames at 160ms\/frame/);
   assert.match(output, /Verified poring-attack: Mob 1002, action 16, 28 frames at 40ms\/frame/);
   assert.match(output, /Verified green-plant: Mob 1080, action 0, 12 frames at 160ms\/frame/);
@@ -995,6 +997,86 @@ function testPoringIdleAndAttackAnimations() {
   assert.match(appSource, /result\.dodged \|\| result\.monsterDamage/);
   assert.match(appSource, /monster\.attackAnimationAssetId/);
   assert.match(appSource, /optionalAnimationIds\.add\(monster\.attackAnimationAssetId\)/);
+}
+
+
+function testLunaticWolfAttackAnimations() {
+  const tool = require(path.join(__dirname, '..', 'tools', 'render_monster_act_spr.js'));
+  const expected = [
+    {
+      key: 'lunatic', mobId: 1063, id: 'lunatic_attack_anim', path: 'assets/lunatic_attack.svg',
+      actPath: 'lunatic.act', sprPath: 'lunatic.spr', actionIndex: 18, frames: 19, frameMs: 40,
+      bytes: 95667, sha: '4d1e7e2ca0ac737758adb7439f48545a3dadaed6',
+      actBytes: 129468, actSha: 'fb90ed9e0d2f71392b2f25cddb4784a09a221cca',
+      sprBytes: 36287, sprSha: '1cdcc31c9135ede2140e0d951b59efcc1560eda2'
+    },
+    {
+      key: 'wolf', mobId: 1013, id: 'wolf_attack_anim', path: 'assets/wolf_attack.svg',
+      actPath: 'wolf.act', sprPath: 'wolf.spr', actionIndex: 16, frames: 7, frameMs: 120,
+      bytes: 112050, sha: '54058111ce081c79625d91f1acc6f4dcc9ab7de0',
+      actBytes: 36564, actSha: '93c05e86366a7d9cfab19f59d1ff8f60dd1b617d',
+      sprBytes: 104662, sprSha: '61b60050dce8094bbebf04d86cc87ef1e8d61706'
+    }
+  ];
+  const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
+  expected.forEach(function (want) {
+    const monster = world.monsters[want.key];
+    const asset = assetMap.get(want.id);
+    assert.ok(monster, 'missing attack-animation monster ' + want.key);
+    assert.ok(asset, 'missing attack animation manifest ' + want.id);
+    assert.equal(monster.sourceMobId, want.mobId);
+    assert.equal(monster.assetId, want.key, 'attack animation must preserve its dedicated static identity image');
+    assert.equal(monster.attackAnimationAssetId, want.id);
+    assert.equal(monster.attackAnimationActionIndex, want.actionIndex);
+    assert.equal(monster.attackAnimationFrameCount, want.frames);
+    assert.equal(monster.attackAnimationFrameDurationMs, want.frameMs);
+    assert.equal(asset.sourceMobId, want.mobId);
+    assert.equal(asset.assetKind, 'monster-animation');
+    assert.equal(asset.animationType, 'attack');
+    assert.equal(asset.actActionIndex, want.actionIndex);
+    assert.equal(asset.frameCount, want.frames);
+    assert.equal(asset.frameDurationMs, want.frameMs);
+    assert.equal(asset.requiredOnStart, false);
+    assert.equal(asset.sourceRepository, 'MyGodIsHe/pyro-tools');
+    assert.equal(asset.sourceCommit, '1a28450df59bc69e56e70e431f9b61351bafc8f6');
+    assert.equal(asset.sourceActSha, want.actSha);
+    assert.equal(asset.sourceSprSha, want.sprSha);
+    assert.equal(asset.bytes, want.bytes);
+    assert.equal(asset.gitSha, want.sha);
+
+    const actBytes = fs.readFileSync(path.join(__dirname, '..', 'tools', 'samples', want.actPath));
+    const sprBytes = fs.readFileSync(path.join(__dirname, '..', 'tools', 'samples', want.sprPath));
+    assert.equal(actBytes.length, want.actBytes);
+    assert.equal(tool.gitBlobSha(actBytes), want.actSha);
+    assert.equal(sprBytes.length, want.sprBytes);
+    assert.equal(tool.gitBlobSha(sprBytes), want.sprSha);
+    const act = tool.parseAct(actBytes);
+    const spr = tool.parseSpr(sprBytes);
+    assert.equal(Math.round(act.speeds[want.actionIndex] * 40), want.frameMs);
+    assert.equal(act.actions[want.actionIndex].length, want.frames);
+    act.actions[want.actionIndex].forEach(function (layers, frameIndex) {
+      assert.equal(layers.length, 1, want.key + ' attack frame should contain one layer (' + frameIndex + ')');
+      assert.equal(layers[0].direction, 0, want.key + ' attack must use the validated direction-0 layer');
+      assert.ok(spr.sprites[layers[0].spriteIndex], want.key + ' attack frame must reference its paired SPR');
+      assert.equal(Math.abs(layers[0].rotation), 0);
+      assert.equal(Math.abs(layers[0].scaleX - 1) < 0.001, true);
+      assert.equal(Math.abs(layers[0].scaleY - 1) < 0.001, true);
+    });
+
+    const file = fs.readFileSync(path.join(__dirname, '..', want.path));
+    assert.equal(file.length, want.bytes);
+    const digest = crypto.createHash('sha1').update(Buffer.concat([
+      Buffer.from('blob ' + file.length + '\0'), file
+    ])).digest('hex');
+    assert.equal(digest, want.sha);
+    const svg = file.toString('utf8');
+    assert.match(svg, new RegExp('data-mob-id="' + want.mobId + '"'));
+    assert.match(svg, new RegExp('data-act-action-index="' + want.actionIndex + '"'));
+    assert.match(svg, new RegExp('data-frame-count="' + want.frames + '"'));
+    assert.match(svg, new RegExp('data-frame-duration-ms="' + want.frameMs + '"'));
+    assert.match(svg, /攻擊逐格動畫/);
+    assert.equal((svg.match(/id="frame-/g) || []).length, want.frames);
+  });
 }
 
 function testCriticalEffectManifest() {
@@ -1278,7 +1360,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 2\.6/);
+  assert.match(html, /MVP 2.7/);
 }
 
 
@@ -1325,8 +1407,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 2\.6/);
-  assert.match(sw, /ro-h5-shell-v34/);
+  assert.match(html, /MVP 2.7/);
+  assert.match(sw, /ro-h5-shell-v35/);
 }
 
 testMonsterArtworkIdentityMapping();
@@ -1336,6 +1418,7 @@ testMonsterIdleAnimationAssets();
 testMonsterActSprExportReproducibility();
 testGreenPlantMob1080ActSprIdentity();
 testPoringIdleAndAttackAnimations();
+testLunaticWolfAttackAnimations();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
 testSoundEffectManifest();
@@ -1372,4 +1455,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (42 suites).');
+console.log('RO H5 core tests passed (43 suites).');
