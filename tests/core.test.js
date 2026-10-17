@@ -65,6 +65,9 @@ function testMonsterArtworkIdentityMapping() {
   assert.equal(gitBlobSha, thiefBugAsset.gitSha, 'local Thief Bug bytes must match the declared Git blob SHA-1');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   assert.match(appSource, /function getMonsterArtworkSource\(monster\)/);
+  assert.match(appSource, /function getMissingMonsterArtworkSource\(\)/, 'missing art has an explicit placeholder');
+  assert.match(appSource, /return getMissingMonsterArtworkSource\(\)/, 'missing art must not borrow another monster image');
+  assert.doesNotMatch(appSource, /return assetUrls\.poring \|\| '\.\/assets\/poring\.png'/, 'battle art must not silently substitute Poring');
   assert.match(appSource, /data:image\/svg\+xml;charset=utf-8/);
   assert.match(appSource, /getMonsterArtworkSource\(currentMonster\)/);
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -82,7 +85,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v28/);
+  assert.match(serviceWorker, /ro-h5-shell-v29/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -149,8 +152,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 2\.1/);
-  assert.match(sw, /ro-h5-shell-v28/);
+  assert.match(html, /MVP 2\.2/);
+  assert.match(sw, /ro-h5-shell-v29/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -193,8 +196,8 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 2\.1/);
-  assert.match(sw, /ro-h5-shell-v28/);
+  assert.match(html, /MVP 2\.2/);
+  assert.match(sw, /ro-h5-shell-v29/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -211,8 +214,8 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
-  assert.match(html, /MVP 2\.1/);
-  assert.match(sw, /ro-h5-shell-v28/);
+  assert.match(html, /MVP 2\.2/);
+  assert.match(sw, /ro-h5-shell-v29/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -386,7 +389,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 2\.1/);
+  assert.match(html, /MVP 2\.2/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -532,7 +535,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 2\.1/);
+  assert.match(html, /MVP 2\.2/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -1036,7 +1039,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 2\.1/);
+  assert.match(html, /MVP 2\.2/);
 }
 
 
@@ -1083,8 +1086,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 2\.1/);
-  assert.match(sw, /ro-h5-shell-v28/);
+  assert.match(html, /MVP 2\.2/);
+  assert.match(sw, /ro-h5-shell-v29/);
 }
 
 testMonsterArtworkIdentityMapping();
