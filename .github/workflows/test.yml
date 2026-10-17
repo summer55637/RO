@@ -1,0 +1,28 @@
+name: MVP smoke tests
+
+on:
+  push:
+    branches:
+      - feat/first-playable-mvp
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: |
+          node --check core.js
+          node --check app.js
+          node --check sw.js
+          node --check tests/core.test.js
+      - name: Run core regression tests
+        run: npm test

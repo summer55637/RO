@@ -1,0 +1,10 @@
+{
+  "name": "ro-h5-idle-rpg",
+  "version": "0.1.0",
+  "private": true,
+  "description": "純單機 H5 放置 RPG 第一個可玩版本",
+  "scripts": {
+    "test": "node tests/core.test.js",
+    "serve": "python -m http.server 8000"
+  }
+}
