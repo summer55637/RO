@@ -11,7 +11,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v16/);
+  assert.match(serviceWorker, /ro-h5-shell-v17/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -217,8 +217,59 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.1/);
+  assert.match(html, /MVP 1\.2/);
 }
+function testCardExtractionTransactions() {
+  const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
+  const account = core.emptyAccount();
+  character.equipment.weapon = { instanceId: 'extraction-equipped', itemId: 'novice_dagger', cards: ['fabre_card'], refineLevel: 2 };
+  assert.equal(core.getEquipmentBonuses(character).attackBonus, 8, 'equipped card and +2 refinement are active before extraction');
+  const extractedEquipped = core.removeSocketedCard(character, account, 'extraction-equipped', 0);
+  assert.equal(extractedEquipped.ok, true);
+  assert.equal(extractedEquipped.cardName, '綠棉蟲卡片');
+  assert.equal(extractedEquipped.slot, 'weapon');
+  assert.deepEqual(character.equipment.weapon.cards, []);
+  assert.equal(character.equipment.weapon.refineLevel, 2, 'card extraction must preserve refinement');
+  assert.equal(account.warehouse['綠棉蟲卡片'], 1, 'extracted card returns to shared warehouse');
+  assert.equal(core.getEquipmentBonuses(character).attackBonus, 7, 'card effect is removed while gear and refinement remain active');
+
+  account.equipmentInventory.push({ instanceId: 'extraction-inventory', itemId: 'four_leaf_charm', cards: ['lunatic_card'] });
+  const extractedInventory = core.removeSocketedCard(character, account, 'extraction-inventory', 0);
+  assert.equal(extractedInventory.ok, true);
+  assert.equal(extractedInventory.slot, 'inventory', 'cards can be extracted without equipping the item');
+  assert.equal(account.warehouse['瘋兔卡片'], 1);
+  assert.deepEqual(account.equipmentInventory[0].cards, []);
+  const emptySlot = core.removeSocketedCard(character, account, 'extraction-inventory', 0);
+  assert.equal(emptySlot.ok, false, 'an empty socket cannot duplicate a card');
+  assert.equal(account.warehouse['瘋兔卡片'], 1, 'failed extraction leaves warehouse unchanged');
+}
+
+function testEquipmentSaleTransactions() {
+  const character = core.makeCharacter('EquipmentSeller', 'female', 'novice');
+  const account = core.emptyAccount();
+  account.gold = 25;
+  account.slots[0] = character;
+  account.equipmentInventory.push({ instanceId: 'sale-dagger', itemId: 'novice_dagger', cards: [], refineLevel: 3 });
+  const sold = core.sellEquipment(character, account, 'sale-dagger');
+  assert.deepEqual({ ok: sold.ok, itemName: sold.itemName, salePrice: sold.salePrice }, { ok: true, itemName: '初心者短刀', salePrice: 30 });
+  assert.equal(account.gold, 55, 'sale increases shared Zeny by the base prototype price');
+  assert.equal(account.equipmentInventory.some(function (item) { return item.instanceId === 'sale-dagger'; }), false);
+  assert.equal(sold.refineLevel, 3, 'selling refined gear reports its refinement but does not refund refinement costs');
+
+  account.equipmentInventory.push({ instanceId: 'sale-carded', itemId: 'cotton_adventurer_armor', cards: ['poring_card'] });
+  const protectedSale = core.sellEquipment(character, account, 'sale-carded');
+  assert.equal(protectedSale.ok, false, 'carded gear must not be sold before card extraction');
+  assert.equal(account.equipmentInventory.some(function (item) { return item.instanceId === 'sale-carded'; }), true);
+  assert.equal(account.gold, 55);
+  assert.equal(core.removeSocketedCard(character, account, 'sale-carded', 0).ok, true);
+  assert.equal(core.sellEquipment(character, account, 'sale-carded').salePrice, 40, 'gear can be sold after the card is returned');
+
+  character.equipment.weapon = { instanceId: 'still-worn', itemId: 'novice_dagger', cards: [] };
+  account.equipmentInventory.push({ instanceId: 'still-worn', itemId: 'novice_dagger', cards: [] });
+  const wornSale = core.sellEquipment(character, account, 'still-worn');
+  assert.equal(wornSale.ok, false, 'an instance still equipped by any character cannot be sold');
+}
+
 function testEquipmentUiWiring() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -226,10 +277,15 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /function renderEquipment\(content\)/);
   assert.match(appSource, /window\.ROCore\.equipItem\(character, account, instanceId\)/);
   assert.match(appSource, /window\.ROCore\.socketCard\(character, account, slot, cardId\)/);
+  assert.ok(appSource.includes('window.ROCore.removeSocketedCard(character, account, instanceId, cardIndex)'));
+  assert.ok(appSource.includes('window.ROCore.sellEquipment(character, account, instanceId)'));
+  assert.ok(appSource.includes('function handleRemoveSocketedCard(instanceId, cardIndex, cardName)'));
+  assert.ok(appSource.includes('function handleSellEquipment(instanceId)'));
+  assert.ok(appSource.includes('出售（'));
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.1/);
+  assert.match(html, /MVP 1\.2/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -715,7 +771,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.1/);
+  assert.match(html, /MVP 1\.2/);
 }
 
 testAutomaticUpdateStrategy();
@@ -745,5 +801,7 @@ testEquipmentDropAndSaveCompatibility();
 testEquipmentUiWiring();
 testEquipmentRefinementProgression();
 testEquipmentRefinementCombatAndUi();
+testCardExtractionTransactions();
+testEquipmentSaleTransactions();
 
-console.log('RO H5 core tests passed (27 suites).');
+console.log('RO H5 core tests passed (29 suites).');

@@ -370,6 +370,69 @@
     return { ok: true, cardName: card.name, itemName: gear.name };
   }
 
+  function removeSocketedCard(character, account, instanceId, cardIndex) {
+    if (!character || !account) return { ok: false, reason: '角色或帳號資料尚未載入。' };
+    ensureEquipmentShape(character);
+    ensureAccountEquipmentShape(account);
+    if (!account.warehouse || typeof account.warehouse !== 'object' || Array.isArray(account.warehouse)) account.warehouse = {};
+    const slots = ['weapon', 'armor', 'shoes', 'accessory'];
+    let instance = null;
+    let equippedSlot = null;
+    slots.some(function (slot) {
+      const candidate = character.equipment[slot];
+      if (candidate && candidate.instanceId === instanceId) {
+        instance = candidate;
+        equippedSlot = slot;
+        return true;
+      }
+      return false;
+    });
+    if (!instance) instance = account.equipmentInventory.find(function (candidate) { return candidate && candidate.instanceId === instanceId; }) || null;
+    if (!instance) return { ok: false, reason: '找不到這件裝備；沒有移動卡片。' };
+    if (!Array.isArray(instance.cards)) instance.cards = [];
+    if (!Number.isInteger(cardIndex) || cardIndex < 0 || cardIndex >= instance.cards.length) {
+      return { ok: false, reason: '這個卡槽沒有可取出的卡片。' };
+    }
+    const cardId = instance.cards[cardIndex];
+    const card = getItemDefinition(cardId);
+    const gear = getItemDefinition(instance.itemId);
+    if (!card || card.type !== 'card' || !gear || gear.type !== 'equipment') {
+      return { ok: false, reason: '裝備或卡片資料無效；沒有移動卡片。' };
+    }
+    instance.cards.splice(cardIndex, 1);
+    account.warehouse[card.name] = Math.max(0, Number(account.warehouse[card.name]) || 0) + 1;
+    return { ok: true, cardId: cardId, cardName: card.name, itemName: gear.name, instanceId: instance.instanceId, slot: equippedSlot || 'inventory' };
+  }
+
+  function sellEquipment(character, account, instanceId) {
+    if (!character || !account) return { ok: false, reason: '角色或帳號資料尚未載入。' };
+    ensureEquipmentShape(character);
+    ensureAccountEquipmentShape(account);
+    const inventoryIndex = account.equipmentInventory.findIndex(function (instance) { return instance && instance.instanceId === instanceId; });
+    if (inventoryIndex < 0) return { ok: false, reason: '只有共用背包裡的裝備可以出售。' };
+    const instance = account.equipmentInventory[inventoryIndex];
+    const item = getItemDefinition(instance.itemId);
+    if (!item || item.type !== 'equipment') return { ok: false, reason: '裝備資料無效；沒有出售物品。' };
+    if (Array.isArray(instance.cards) && instance.cards.length > 0) {
+      return { ok: false, reason: '裝備還有已鑲嵌卡片；請先取出卡片再出售。' };
+    }
+    function holdsInstance(hero) {
+      if (!hero || typeof hero !== 'object') return false;
+      ensureEquipmentShape(hero);
+      return ['weapon', 'armor', 'shoes', 'accessory'].some(function (slot) {
+        return hero.equipment[slot] && hero.equipment[slot].instanceId === instanceId;
+      });
+    }
+    if (holdsInstance(character) || (Array.isArray(account.slots) && account.slots.some(function (hero) { return hero !== character && holdsInstance(hero); }))) {
+      return { ok: false, reason: '這件裝備仍被角色穿戴中；請先卸下裝備。' };
+    }
+    const salePrice = Math.max(0, Math.floor(Number(item.sellPrice) || 0));
+    if (salePrice <= 0) return { ok: false, reason: '這件裝備沒有可用的出售價格。' };
+    account.equipmentInventory.splice(inventoryIndex, 1);
+    account.gold = Math.max(0, Number(account.gold) || 0) + salePrice;
+    return { ok: true, itemName: item.name, salePrice: salePrice, refineLevel: Math.max(0, Math.floor(Number(instance.refineLevel) || 0)) };
+  }
+
   function chooseMonster(mapId, rng) {
     const random = typeof rng === 'function' ? rng : Math.random;
     const map = getMap(mapId);
@@ -730,6 +793,8 @@
     equipItem: equipItem,
     unequipItem: unequipItem,
     socketCard: socketCard,
+    removeSocketedCard: removeSocketedCard,
+    sellEquipment: sellEquipment,
     normalizeNameKey: normalizeNameKey,
     validateCharacterName: validateCharacterName,
     makeCharacter: makeCharacter,
