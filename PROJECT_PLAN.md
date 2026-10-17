@@ -1,8 +1,8 @@
 # RO 純單機 H5 放置 RPG — 專案規畫總表
 
-- **文件版本：** V1.26
+- **文件版本：** V1.27
 - **整理日期：** 2026-10-17
-- **目前階段：** MVP 2.0 離線還原已快取怪物圖鑑縮圖
+- **目前階段：** MVP 2.1 盜蟲 Mob 1051 已驗證圖像接入
 - **實作狀態：** 使用者已於 2026-10-17 授權開始實作
 - **GitHub 倉庫：** `summer55637/RO`（預設分支 `main`）
 - **現況盤點：** 目標倉庫初始僅含本規畫文件；nba9001-sys/ro-idle 是既有原型與素材／資料參考倉庫。
@@ -625,3 +625,12 @@
 - 此還原流程只讀取本機已存在快取，不會觸發網路下載；尚未快取或驗證失敗的素材保持「未載入」佔位，等待原有地圖素材流程按需載入。
 - 非同步讀取完成後，只有在同一角色仍位於圖鑑、原清單仍存在時才更新縮圖，避免晚到結果覆寫其他分頁或角色介面。反覆進入圖鑑時同一資產只讀取一次，降低 IndexedDB 工作量。
 - 不新增／修改存檔欄位，不改角色、戰鬥、掉落或地圖進度。Service Worker shell cache 升至 v27；自動測試保護「僅從本機快取復原、驗證後才顯示、不觸發下載」的約束。
+
+
+## 41. 盜蟲 Mob 1051 專屬圖像接入（MVP 2.1，2026-10-17）
+
+- Divine Pride 的[盜蟲資料頁](https://www.divine-pride.net/database/monster/1051/thief-bug)確認 `THIEF_BUG` 與 Mob ID `1051`；取得[靜態 PNG](https://static.divine-pride.net/images/mobs/png/1051.png)並固定為 `assets/thief_bug.png`（36×27 pixels、1,783 bytes、Git blob SHA-1 `342abcc99d1c1d902751b64e65b6f56d8b309342`）。
+- `world-data.js` 已加入獨立 manifest entry；地圖原有素材準備流程會按需讀取此本地檔，驗證 bytes 與 Git blob SHA-1 後才放入 IndexedDB。向量圖只保留為失敗備援，絕不以 Mob 1015（殭屍）替代。
+- 新增回歸測試檢查 PNG signature、尺寸、原始 bytes、Git blob SHA、來源 URL、Mob ID 及所有地圖怪物的 manifest 對應；Service Worker shell cache 從 v27 升至 v28。
+- Divine Pride 的[盜蟲精靈表](https://static.divine-pride.net/images/spritesheets/npc/1051.png)已確認可供後續研究，但目前只接入靜態 PNG。SPR／ACT 的動作索引、各動作畫格、幀時長與對應關係仍要逐項解析和實際核對，不能把精靈表直接當成已完成動畫。
+- 此版本不更動角色存檔、戰鬥數值、掉落、角色進度或帳號共用資產；沒有重設任何玩家資料。

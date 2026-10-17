@@ -1290,7 +1290,7 @@
     const assetId = monster && monster.assetId ? monster.assetId : 'poring';
     if (assetUrls[assetId]) return assetUrls[assetId];
     if (monster && monster.id === 'thief_bug' && monster.assetFallback === 'vector') {
-      // Pinned source bundle has no verified Mob 1051 image. Do not display Mob 1015 (Zombie).
+      // Keep the dedicated vector fallback if the verified Mob 1051 PNG is unavailable; never display Mob 1015 (Zombie).
       const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 112"><g stroke="#43291d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M51 46 31 33 18 18 M76 46 97 33 110 18 M46 57 24 51 12 39 M45 69 23 78 16 94 M82 57 104 51 116 39 M83 69 105 78 112 94 M54 80 46 98 M74 80 82 98 M57 38 48 25 M71 38 80 25"/></g><ellipse cx="64" cy="65" rx="23" ry="31" fill="#8d5834" stroke="#43291d" stroke-width="4"/><path d="M43 51Q64 59 85 51 M41 64Q64 72 87 64 M46 77Q64 83 82 77" stroke="#4d2d1d" stroke-width="3" fill="none"/><ellipse cx="64" cy="34" rx="15" ry="13" fill="#a36a3d" stroke="#43291d" stroke-width="4"/><circle cx="58" cy="32" r="2.5" fill="#f2d8a0"/><circle cx="70" cy="32" r="2.5" fill="#f2d8a0"/></svg>';
       return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     }
@@ -1354,7 +1354,7 @@
     const assetId = monster.assetId ? monster.assetId : '';
     // Only use sprite URLs created from assets that have already passed the manifest's byte/hash validation.
     if (assetId && assetUrls[assetId]) return assetUrls[assetId];
-    // The Thief Bug has a dedicated SVG fallback until a Mob 1051 bitmap can be pinned and verified.
+    // The Thief Bug keeps a dedicated SVG fallback if its pinned Mob 1051 bitmap is unavailable.
     if (monster.id === 'thief_bug' && monster.assetFallback === 'vector') return getMonsterArtworkSource(monster);
     // Never let a missing portrait silently fall back to the Poring image.
     return '';

@@ -1,5 +1,7 @@
 'use strict';
 
+const crypto = require('node:crypto');
+
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -41,8 +43,26 @@ function testMonsterArtworkIdentityMapping() {
     else assert.equal(asset.path, './assets/' + monsterId + '.png', monsterId + ' local path mismatch');
   });
   assert.equal(world.monsters.thief_bug.sourceMobId, 1051);
-  assert.equal(world.monsters.thief_bug.assetFallback, 'vector');
-  assert.equal(assetMap.has('thief_bug'), false, 'Thief Bug must not use Zombie Mob 1015');
+  assert.equal(world.monsters.thief_bug.assetId, 'thief_bug');
+  assert.equal(world.monsters.thief_bug.assetFallback, 'vector', 'vector art remains the explicit fallback only');
+  const thiefBugAsset = assetMap.get('thief_bug');
+  assert.ok(thiefBugAsset, 'Thief Bug must have its own verified artwork manifest entry');
+  assert.equal(thiefBugAsset.sourceMobId, 1051);
+  assert.equal(thiefBugAsset.sourceRepository, 'divine-pride.net');
+  assert.equal(thiefBugAsset.sourcePath, 'images/mobs/png/1051.png');
+  assert.equal(thiefBugAsset.sourceUrl, 'https://static.divine-pride.net/images/mobs/png/1051.png');
+  assert.equal(thiefBugAsset.path, './assets/thief_bug.png');
+  assert.equal(thiefBugAsset.bytes, 1783);
+  assert.equal(thiefBugAsset.gitSha, '342abcc99d1c1d902751b64e65b6f56d8b309342');
+  const thiefBugBytes = fs.readFileSync(path.join(__dirname, '..', 'assets', 'thief_bug.png'));
+  assert.equal(thiefBugBytes.length, thiefBugAsset.bytes);
+  assert.deepEqual(thiefBugBytes.subarray(0, 8), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  assert.equal(thiefBugBytes.readUInt32BE(16), 36, 'Mob 1051 PNG width should match the pinned source');
+  assert.equal(thiefBugBytes.readUInt32BE(20), 27, 'Mob 1051 PNG height should match the pinned source');
+  const gitBlobSha = crypto.createHash('sha1').update(Buffer.concat([
+    Buffer.from('blob ' + thiefBugBytes.length + '\0'), thiefBugBytes
+  ])).digest('hex');
+  assert.equal(gitBlobSha, thiefBugAsset.gitSha, 'local Thief Bug bytes must match the declared Git blob SHA-1');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   assert.match(appSource, /function getMonsterArtworkSource\(monster\)/);
   assert.match(appSource, /data:image\/svg\+xml;charset=utf-8/);
@@ -62,7 +82,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v27/);
+  assert.match(serviceWorker, /ro-h5-shell-v28/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -129,8 +149,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 2\.0/);
-  assert.match(sw, /ro-h5-shell-v27/);
+  assert.match(html, /MVP 2\.1/);
+  assert.match(sw, /ro-h5-shell-v28/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -142,17 +162,24 @@ function testVerifiedBestiaryArtworkEvidence() {
     const monsterId = entry[0], monster = entry[1];
     assert.ok(Number.isInteger(monster.sourceMobId) && monster.sourceMobId > 0, monsterId + ' needs a canonical Mob ID');
     if (monster.assetFallback === 'vector') {
-      assert.equal(monsterId, 'thief_bug');
+      assert.equal(monsterId, 'thief_bug', 'only Thief Bug may use the dedicated vector fallback');
       assert.equal(monster.sourceMobId, 1051);
-      assert.equal(assetMap.has(monster.assetId), false, 'unverified Thief Bug PNG must not be added as if verified');
-      return;
     }
     const asset = assetMap.get(monster.assetId);
     assert.ok(asset, monsterId + ' must reference a dedicated asset manifest entry');
     assert.equal(asset.sourceMobId, monster.sourceMobId, monsterId + ' asset and monster Mob IDs must match');
-    assert.equal(asset.sourcePath, 'images/monsters/' + monster.sourceMobId + '.png', monsterId + ' source filename must match Mob ID');
+    const expectedSourcePath = monsterId === 'thief_bug'
+      ? 'images/mobs/png/1051.png'
+      : 'images/monsters/' + monster.sourceMobId + '.png';
+    assert.equal(asset.sourcePath, expectedSourcePath, monsterId + ' source filename must match Mob ID');
     assert.ok(Number(asset.bytes) > 0, monsterId + ' asset must record a positive source size');
     assert.match(asset.gitSha || '', /^[0-9a-f]{40}$/, monsterId + ' asset must pin a Git blob SHA-1');
+    if (monsterId === 'thief_bug') {
+      assert.equal(asset.path, './assets/thief_bug.png');
+      assert.equal(asset.bytes, 1783);
+      assert.equal(asset.gitSha, '342abcc99d1c1d902751b64e65b6f56d8b309342');
+      assert.equal(asset.sourceUrl, 'https://static.divine-pride.net/images/mobs/png/1051.png');
+    }
   });
 
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
@@ -166,8 +193,8 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 2\.0/);
-  assert.match(sw, /ro-h5-shell-v27/);
+  assert.match(html, /MVP 2\.1/);
+  assert.match(sw, /ro-h5-shell-v28/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -184,8 +211,8 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
-  assert.match(html, /MVP 2\.0/);
-  assert.match(sw, /ro-h5-shell-v27/);
+  assert.match(html, /MVP 2\.1/);
+  assert.match(sw, /ro-h5-shell-v28/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -359,7 +386,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 2\.0/);
+  assert.match(html, /MVP 2\.1/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -505,7 +532,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 2\.0/);
+  assert.match(html, /MVP 2\.1/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -689,7 +716,7 @@ function testAssetManifestCoverage() {
   assert.ok(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length >= 20);
   const assetIds = new Set(world.assets.map(function (asset) { return asset.id; }));
   assert.equal(assetIds.size, world.assets.length, 'asset IDs must be unique');
-  world.assets.filter(function (asset) { return asset.sourceRepository; }).forEach(function (asset) {
+  world.assets.filter(function (asset) { return asset.sourceRepository && asset.id !== 'thief_bug'; }).forEach(function (asset) {
     assert.equal(asset.sourceRepository, 'nba9001-sys/ro-idle');
     assert.match(asset.path, /raw\.githubusercontent\.com\/nba9001-sys\/ro-idle\/2348031f3797dbea1981f399288748378a283940\//);
     assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
@@ -720,10 +747,9 @@ function testAssetManifestCoverage() {
     map.monsters.forEach(function (entry) {
       const monster = world.monsters[entry.id];
       assert.ok(monster, 'missing monster data: ' + entry.id);
+      assert.ok(assetIds.has(monster.assetId), 'missing dedicated monster image asset: ' + entry.id);
       if (monster.assetFallback === 'vector') {
-        assert.equal(assetIds.has(monster.assetId), false, 'vector fallback must not point at missing or misidentified art: ' + entry.id);
-      } else {
-        assert.ok(assetIds.has(monster.assetId), 'missing monster image asset: ' + entry.id);
+        assert.equal(entry.id, 'thief_bug', 'only Thief Bug may use the explicit vector fallback');
       }
     });
   });
@@ -1010,7 +1036,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 2\.0/);
+  assert.match(html, /MVP 2\.1/);
 }
 
 
@@ -1057,8 +1083,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 2\.0/);
-  assert.match(sw, /ro-h5-shell-v27/);
+  assert.match(html, /MVP 2\.1/);
+  assert.match(sw, /ro-h5-shell-v28/);
 }
 
 testMonsterArtworkIdentityMapping();
