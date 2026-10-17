@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+require('../world-data.js');
 const core = require('../core.js');
 
 function testNameRules() {
@@ -47,8 +48,27 @@ function testPause() {
   assert.equal(account.gold, 0);
 }
 
+
+function testMapAndMonsterProgression() {
+  const character = core.makeCharacter('Mapper', 'male', 'novice');
+  assert.equal(core.getMap('training').id, 'novice_ground');
+  assert.equal(core.startMap(character, 'prt_fild01', function () { return 0; }), false);
+  assert.equal(core.startMap(character, 'novice_ground', function () { return 0; }), true);
+  assert.equal(character.battle.currentMonsterId, 'poring');
+
+  const account = core.emptyAccount();
+  const report = core.settleOffline(character, account, 12, function () { return 0; });
+  assert.ok(report.kills >= 1);
+  assert.ok(character.baseLevel >= 2);
+  assert.equal(core.startMap(character, 'prt_fild01', function () { return 0; }), true);
+  assert.equal(character.battle.currentMonsterId, 'thief_bug');
+  assert.equal(character.battle.monsterMaxHp, core.getMonster('thief_bug').maxHp);
+}
+
 testNameRules();
 testOfflineTimeCap();
 testBattleAndRewards();
 testPause();
+testMapAndMonsterProgression();
+
 console.log('RO H5 core tests passed (4 suites).');
