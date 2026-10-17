@@ -2348,10 +2348,14 @@
 
   function closeOfflineReport() {
     if (character && character.pendingReport) {
+      const pendingReport = character.pendingReport;
       character.pendingReport = null;
-      persistCurrent();
+      if (!persistCurrent()) {
+        // Keep the report pending if acknowledging it could not be persisted.
+        character.pendingReport = pendingReport;
+      }
     }
-    $('#offline-dialog').close();
+    // The native method="dialog" form closes the dialog even if this handler fails.
   }
 
   function openRename(index) {
