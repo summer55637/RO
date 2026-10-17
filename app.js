@@ -66,6 +66,9 @@
   let assetDb = null;
   let assetUrls = {};
   let activeDetail = 'status';
+  let bestiarySearchQuery = '';
+  let bestiaryDiscoveryFilter = 'all';
+  let bestiarySortMode = 'name';
   let pendingRenameSlot = null;
   let pendingDeleteSlot = null;
   let hiddenAt = 0;
@@ -1336,7 +1339,10 @@
       logs.appendChild(line);
     });
     logs.scrollTop = logs.scrollHeight;
-    renderDetails();
+    const detailsContent = $('#details-content');
+    const bestiaryControls = detailsContent && detailsContent.querySelector('.bestiary-controls');
+    const preserveFocusedBestiaryControl = bestiaryControls && bestiaryControls.contains(document.activeElement);
+    if (!preserveFocusedBestiaryControl) renderDetails();
   }
 
   function renderBestiary(content) {
@@ -1365,6 +1371,7 @@
     search.className = 'text-input bestiary-search';
     search.placeholder = '輸入怪物名稱';
     search.setAttribute('aria-label', '搜尋已發現怪物');
+    search.value = bestiarySearchQuery;
     searchLabel.append(searchCaption, search);
     const filterLabel = document.createElement('label');
     filterLabel.className = 'bestiary-control';
@@ -1379,6 +1386,7 @@
       option.textContent = entry[1];
       filter.appendChild(option);
     });
+    filter.value = bestiaryDiscoveryFilter;
     filterLabel.append(filterCaption, filter);
     const sortLabel = document.createElement('label');
     sortLabel.className = 'bestiary-control';
@@ -1393,6 +1401,7 @@
       option.textContent = entry[1];
       sort.appendChild(option);
     });
+    sort.value = bestiarySortMode;
     sortLabel.append(sortCaption, sort);
     controls.append(searchLabel, filterLabel, sortLabel);
     content.appendChild(controls);
@@ -1473,9 +1482,18 @@
         list.appendChild(card);
       });
     }
-    search.addEventListener('input', renderEntries);
-    filter.addEventListener('change', renderEntries);
-    sort.addEventListener('change', renderEntries);
+    search.addEventListener('input', function () {
+      bestiarySearchQuery = search.value;
+      renderEntries();
+    });
+    filter.addEventListener('change', function () {
+      bestiaryDiscoveryFilter = filter.value;
+      renderEntries();
+    });
+    sort.addEventListener('change', function () {
+      bestiarySortMode = sort.value;
+      renderEntries();
+    });
     renderEntries();
   }
   function handleCraftConsumable(recipeId) {
