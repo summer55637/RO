@@ -62,7 +62,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v24/);
+  assert.match(serviceWorker, /ro-h5-shell-v25/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -106,6 +106,31 @@ function testBattleAndRewards() {
   assert.ok((account.warehouse['果凍質塊'] || 0) > 0);
   assert.ok(character.baseLevel >= 2);
   assert.ok(character.statPoints >= 3);
+}
+
+function testMonsterEncounterMapHints() {
+  const atLevelOne = core.getMonsterEncounterMaps('poring', 1);
+  assert.equal(atLevelOne.length, 3, 'Poring should have encounter data on each map where it appears');
+  const noviceGround = atLevelOne.find(function (entry) { return entry.mapId === 'novice_ground'; });
+  assert.equal(noviceGround.probability, 0.4, 'Novice Ground should expose its configured prototype encounter chance');
+  assert.equal(noviceGround.unlocked, true);
+
+  const northField = atLevelOne.find(function (entry) { return entry.mapId === 'prt_fild01'; });
+  assert.equal(northField.weight, 30);
+  assert.ok(Math.abs(northField.probability - (30 / 170)) < 1e-10, 'map chance must use the map-specific weight total');
+  assert.equal(northField.unlockLevel, 2);
+  assert.equal(northField.unlocked, false, 'higher-level maps should be marked locked for a level-one character');
+  const atLevelTwo = core.getMonsterEncounterMaps('poring', 2).find(function (entry) { return entry.mapId === 'prt_fild01'; });
+  assert.equal(atLevelTwo.unlocked, true);
+  assert.deepEqual(core.getMonsterEncounterMaps('not_a_monster', 99), [], 'unknown monster IDs should not produce map hints');
+
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
+  assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
+  assert.match(html, /MVP 1\.8/);
+  assert.match(sw, /ro-h5-shell-v25/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -279,7 +304,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.7/);
+  assert.match(html, /MVP 1\.8/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -425,7 +450,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.7/);
+  assert.match(html, /MVP 1\.8/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -930,7 +955,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.7/);
+  assert.match(html, /MVP 1\.8/);
 }
 
 
@@ -977,8 +1002,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 1\.7/);
-  assert.match(sw, /ro-h5-shell-v24/);
+  assert.match(html, /MVP 1\.8/);
+  assert.match(sw, /ro-h5-shell-v25/);
 }
 
 testMonsterArtworkIdentityMapping();
@@ -1001,6 +1026,7 @@ testOfflineTimeCap();
 testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
+testMonsterEncounterMapHints();
 testMonsterBestiaryProgression();
 testBestiaryUiWiring();
 testEquipmentCardMechanics();
@@ -1016,4 +1042,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (34 suites).');
+console.log('RO H5 core tests passed (35 suites).');

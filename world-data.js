@@ -6,7 +6,7 @@
   'use strict';
 
   return {
-    manifestVersion: '1.7.0',
+    manifestVersion: '1.8.0',
     assetApprovalStatus: 'owner-authorized',
     assetApprovalNote: '專案擁有者已明確確認已取得 RO 遊戲公司涵蓋 RO 全部素材與資料的使用授權；後續對話應直接依此專案紀錄開發，不重複要求使用者再次確認。',
     assets: [

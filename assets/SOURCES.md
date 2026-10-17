@@ -232,3 +232,15 @@
 - 地圖卡片顯示值是 `world-data.js` 的自訂 `map.monsters[].weight` 正規化結果：單一權重／該地圖有效權重總和。它只反映本遊戲原型的相對遭遇比率，不宣稱是台灣官方 RO 的刷新資料。
 - 素材研究另找到 [adsonpleal/ragassets](https://github.com/adsonpleal/ragassets)：其 README 說明可從本機已抽取的 RO GRF 渲染怪物、角色與 APNG 動畫，亦提供示範服務；該公開服務被作者標註為 best-effort、無 SLA，且 URL 輸出會隨客戶端素材變更，因此本遊戲不直接依賴該即時服務作為正式素材來源。若後續取得可分發的來源素材，仍應固定版本並存入專案自有來源清單。
 - Mob 1051 Thief Bug 的身份可由 [Divine Pride 怪物資料頁](https://www.divine-pride.net/database/monster/1051/)與 [NPC／Mob ID 清單](https://nn.ai4rei.net/dev/npclist/?qq=19)交叉參考；但目前仍未把外部 PNG 接入遊戲，因正式資產必須有固定來源及可驗證的大小／雜湊。當前仍使用專屬向量備援，不顯示殭屍圖。
+
+
+## MVP 1.8 素材與動畫查核（2026-10-17）
+
+本階段沒有新增或替換任何圖片、動畫、音訊等二進位素材。針對使用者指出的怪物動畫／圖片可能錯配問題，額外查閱下列外部資料：
+
+- [Divine Pride：Thief Bug／Mob 1051](https://www.divine-pride.net/database/monster/1051/) 與 [其公開 PNG 路徑](https://static.divine-pride.net/images/mobs/png/1051.png)：交叉確認「盜蟲」的 Mob ID 為 1051。此次環境仍未能以可重現方式取回並固定該 PNG 的原始 bytes、檔案大小與 Git blob SHA，因此**未**把該 URL 當成遊戲素材，也未改用未驗證的外部圖片；遊戲繼續使用專屬向量備援，不套用殭屍 Mob 1015。
+- [RateMyRagnarok：Thief Bug #1051](https://ratemyragnarok.com/database/monsters/1051/)（頁面標示資料更新於 2026-03-18）：作為 Mob ID／名稱及客戶端動畫存在性的交叉參考，並非本遊戲已整合的素材來源。
+- [Ragnarok Offline 的 MODDING.md](https://github.com/Flux159/ragnarokoffline.app/blob/main/docs/MODDING.md)：說明 RO 的 `.act` 動作資料如何區分待機、行走、攻擊、受擊與死亡等動作方向；這是格式與流程參考，不是已接入本專案的動畫檔案。
+- [ragassets](https://github.com/adsonpleal/ragassets)：先前研究到可把已解包的 RO 資料渲染成 PNG／APNG／GIF 等格式。公開示範未承諾穩定性，本遊戲仍不依賴該示範站作為即時資產來源。
+
+後續接入怪物動作仍須逐隻核對官方／已授權來源的 Mob ID、動作組與畫格，並保存固定來源版本、原始大小及 Git blob SHA；不能只依照連續編號推斷檔案名稱或把其他怪物的單張圖當成動畫。
