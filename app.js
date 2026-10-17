@@ -1101,12 +1101,20 @@
 
     try {
       const requiredIds = new Set([map.backgroundAssetId]);
+      const optionalAnimationIds = new Set();
       map.monsters.forEach(function (entry) {
         const monster = window.ROCore.getMonster(entry.id);
         if (monster && monster.assetId) requiredIds.add(monster.assetId);
+        if (monster && monster.animationAssetId) optionalAnimationIds.add(monster.animationAssetId);
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       await ensureAssets(neededAssets, false);
+      const optionalAnimationAssets = ASSETS.filter(function (asset) { return optionalAnimationIds.has(asset.id); });
+      const animationLoadPromise = Promise.all(optionalAnimationAssets.map(function (asset) {
+        return ensureAssets([asset], false).then(function () { return null; }).catch(function (error) {
+          return { asset: asset, error: error };
+        });
+      }));
       await ensurePlayerSprite(character);
       
       if (!window.ROCore.startMap(character, map.id)) throw new Error('目前等級尚未符合地圖需求。');
@@ -1120,6 +1128,15 @@
       renderGame();
       playMapMusic(map);
       startBattleLoop();
+      if (optionalAnimationAssets.length) {
+        animationLoadPromise.then(function (results) {
+          if (!character || character.battle.map !== map.id) return;
+          results.filter(Boolean).forEach(function (failure) {
+            appendCharacterLog(failure.asset.name + '載入失敗，會先使用同一物種的已驗證靜態圖。', 'warning');
+          });
+          renderGame();
+        });
+      }
     } catch (error) {
       $('#map-load-message').textContent = (error && error.message ? error.message : '地圖素材準備失敗。') + ' 可檢查網路後再次進入。';
     } finally {
@@ -1293,6 +1310,8 @@
   }
 
   function getMonsterArtworkSource(monster) {
+    const animationAssetId = monster && monster.animationAssetId ? monster.animationAssetId : '';
+    if (animationAssetId && assetUrls[animationAssetId]) return assetUrls[animationAssetId];
     const assetId = monster && monster.assetId ? monster.assetId : '';
     if (assetId && assetUrls[assetId]) return assetUrls[assetId];
     if (monster && monster.id === 'thief_bug' && monster.assetFallback === 'vector') {
@@ -1322,8 +1341,11 @@
     const currentMonster = window.ROCore.getMonster(character.battle.currentMonsterId);
     $('#scene-background').src = assetUrls[(currentMap && currentMap.backgroundAssetId) || 'field'] || './assets/field.jpg';
     $('.monster-label strong').textContent = currentMonster ? currentMonster.name : '怪物';
-    $('#monster-image').src = getMonsterArtworkSource(currentMonster);
-    $('#monster-image').alt = currentMonster ? currentMonster.name : '怪物';
+    const monsterImage = $('#monster-image');
+    const monsterArtworkSource = getMonsterArtworkSource(currentMonster);
+    // Assigning the same src on every battle tick restarts the embedded SVG animation timeline.
+    if (monsterImage.getAttribute('src') !== monsterArtworkSource) monsterImage.src = monsterArtworkSource;
+    monsterImage.alt = currentMonster ? currentMonster.name : '怪物';
     $('#hp-text').textContent = formatNumber(character.hp) + ' / ' + formatNumber(character.maxHp);
     $('#sp-text').textContent = formatNumber(character.sp) + ' / ' + formatNumber(character.maxSp);
     $('#hp-fill').style.width = Math.max(0, Math.min(100, character.hp / Math.max(1, character.maxHp) * 100)) + '%';
