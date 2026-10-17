@@ -273,3 +273,24 @@
 ## MVP 2.0 本機圖鑑縮圖快取還原（2026-10-17）
 
 本階段沒有新增二進位圖片，也沒有更改素材來源。圖鑑新增只讀 IndexedDB 還原：讀取已存在的怪物素材紀錄，重新驗證原有 manifest 大小及 Git blob SHA-1，再建立 Object URL。這不是新素材來源或動畫整合；未快取或驗證失敗時仍顯示佔位，不會從外部任意 URL 載圖，也不會為圖鑑預先下載其他地圖素材。
+
+
+## MVP 2.3 真實怪物待機動畫素材指紋（2026-10-17）
+
+兩份動畫皆由固定版 [MyGodIsHe/pyro-tools](https://github.com/MyGodIsHe/pyro-tools/tree/1a28450df59bc69e56e70e431f9b61351bafc8f6) 範例內配對 ACT／SPR 二進位解析而來；原始資料仍留在來源倉庫，可用下列 Git blob SHA-1 核對。
+
+### 瘋兔（Mob 1063）
+- ACT：[lunatic.act](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/lunatic.act)，129,468 bytes，Git blob SHA-1 `fb90ed9e0d2f71392b2f25cddb4784a09a221cca`。
+- SPR：[lunatic.spr](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/lunatic.spr)，36,287 bytes，Git blob SHA-1 `1cdcc31c9135ede2140e0d951b59efcc1560eda2`。
+- 使用 ACT action 2，12 格、每格 80ms；逐格套用同一份 SPR 的索引圖，選取經目視核對的方向 0 圖層。
+
+### 狼（Mob 1013）
+- ACT：[wolf.act](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/wolf.act)，36,564 bytes，Git blob SHA-1 `93c05e86366a7d9cfab19f59d1ff8f60dd1b617d`。
+- SPR：[wolf.spr](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/wolf.spr)，104,662 bytes，Git blob SHA-1 `61b60050dce8094bbebf04d86cc87ef1e8d61706`。
+- 使用 ACT action 0，15 格、每格 120ms；逐格使用同一組 Mob 1013 的 SPR 索引圖。
+
+### 產出檔與限制
+- `assets/lunatic_idle.svg`：58,141 UTF-8 bytes，Git blob SHA-1 `04461b2829cec9e95cdef5d11ce6140fa29ed5ed`，含 12 個按時序切換的獨立畫格。
+- `assets/wolf_idle.svg`：265,283 UTF-8 bytes，Git blob SHA-1 `bb11db5c6f0417f2565380717ec0d0f51a8b51aa`，含 15 個按時序切換的獨立畫格。
+- 輸出由固定 ACT action 的索引、方向 0 圖層與配對 SPR 像素產生；檔案在 runtime 載入前仍須透過 manifest 驗證大小與 Git blob SHA-1。
+- 目前只把這兩個動作循環用作待機外觀。ACT 中其他動作的攻擊／受擊／死亡語義仍在核對階段，尚未整合，遊戲仍保留既有戰鬥 hit／skill／defeat 效果。

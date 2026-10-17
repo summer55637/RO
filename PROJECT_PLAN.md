@@ -1,8 +1,8 @@
 # RO 純單機 H5 放置 RPG — 專案規畫總表
 
-- **文件版本：** V1.28
+- **文件版本：** V1.29
 - **整理日期：** 2026-10-17
-- **目前階段：** MVP 2.2 防止怪物圖像錯誤代用
+- **目前階段：** MVP 2.3 瘋兔／狼 ACT／SPR 待機逐格動畫
 - **實作狀態：** 使用者已於 2026-10-17 授權開始實作
 - **GitHub 倉庫：** `summer55637/RO`（預設分支 `main`）
 - **現況盤點：** 目標倉庫初始僅含本規畫文件；nba9001-sys/ro-idle 是既有原型與素材／資料參考倉庫。
@@ -643,3 +643,13 @@
 - 已盤點 [PyRO-Tools](https://github.com/MyGodIsHe/pyro-tools) 的固定提交 `1a28450df59bc69e56e70e431f9b61351bafc8f6`；該範例倉庫提供配對的 `lunatic.act/.spr`、`wolf.act/.spr` 二進位樣本。來源及 Git blob SHA 記錄於 `assets/SOURCES.md`。PyRO-Tools 的 parser 偏舊版 Python，尚未直接加入瀏覽器 runtime；真正動畫仍須先做格式版本解析、動作分組、方向／圖層校驗和實際畫格核對。
 - 同時記錄 Divine Pride Mob 1051 spritesheet 的來源尺寸與雜湊作為素材研究指紋；它是靜態組合圖，並非可直接播放的 ACT 時序。
 - 本版不更動角色存檔、角色欄位、戰鬥數值、掉落或地圖解鎖進度。
+
+
+## 43. 真實 ACT／SPR 待機逐格動畫（MVP 2.3，2026-10-17）
+
+- 解析 [PyRO-Tools 固定提交](https://github.com/MyGodIsHe/pyro-tools/tree/1a28450df59bc69e56e70e431f9b61351bafc8f6)中的配對二進位樣本，依 ACT 畫格／圖層與時序、SPR 索引圖像與調色盤產生獨立 SVG 逐格循環。
+- 瘋兔使用 Mob 1063 專屬 `lunatic.act/.spr`，接入 ACT action 2 的 12 格循環（每格 80ms）；狼使用 Mob 1013 專屬 `wolf.act/.spr`，接入 action 0 的 15 格循環（每格 120ms）。原始檔及輸出檔的 Git blob SHA-1 均記錄於 `assets/SOURCES.md` 與素材 manifest。
+- 兩份動畫資產沿用延遲下載、重試、大小與 Git blob SHA-1 驗證流程，不列為初次啟動必要素材；動畫載入失敗不阻擋進地圖，會改用同一物種已驗證的靜態圖。
+- 為避免每次戰鬥刷新重設 SVG 時間軸，只有圖像來源確實改變時才重新指定 `img.src`。Service Worker shell cache 從 v29 升至 v30。
+- 本版只接入已目視核對的待機循環；攻擊、受擊、倒地／死亡等 ACT action 的語義尚未全部確認，仍保留既有戰鬥回饋，不把猜測的 action index 當成已完成動畫。
+- 不更改既有角色存檔、存檔 key、角色進度、數值、掉落、地圖解鎖或共用倉庫。

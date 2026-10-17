@@ -85,7 +85,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v29/);
+  assert.match(serviceWorker, /ro-h5-shell-v30/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -152,8 +152,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 2\.2/);
-  assert.match(sw, /ro-h5-shell-v29/);
+  assert.match(html, /MVP 2\.3/);
+  assert.match(sw, /ro-h5-shell-v30/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -196,8 +196,8 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 2\.2/);
-  assert.match(sw, /ro-h5-shell-v29/);
+  assert.match(html, /MVP 2\.3/);
+  assert.match(sw, /ro-h5-shell-v30/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -214,8 +214,8 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
-  assert.match(html, /MVP 2\.2/);
-  assert.match(sw, /ro-h5-shell-v29/);
+  assert.match(html, /MVP 2\.3/);
+  assert.match(sw, /ro-h5-shell-v30/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -389,7 +389,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 2\.2/);
+  assert.match(html, /MVP 2\.3/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -535,7 +535,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 2\.2/);
+  assert.match(html, /MVP 2\.3/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -719,7 +719,7 @@ function testAssetManifestCoverage() {
   assert.ok(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length >= 20);
   const assetIds = new Set(world.assets.map(function (asset) { return asset.id; }));
   assert.equal(assetIds.size, world.assets.length, 'asset IDs must be unique');
-  world.assets.filter(function (asset) { return asset.sourceRepository && asset.id !== 'thief_bug'; }).forEach(function (asset) {
+  world.assets.filter(function (asset) { return asset.sourceRepository && asset.id !== 'thief_bug' && asset.assetKind !== 'monster-animation'; }).forEach(function (asset) {
     assert.equal(asset.sourceRepository, 'nba9001-sys/ro-idle');
     assert.match(asset.path, /raw\.githubusercontent\.com\/nba9001-sys\/ro-idle\/2348031f3797dbea1981f399288748378a283940\//);
     assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
@@ -756,6 +756,74 @@ function testAssetManifestCoverage() {
       }
     });
   });
+}
+
+function testMonsterIdleAnimationAssets() {
+  const expected = {
+    lunatic: {
+      mobId: 1063, id: 'lunatic_idle_anim', path: 'assets/lunatic_idle.svg',
+      bytes: 58141, sha: '04461b2829cec9e95cdef5d11ce6140fa29ed5ed',
+      actSha: 'fb90ed9e0d2f71392b2f25cddb4784a09a221cca',
+      sprSha: '1cdcc31c9135ede2140e0d951b59efcc1560eda2',
+      actionIndex: 2, frames: 12, frameMs: 80
+    },
+    wolf: {
+      mobId: 1013, id: 'wolf_idle_anim', path: 'assets/wolf_idle.svg',
+      bytes: 265283, sha: 'bb11db5c6f0417f2565380717ec0d0f51a8b51aa',
+      actSha: '93c05e86366a7d9cfab19f59d1ff8f60dd1b617d',
+      sprSha: '61b60050dce8094bbebf04d86cc87ef1e8d61706',
+      actionIndex: 0, frames: 15, frameMs: 120
+    }
+  };
+  const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
+  Object.entries(expected).forEach(function (entry) {
+    const monsterId = entry[0], want = entry[1];
+    const monster = world.monsters[monsterId], asset = assetMap.get(want.id);
+    assert.ok(monster, 'missing target monster ' + monsterId);
+    assert.ok(asset, 'missing parsed animation asset ' + want.id);
+    assert.equal(monster.sourceMobId, want.mobId);
+    assert.equal(monster.assetId, monsterId, 'animation must not replace the identity PNG');
+    assert.equal(monster.animationAssetId, want.id);
+    assert.equal(monster.animationActionIndex, want.actionIndex);
+    assert.equal(monster.animationFrameCount, want.frames);
+    assert.equal(monster.animationFrameDurationMs, want.frameMs);
+    assert.equal(asset.sourceMobId, want.mobId);
+    assert.equal(asset.assetKind, 'monster-animation');
+    assert.equal(asset.animationType, 'idle');
+    assert.equal(asset.actActionIndex, want.actionIndex);
+    assert.equal(asset.frameCount, want.frames);
+    assert.equal(asset.frameDurationMs, want.frameMs);
+    assert.equal(asset.requiredOnStart, false, 'animation is loaded only when a map needs it');
+    assert.equal(asset.path, './' + want.path);
+    assert.equal(asset.bytes, want.bytes);
+    assert.equal(asset.gitSha, want.sha);
+    assert.equal(asset.sourceRepository, 'MyGodIsHe/pyro-tools');
+    assert.equal(asset.sourceCommit, '1a28450df59bc69e56e70e431f9b61351bafc8f6');
+    assert.equal(asset.sourceActSha, want.actSha);
+    assert.equal(asset.sourceSprSha, want.sprSha);
+    const file = fs.readFileSync(path.join(__dirname, '..', want.path));
+    assert.equal(file.length, want.bytes, 'generated animation byte size must match manifest');
+    const blobSha = crypto.createHash('sha1').update(Buffer.concat([
+      Buffer.from('blob ' + file.length + '\0'), file
+    ])).digest('hex');
+    assert.equal(blobSha, want.sha, 'generated animation must match manifest Git blob SHA-1');
+    const svg = file.toString('utf8');
+    assert.match(svg, /<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+    assert.match(svg, new RegExp('data-mob-id="' + want.mobId + '"'));
+    assert.match(svg, new RegExp('data-act-action-index="' + want.actionIndex + '"'));
+    assert.match(svg, new RegExp('data-frame-count="' + want.frames + '"'));
+    assert.equal((svg.match(/id="frame-/g) || []).length, want.frames, 'each ACT frame has a distinct SVG group');
+    assert.match(svg, /@keyframes f0/);
+    assert.match(svg, /animation:f0 /, 'frame timing is embedded without a JS timer');
+  });
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(appSource, /function getMonsterArtworkSource\(monster\)/);
+  assert.match(appSource, /animationAssetId && assetUrls\[animationAssetId\]/, 'use the verified parsed animation when available');
+  assert.match(appSource, /if \(optionalAnimationAssets\.length\)/, 'animation failure must not block map entry');
+  assert.match(appSource, /getAttribute\('src'\) !== monsterArtworkSource/, 'do not restart the SVG timeline every battle tick');
+  assert.match(appSource, /同一物種的已驗證靜態圖/);
+  const sources = fs.readFileSync(path.join(__dirname, '..', 'assets', 'SOURCES.md'), 'utf8');
+  assert.match(sources, /MVP 2\.3 真實怪物待機動畫素材指紋/);
 }
 
 function testCriticalEffectManifest() {
@@ -1039,7 +1107,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 2\.2/);
+  assert.match(html, /MVP 2\.3/);
 }
 
 
@@ -1086,13 +1154,14 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 2\.2/);
-  assert.match(sw, /ro-h5-shell-v29/);
+  assert.match(html, /MVP 2\.3/);
+  assert.match(sw, /ro-h5-shell-v30/);
 }
 
 testMonsterArtworkIdentityMapping();
 testAutomaticUpdateStrategy();
 testAssetManifestCoverage();
+testMonsterIdleAnimationAssets();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
 testSoundEffectManifest();
@@ -1128,4 +1197,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (37 suites).');
+console.log('RO H5 core tests passed (38 suites).');
