@@ -252,13 +252,13 @@
 
     if (account.warehouse == null) account.warehouse = {};
     if (!isRecord(account.warehouse)) return fail('共用倉庫資料格式無效；本機存檔沒有變更。');
-    Object.keys(account.warehouse).forEach(function (name) {
+    for (const name of Object.keys(account.warehouse)) {
       const quantity = Number(account.warehouse[name]);
       if (!Number.isFinite(quantity) || quantity < 0) {
-        throw new Error('倉庫物品數量無效。');
+        return fail('倉庫物品數量無效；本機存檔沒有變更。');
       }
       account.warehouse[name] = Math.floor(quantity);
-    });
+    }
 
     if (account.equipmentInventory == null) account.equipmentInventory = [];
     if (!Array.isArray(account.equipmentInventory)) {
