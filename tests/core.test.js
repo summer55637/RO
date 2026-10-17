@@ -1628,6 +1628,7 @@ function testStoredAccountReplaceTransactionSafety() {
 
 function testCrossTabSaveConflictProtection() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const coreSource = fs.readFileSync(path.join(__dirname, '..', 'core.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
@@ -1639,7 +1640,7 @@ function testCrossTabSaveConflictProtection() {
   assert.match(appSource, /function exportConflictRecovery\(\)/);
   assert.match(appSource, /function reloadLatestSave\(\)/);
   assert.match(appSource, /function replaceStoredAccount|ROCore\.replaceStoredAccount\(localStorage, SAVE_KEY, pendingImportAccount\)/);
-  assert.match(appSource, /currentRaw !== nextText/);
+  assert.match(coreSource, /currentRaw !== nextText/);
   assert.match(appSource, /存檔衝突時請先下載恢復備份/);
   assert.match(html, /id="save-conflict-banner"[^>]*class="save-conflict-banner hidden"/);
   assert.match(html, /id="btn-save-conflict-export"/);
