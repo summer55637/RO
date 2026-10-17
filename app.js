@@ -847,45 +847,44 @@
       return;
     }
 
-    let previousRaw = null;
-    let writeAttempted = false;
     try {
-      previousRaw = localStorage.getItem(SAVE_KEY);
-      const imported = Object.assign({}, pendingImportAccount, { updatedAt: Date.now() });
-      const serialized = JSON.stringify(imported);
-      writeAttempted = true;
-      localStorage.setItem(SAVE_KEY, serialized);
-      const saved = localStorage.getItem(SAVE_KEY);
-      if (saved !== serialized) throw new Error('寫入後回讀比對失敗。');
-      const verified = window.ROCore.preparePortableSave(JSON.parse(saved));
-      if (!verified.ok) throw new Error(verified.reason);
-      account = verified.account;
-      character = null;
-      activeSlot = null;
+      const latestRaw = localStorage.getItem(SAVE_KEY);
+      if (lastPersistedRaw !== undefined && latestRaw !== lastPersistedRaw) {
+        pendingImportAccount = null;
+        pendingImportStage = 0;
+        pendingImportMigrated = false;
+        $('#import-save-dialog').close();
+        account = readAccount();
+        renderSlots();
+        setSaveFileMessage('偵測到另一個分頁剛更新存檔。為避免覆蓋較新的資料，本次匯入已取消；請重新檢查目前存檔後再試。', true);
+        return;
+      }
+
+      const result = window.ROCore.replaceStoredAccount(localStorage, SAVE_KEY, pendingImportAccount);
+      if (!result.ok) {
+        $('#import-save-message').textContent = result.concurrentChange
+          ? '匯入未完成：另一個操作同時更新了存檔。為避免覆蓋新資料，復原寫入已略過；請先重新讀取目前存檔。'
+          : (result.restored
+            ? '匯入未完成：' + (result.reason || '存檔寫入失敗。') + '；原存檔已保留。'
+            : '匯入未完成，且無法確認原存檔已安全復原。請保留原始 .rosave 備份，不要繼續覆寫。');
+        $('#import-save-message').classList.add('error');
+        return;
+      }
+
+      account = result.account;
+      lastPersistedRaw = result.serialized;
+      saveConflictDetected = false;
+      conflictLatestRaw = null;
       pendingImportAccount = null;
       pendingImportStage = 0;
       pendingImportMigrated = false;
+      hideSaveConflictBanner();
       $('#import-save-dialog').close();
       renderSlots();
       setSaveFileMessage('存檔已匯入並重新讀取驗證成功。請繼續選擇角色。', false);
       showToast('存檔匯入完成');
     } catch (error) {
-      let restored = true;
-      if (writeAttempted) {
-        try {
-          const currentRaw = localStorage.getItem(SAVE_KEY);
-          if (currentRaw !== previousRaw) {
-            if (previousRaw === null) localStorage.removeItem(SAVE_KEY);
-            else localStorage.setItem(SAVE_KEY, previousRaw);
-          }
-          restored = localStorage.getItem(SAVE_KEY) === previousRaw;
-        } catch (_) {
-          restored = false;
-        }
-      }
-      $('#import-save-message').textContent = restored
-        ? '匯入未完成：' + (error.message || '存檔寫入失敗。') + '；原存檔已保留。'
-        : '嚴重警告：匯入驗證失敗，且無法確認原存檔已復原。請保留原始 .rosave 備份並停止操作。';
+      $('#import-save-message').textContent = '匯入未完成：' + (error.message || '無法安全寫入存檔。') + '。本次沒有繼續操作。';
       $('#import-save-message').classList.add('error');
     }
   }
