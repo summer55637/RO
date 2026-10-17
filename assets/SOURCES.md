@@ -244,3 +244,11 @@
 - [ragassets](https://github.com/adsonpleal/ragassets)：先前研究到可把已解包的 RO 資料渲染成 PNG／APNG／GIF 等格式。公開示範未承諾穩定性，本遊戲仍不依賴該示範站作為即時資產來源。
 
 後續接入怪物動作仍須逐隻核對官方／已授權來源的 Mob ID、動作組與畫格，並保存固定來源版本、原始大小及 Git blob SHA；不能只依照連續編號推斷檔案名稱或把其他怪物的單張圖當成動畫。
+
+
+## MVP 1.9 怪物圖鑑縮圖與動畫格式研究（2026-10-17）
+
+- [RagnarokFileFormats：ACT.MD](https://github.com/rdw-archive/RagnarokFileFormats/blob/master/ACT.MD) 說明 ACT 檔案描述動作、影格、層級、時間及音效索引；[其格式總覽](https://github.com/rdw-archive/RagnarokFileFormats) 說明 SPR 保存圖像，ACT 保存動畫序列與相關資料。兩者搭配才可重建真正的怪物動作，而不是反覆縮放單張靜態圖。
+- [ragassets](https://github.com/adsonpleal/ragassets) 是 Go 實作的 RO 資產渲染服務，可將已解包的 SPR／ACT／PAL／IMF 資料渲染為 PNG／APNG／GIF；其 README 明列怪物動作索引，但渲染需使用者／營運者已有的客戶端素材。公開示範站並非本遊戲的穩定託管依賴，本階段沒有直接使用該服務下載運行時素材。
+- [ragx](https://github.com/joaopedrosgs/ragx) 提供 `ragx sprites` 匯出 SPR／ACT 精靈對應的圖集 PNG 與動畫 JSON。可作為後續建立本地、可固定版本怪物動畫素材包的處理工具參考，尚未整合到遊戲建置流程。
+- 本版僅在圖鑑顯示已驗證且已快取的現有怪物縮圖及來源 Mob ID，**不是**新增真正怪物動畫。若資產尚未載入，顯示「未載入」；不能回退成波利圖。盜蟲 Mob 1051 仍使用專屬向量圖，直到取得能固定原始大小及 Git blob SHA-1 的正確圖片。
