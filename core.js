@@ -8,6 +8,8 @@
   const MAX_OFFLINE_SECONDS = 24 * 60 * 60;
   const SLOT_COUNT = 3;
   const JOB_LEVEL_CAP = 10;
+  const STAT_CAP = 99;
+  const STAT_KEYS = ['str', 'agi', 'vit', 'int', 'dex', 'luk'];
   const WORLD = world || {
     maps: [{ id: 'novice_ground', name: '新手訓練場', unlockLevel: 1, monsters: [{ id: 'poring', weight: 1 }] }],
     monsters: { poring: { id: 'poring', name: '波利', maxHp: 18, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 5, drops: [] } }
@@ -106,6 +108,38 @@
     return 10 + level * 4;
   }
 
+  // Prototype baseline from classic RO references; Taiwan PC formulas still require version-specific verification.
+  function statPointGainForLevelUp(currentBaseLevel) {
+    return Math.floor(Math.max(1, Number(currentBaseLevel) || 1) / 5) + 3;
+  }
+
+  // Cost to raise a base stat from its current value by one.
+  function statPointCost(currentValue) {
+    const value = Math.max(1, Math.floor(Number(currentValue) || 1));
+    return Math.floor((value - 1) / 10) + 2;
+  }
+
+  function allocateStat(character, key) {
+    if (!character || !character.stats) return { ok: false, reason: '角色資料尚未載入。' };
+    if (!STAT_KEYS.includes(key)) return { ok: false, reason: '未知的能力值。' };
+    const current = Math.max(1, Math.floor(Number(character.stats[key]) || 1));
+    if (current >= STAT_CAP) return { ok: false, reason: '此能力值已達目前原型上限 ' + STAT_CAP + '。' };
+    const cost = statPointCost(current);
+    if ((Number(character.statPoints) || 0) < cost) return { ok: false, reason: '能力點不足，需要 ' + cost + ' 點。' };
+
+    character.statPoints -= cost;
+    character.stats[key] = current + 1;
+    if (key === 'vit') {
+      character.maxHp = Math.max(1, Number(character.maxHp) || 1) + 5;
+      character.hp = Math.min(character.maxHp, (Number(character.hp) || 0) + 5);
+    } else if (key === 'int') {
+      character.maxSp = Math.max(1, Number(character.maxSp) || 1) + 2;
+      character.sp = Math.min(character.maxSp, (Number(character.sp) || 0) + 2);
+    }
+
+    return { ok: true, key: key, cost: cost, oldValue: current, newValue: current + 1, remainingPoints: character.statPoints };
+  }
+
   function resolveOfflineSeconds(lastSavedAt, now) {
     const last = Number(lastSavedAt);
     const current = Number(now == null ? Date.now() : now);
@@ -158,7 +192,7 @@
 
   function stepCombat(character, account, rng) {
     const random = typeof rng === 'function' ? rng : Math.random;
-    const result = { playerDamage: 0, monsterDamage: 0, killed: false, monsterId: '', monsterName: '', expGained: 0, jobExpGained: 0, goldGained: 0, drops: [], levelUps: [], jobCapped: false, playerDown: false };
+    const result = { playerDamage: 0, monsterDamage: 0, killed: false, monsterId: '', monsterName: '', critical: false, dodged: false, expGained: 0, jobExpGained: 0, goldGained: 0, drops: [], levelUps: [], jobCapped: false, playerDown: false };
     if (!character || !character.battle || !character.battle.map || character.battle.paused) return result;
     ensureCombatShape(character, random);
     const monster = getMonster(character.battle.currentMonsterId);
@@ -166,7 +200,13 @@
     result.monsterId = monster.id;
     result.monsterName = monster.name;
 
-    const damage = Math.max(1, 4 + character.baseLevel + (character.stats.str || 0) - Math.floor(random() * 3));
+    const str = Math.max(1, Number(character.stats.str) || 1);
+    const dex = Math.max(1, Number(character.stats.dex) || 1);
+    const luk = Math.max(1, Number(character.stats.luk) || 1);
+    let damage = Math.max(1, 4 + character.baseLevel + str + Math.floor(dex / 10) - Math.floor(random() * 3));
+    const criticalChance = Math.min(0.25, luk * 0.005);
+    result.critical = random() < criticalChance;
+    if (result.critical) damage = Math.ceil(damage * 1.5);
     character.battle.monsterHp = Math.max(0, character.battle.monsterHp - damage);
     result.playerDamage = damage;
 
@@ -193,8 +233,8 @@
 
       while (character.baseExp >= baseExpToNext(character.baseLevel)) {
         character.baseExp -= baseExpToNext(character.baseLevel);
+        character.statPoints += statPointGainForLevelUp(character.baseLevel);
         character.baseLevel += 1;
-        character.statPoints += 3;
         character.maxHp += 8;
         character.hp = Math.min(character.maxHp, character.hp + 8);
         character.maxSp += 2;
@@ -225,9 +265,14 @@
     character.battle.monsterAttackClock += 1;
     if (character.battle.monsterAttackClock >= 2) {
       character.battle.monsterAttackClock = 0;
-      const mobDamage = monster.attackMin + Math.floor(random() * (monster.attackMax - monster.attackMin + 1));
-      character.hp = Math.max(0, character.hp - mobDamage);
-      result.monsterDamage = mobDamage;
+      const agi = Math.max(1, Number(character.stats.agi) || 1);
+      const dodgeChance = Math.min(0.35, agi * 0.005);
+      result.dodged = random() < dodgeChance;
+      if (!result.dodged) {
+        const mobDamage = monster.attackMin + Math.floor(random() * (monster.attackMax - monster.attackMin + 1));
+        character.hp = Math.max(0, character.hp - mobDamage);
+        result.monsterDamage = mobDamage;
+      }
       if (character.hp <= 0) {
         character.hp = character.maxHp;
         result.playerDown = true;
@@ -262,12 +307,17 @@
     MAX_OFFLINE_SECONDS: MAX_OFFLINE_SECONDS,
     SLOT_COUNT: SLOT_COUNT,
     JOB_LEVEL_CAP: JOB_LEVEL_CAP,
+    STAT_CAP: STAT_CAP,
+    STAT_KEYS: STAT_KEYS,
     emptyAccount: emptyAccount,
     normalizeNameKey: normalizeNameKey,
     validateCharacterName: validateCharacterName,
     makeCharacter: makeCharacter,
     baseExpToNext: baseExpToNext,
     jobExpToNext: jobExpToNext,
+    statPointGainForLevelUp: statPointGainForLevelUp,
+    statPointCost: statPointCost,
+    allocateStat: allocateStat,
     resolveOfflineSeconds: resolveOfflineSeconds,
     getMap: getMap,
     getMonster: getMonster,
