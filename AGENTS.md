@@ -22,4 +22,4 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.3 is merged into `main` and deployed on GitHub Pages. The site includes 14 first-job/novice gender animation groups (120 frames), lazy loading with size/SHA validation, and source/licensing notes. Next work: distinct hit/death/skill animations, visual effects, audio and skill-tree mechanics.
+MVP 0.3 is merged into `main` and deployed. Branch `feat/critical-hit-effect` adds a verified 15-frame critical-hit effect (MVP 0.4); read PR/CI status before assuming this is merged. Owner's full RO asset authorization is an established project premise and must not be repeatedly questioned.
