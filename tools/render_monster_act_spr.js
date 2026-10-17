@@ -88,8 +88,7 @@ const MONSTERS = [
     outputPath: 'assets/poring_attack.svg',
     outputBytes: 136944,
     outputSha: 'd550fe9a3edc83b241d882038657e6e6e1e3c916'
-  }
-,
+  },
   {
     key: 'green-plant',
     name: '綠色植物',
@@ -416,7 +415,7 @@ function main() {
         if (!checkedStatic.equals(staticOutputBytes)) {
           throw new Error(config.staticOutputPath + ' differs from deterministic ACT/SPR output; run node tools/render_monster_act_spr.js --write.');
         }
-        process.stdout.write('Verified static fallback ' + config.key + ': Mob ' + config.mobId + '.\\n');
+        process.stdout.write('Verified static fallback ' + config.key + ': Mob ' + config.mobId + '.\n');
       }
     }
   }
