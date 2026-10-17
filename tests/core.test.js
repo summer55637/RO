@@ -62,7 +62,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v22/);
+  assert.match(serviceWorker, /ro-h5-shell-v23/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -136,6 +136,12 @@ function testBestiaryUiWiring() {
   assert.match(appSource, /id = 'bestiary-sort'/, 'bestiary includes sorting controls');
   assert.match(appSource, /!discovered \|\| !String\(monsterData\[id\]\.name \|\| id\)\.toLocaleLowerCase\(\)\.includes\(query\)/, 'search must not reveal undiscovered monster names');
   assert.match(appSource, /sortMode === 'kills'/, 'bestiary can sort by defeat count');
+  assert.match(appSource, /let bestiarySearchQuery = ''/);
+  assert.match(appSource, /search\.value = bestiarySearchQuery/);
+  assert.match(appSource, /bestiarySearchQuery = search\.value/);
+  assert.match(appSource, /bestiaryDiscoveryFilter = filter\.value/);
+  assert.match(appSource, /bestiarySortMode = sort\.value/);
+  assert.match(appSource, /bestiaryControls\.contains\(document\.activeElement\)/, 'battle updates must not destroy the focused bestiary controls');
   assert.match(html, /data-detail="bestiary">怪物圖鑑/);
   assert.match(css, /\.bestiary-entry/);
 }
@@ -957,7 +963,7 @@ function testConsumableUseAndUiWiring() {
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
   assert.match(html, /MVP 1\.6/);
-  assert.match(sw, /ro-h5-shell-v22/);
+  assert.match(sw, /ro-h5-shell-v23/);
 }
 
 testMonsterArtworkIdentityMapping();
