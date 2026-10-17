@@ -871,7 +871,13 @@
       if (result.drops.length) message += ' 掉落：' + result.drops.join('、') + '。';
       appendCharacterLog(message, 'important');
       if (result.levelUps.length) appendCharacterLog('Base 等級提升至 ' + result.levelUps[result.levelUps.length - 1] + '。', 'important');
-      if (result.jobCapped) appendCharacterLog('初心者 Job Lv. 已達上限；不會自動轉職。', 'warning');
+      if (result.healingGained) appendCharacterLog(character.jobName + '的職業效果恢復 ' + result.healingGained + ' HP。');
+      if (result.jobCapped) {
+        const capMessage = character.jobId === 'novice'
+          ? '初心者 Job Lv. 10 已達轉職門檻；可在「職業」分頁選擇一轉職業。'
+          : character.jobName + '已達目前原型 Job 等級上限；更高階職業尚未開放。';
+        appendCharacterLog(capMessage, 'warning');
+      }
     }
     if (result.playerDown) appendCharacterLog('角色倒地後返回戰線，原型版不扣除經驗。', 'warning');
   }
@@ -932,7 +938,7 @@
       [
         ['職業', character.jobName],
         ['Base 等級', character.baseLevel],
-        ['Job 等級', character.jobLevel + ' / ' + window.ROCore.JOB_LEVEL_CAP],
+        ['Job 等級', character.jobLevel + ' / ' + window.ROCore.getJobLevelCap(character)],
         ['未分配能力點', character.statPoints]
       ].forEach(function (row) { addDetailRow(content, row[0], row[1]); });
       addDetailHeading(content, '能力值分配');
@@ -973,14 +979,50 @@
       }
       content.appendChild(list);
     } else {
+      const jobCap = window.ROCore.getJobLevelCap(character);
       addDetailHeading(content, '職業進度');
       addDetailRow(content, '目前職業', character.jobName);
-      addDetailRow(content, 'Job 等級', character.jobLevel + ' / ' + window.ROCore.JOB_LEVEL_CAP);
-      addDetailRow(content, 'Job EXP', formatNumber(character.jobExp) + ' / ' + (character.jobLevel >= window.ROCore.JOB_LEVEL_CAP ? '—' : window.ROCore.jobExpToNext(character.jobLevel)));
+      addDetailRow(content, 'Job 等級', character.jobLevel + ' / ' + jobCap);
+      addDetailRow(content, 'Job EXP', formatNumber(character.jobExp) + ' / ' + (character.jobLevel >= jobCap ? '—' : window.ROCore.jobExpToNext(character.jobLevel)));
       const note = document.createElement('p');
       note.className = 'field-help';
-      note.textContent = character.jobNotice ? '已達目前職業等級上限。已保留提示；不會自動轉職。' : '符合條件後由玩家自行選擇轉職。本版尚未接入正式職業樹。';
-      content.appendChild(note);
+
+      if (character.jobId === 'novice') {
+        note.textContent = character.jobLevel >= jobCap
+          ? '已符合一轉門檻。選擇職業後 Job Lv. 會重設為 1、Job EXP 歸零；Base 等級、能力值、能力點與共用資產保留。'
+          : '初心者達到 Job Lv. 10 後可選擇一轉職業。此原型不使用轉職任務；目前門檻與數值尚非台灣官方正式規則的完整認證。';
+        content.appendChild(note);
+
+        if (character.jobLevel >= jobCap) {
+          addDetailHeading(content, '選擇一轉職業');
+          const list = document.createElement('div');
+          list.className = 'job-choice-list';
+          window.ROCore.FIRST_JOBS.forEach(function (job) {
+            const card = document.createElement('article');
+            card.className = 'job-choice-card';
+            const title = document.createElement('h4');
+            title.textContent = job.name;
+            const description = document.createElement('p');
+            description.className = 'job-choice-description';
+            description.textContent = job.description;
+            const passive = document.createElement('p');
+            passive.className = 'job-choice-passive';
+            passive.textContent = job.passive;
+            const button = makeButton('轉職為 ' + job.name, 'button button-secondary', function () {
+              changeCharacterJob(job.id);
+            });
+            card.append(title, description, passive, button);
+            list.appendChild(card);
+          });
+          content.appendChild(list);
+        }
+      } else {
+        note.textContent = character.jobLevel >= jobCap
+          ? '已達一轉職業的原型 Job Lv. 50 上限。二轉、轉生與更高階職業尚未實作；不會自動轉職。'
+          : '目前一轉職業已開放。被動效果與 Job Lv. 50 上限為原型設定，後續會依核實的台灣官方規則調整。';
+        content.appendChild(note);
+      }
+
       if (character.jobNotice) {
         const button = makeButton('我已查看職業提示', 'button button-secondary', function () {
           character.jobNotice = false;
@@ -1057,6 +1099,54 @@
     character.lastSavedAt = Date.now();
     if (!writeAccount()) return;
     renderGame();
+  }
+
+  function changeCharacterJob(jobId) {
+    if (!character || activeSlot === null) return;
+    if (!isLockOwner()) return loseControl();
+
+    try {
+      account = readAccount();
+    } catch (error) {
+      fatal('讀取存檔失敗：' + (error.message || '未知錯誤'));
+      return;
+    }
+    const latest = account.slots[activeSlot];
+    if (!latest) {
+      showToast('找不到目前角色存檔，請返回角色選擇畫面。');
+      return;
+    }
+    character = latest;
+
+    const job = window.ROCore.getFirstJob(jobId);
+    if (!job) {
+      showToast('找不到這個職業。');
+      return;
+    }
+    const cap = window.ROCore.getJobLevelCap(character);
+    if (character.jobId !== 'novice' || character.jobLevel < cap) {
+      showToast('目前尚未符合一轉條件。');
+      renderGame();
+      return;
+    }
+    const confirmed = window.confirm(
+      '確定轉職為「' + job.name + '」？\n\n' +
+      'Job Lv. 將重設為 1、Job EXP 歸零；Base 等級、能力值、能力點、地圖進度與共用資產保留。\n' +
+      '職業被動與數值是原型設定，尚非官方正式平衡值。'
+    );
+    if (!confirmed) return;
+
+    const result = window.ROCore.changeJob(character, jobId);
+    if (!result.ok) {
+      showToast(result.reason || '轉職失敗。');
+      renderGame();
+      return;
+    }
+    appendCharacterLog('完成一轉：成為' + character.jobName + '。Job Lv. 重設為 1，開始新的職業成長。', 'important');
+    character.lastSavedAt = Date.now();
+    if (!persistCurrent()) return;
+    renderGame();
+    showToast('轉職成功：' + character.jobName);
   }
 
   function setDetail(name) {
