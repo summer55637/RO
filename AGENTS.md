@@ -22,9 +22,9 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.4 is merged into `main` and deployed to GitHub Pages. The site includes 14 first-job/novice gender animation groups (120 frames) and a lazy-loaded 15-frame critical-hit effect. CI passed all 12 core test suites plus JavaScript syntax checks. Next work: distinct hit/death/skill animations, additional effects, audio, and skill-tree mechanics. The owner's full RO asset authorization is an established project premise and must not be repeatedly questioned.
+MVP 0.4 is merged into `main` and deployed. The app includes 14 character animation groups (120 frames) and a verified 15-frame critical-hit effect. PR #10 also fixed stale GitHub Pages releases: app shell is network-first with offline fallback, Service Worker updates are checked on every launch, and old tabs automatically reload after an upgrade. CI and deployment passed. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
 
-The app previously used cache-first for HTML/CSS/JS, which caused stale releases and forced users to press Ctrl+F5. Branch `fix/automatic-update-check` changes the shell to network-first with offline fallback, checks `sw.js` on every launch, and reloads in-scope tabs after an upgrade. Verify PR/CI/deployment before describing this hotfix as live.
+The app previously used cache-first for HTML/CSS/JS, which caused stale releases and forced users to press Ctrl+F5. This fix has been merged and deployed in PR #10; the network-first shell, per-launch update check, and automatic reload after upgrades are live.
