@@ -53,7 +53,7 @@ function testMonsterArtworkIdentityMapping() {
   assert.doesNotMatch(html, /瘋兔圖像<\/strong><small>1001\.png/, 'installer must not label Scorpion Mob 1001 as Lunatic');
   assert.doesNotMatch(html, /綠棉蟲圖像<\/strong><small>1003\.png/, 'installer must not label Test Egg Mob 1003 as Fabre');
   const sources = fs.readFileSync(path.join(__dirname, '..', 'assets', 'SOURCES.md'), 'utf8');
-  assert.match(sources, /MVP 1\.6 怪物圖片 ID 稽核/);
+  assert.match(sources, /MVP 1\.5 怪物圖片 ID 稽核/);
   assert.match(sources, /975c87dfc27ab267b2ec0dddff77421b2e6ee87b/);
 }
 
