@@ -11,7 +11,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v13/);
+  assert.match(serviceWorker, /ro-h5-shell-v14/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -55,6 +55,33 @@ function testBattleAndRewards() {
   assert.ok((account.warehouse['果凍質塊'] || 0) > 0);
   assert.ok(character.baseLevel >= 2);
   assert.ok(character.statPoints >= 3);
+}
+
+function testMonsterBestiaryProgression() {
+  const character = core.makeCharacter('BestiaryTester', 'male', 'novice');
+  const account = core.emptyAccount();
+  assert.deepEqual(character.bestiary, {}, 'new characters start with an empty bestiary');
+  character.battle.map = 'novice_ground'; character.battle.paused = false;
+  character.battle.currentMonsterId = 'poring'; character.battle.monsterMaxHp = 18; character.battle.monsterHp = 1;
+  const result = core.stepCombat(character, account, function () { return 0.99; });
+  assert.equal(result.killed, true);
+  assert.equal(character.bestiary.poring, 1, 'a kill should register exactly once for the defeated monster');
+  const legacy = core.makeCharacter('LegacyBestiary', 'female', 'novice');
+  delete legacy.bestiary; legacy.battle.map = 'novice_ground'; legacy.battle.paused = false;
+  legacy.battle.monsterMaxHp = 1000; legacy.battle.monsterHp = 1000;
+  core.stepCombat(legacy, core.emptyAccount(), function () { return 0.99; });
+  assert.deepEqual(legacy.bestiary, {}, 'older saves should gain the optional field without losing progress');
+}
+
+function testBestiaryUiWiring() {
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  assert.match(appSource, /function renderBestiary\(content\)/);
+  assert.match(appSource, /activeDetail === 'bestiary'/);
+  assert.match(appSource, /character\.bestiary/);
+  assert.match(html, /data-detail="bestiary">怪物圖鑑/);
+  assert.match(css, /\.bestiary-entry/);
 }
 
 function testPause() {
@@ -519,11 +546,13 @@ function testSkillPointsAndLegacySaveCompatibility() {
   delete legacy.skillPoints;
   delete legacy.battle.skillCooldown;
   delete legacy.battle.combatTicks;
+  delete legacy.bestiary;
   assert.equal(core.getSkillLevel(legacy, 'fire_bolt'), 0);
   legacy.battle.monsterHp = legacy.battle.monsterMaxHp = 1000;
   core.stepCombat(legacy, core.emptyAccount(), function () { return 0.99; });
   assert.equal(legacy.skillPoints, 0);
   assert.deepEqual(legacy.skills, {});
+  assert.deepEqual(legacy.bestiary, {});
   assert.equal(legacy.battle.skillCooldown, 0);
   assert.equal(legacy.battle.combatTicks, 1);
 }
@@ -559,5 +588,7 @@ testOfflineTimeCap();
 testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
+testMonsterBestiaryProgression();
+testBestiaryUiWiring();
 
-console.log('RO H5 core tests passed (19 suites).');
+console.log('RO H5 core tests passed (21 suites).');
