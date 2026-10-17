@@ -950,9 +950,12 @@
     $('#battle-avatar').innerHTML = playerSpriteMarkup(character);
     const hero = $('#hero-sprite');
     const visualKey = (character.jobId || 'novice') + '-' + (character.gender === 'female' ? 'female' : 'male');
-    if (hero.dataset.visualKey !== visualKey) {
+    const spriteAssetId = playerSpriteAssetId(character);
+    const spriteUrl = spriteAssetId ? (assetUrls[spriteAssetId] || '') : '';
+    if (hero.dataset.visualKey !== visualKey || hero.dataset.spriteUrl !== spriteUrl) {
       hero.innerHTML = '<div class="hero-character">' + playerSpriteMarkup(character) + '</div>';
       hero.dataset.visualKey = visualKey;
+      hero.dataset.spriteUrl = spriteUrl;
     }
     const currentMonster = window.ROCore.getMonster(character.battle.currentMonsterId);
     $('#scene-background').src = assetUrls[(currentMap && currentMap.backgroundAssetId) || 'field'] || './assets/field.jpg';
