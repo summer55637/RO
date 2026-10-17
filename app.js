@@ -47,6 +47,12 @@
   let musicEnabled = true;
   let musicPlayer = null;
   let currentMusicAssetId = '';
+  let monsterDefeatTimer = null;
+  let monsterDefeatRunId = 0;
+  let playerHitTimer = null;
+  let playerHitRunId = 0;
+  let heroSkillTimer = null;
+  let heroSkillRunId = 0;
   const musicLoadPromises = Object.create(null);
   const soundPlayers = Object.create(null);
   const soundLoadPromises = Object.create(null);
@@ -1245,11 +1251,65 @@
     battleTimer = null;
   }
 
+
+  function showMonsterDefeatEffect(monsterName) {
+    const effect = $('#monster-defeat-effect');
+    if (!effect) return;
+    const runId = ++monsterDefeatRunId;
+    if (monsterDefeatTimer) window.clearTimeout(monsterDefeatTimer);
+    effect.textContent = '擊倒 ' + (monsterName || '怪物') + '！';
+    effect.classList.remove('show');
+    void effect.offsetWidth;
+    effect.classList.add('show');
+    monsterDefeatTimer = window.setTimeout(function () {
+      if (runId !== monsterDefeatRunId) return;
+      effect.classList.remove('show');
+      effect.textContent = '';
+      monsterDefeatTimer = null;
+    }, 650);
+  }
+
+  function showPlayerHitEffect(damage, playerDown) {
+    const effect = $('#player-hit-effect');
+    if (!effect || !(Number(damage) > 0)) return;
+    const runId = ++playerHitRunId;
+    if (playerHitTimer) window.clearTimeout(playerHitTimer);
+    effect.textContent = '-' + Math.max(0, Math.round(Number(damage) || 0)) + ' HP';
+    effect.classList.toggle('down', Boolean(playerDown));
+    effect.classList.remove('show');
+    void effect.offsetWidth;
+    effect.classList.add('show');
+    playerHitTimer = window.setTimeout(function () {
+      if (runId !== playerHitRunId) return;
+      effect.classList.remove('show', 'down');
+      effect.textContent = '';
+      playerHitTimer = null;
+    }, 620);
+  }
+
+  function playHeroSkillAnimation(kind) {
+    const hero = $('#hero-sprite');
+    const heroInner = hero ? hero.querySelector('.hero-character') : null;
+    const kinds = ['slash', 'magic', 'heal', 'arrow', 'heavy', 'poison'];
+    if (!heroInner || !kind || kinds.indexOf(kind) === -1) return;
+    const runId = ++heroSkillRunId;
+    if (heroSkillTimer) window.clearTimeout(heroSkillTimer);
+    kinds.forEach(function (name) { heroInner.classList.remove('skill-cast-' + name); });
+    void heroInner.offsetWidth;
+    heroInner.classList.add('skill-cast-' + kind);
+    heroSkillTimer = window.setTimeout(function () {
+      if (runId !== heroSkillRunId) return;
+      kinds.forEach(function (name) { heroInner.classList.remove('skill-cast-' + name); });
+      heroSkillTimer = null;
+    }, 430);
+  }
+
   function handleCombatResult(result) {
     if (!result || (!result.playerDamage && !result.killed && !result.skillHealingGained)) return;
     const hero = $('#hero-sprite');
     const monster = $('#monster-actor');
     const heroInner = hero ? hero.querySelector('.hero-character') : null;
+    if (result.monsterDamage) showPlayerHitEffect(result.monsterDamage, result.playerDown);
     if (heroInner) {
       heroInner.classList.remove('attack', 'hit');
       if (result.monsterDamage) heroInner.classList.add('hit');
@@ -1270,6 +1330,7 @@
       }
       const effectLabel = (result.skillName ? result.skillName + ' ' : '') + (result.critical ? '爆擊 ' : '-') + result.playerDamage;
       const effectKind = SKILL_EFFECT_KIND[result.skillName] || '';
+      if (result.skillName) playHeroSkillAnimation(effectKind);
       showSceneEffect(effectLabel, effectKind, Boolean(effectKind && result.skillName !== '治癒術'));
     }
     if (result.dodged) appendCharacterLog('閃避了' + result.monsterName + '的攻擊。');
@@ -1297,6 +1358,7 @@
     }
     if (result.recoveryGained) appendCharacterLog('快速回復恢復 ' + result.recoveryGained + ' HP。');
     if (result.playerDown) appendCharacterLog('角色倒地後返回戰線，原型版不扣除經驗。', 'warning');
+    if (result.killed) showMonsterDefeatEffect(result.monsterName);
   }
 
   function renderGame() {
