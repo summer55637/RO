@@ -390,6 +390,122 @@
     };
   }
 
+  function writeStoredAccountWithBackup(storage, saveKey, backupKey, nextAccount, expectedRaw) {
+    function failure(reason, restored, concurrentChange) {
+      return {
+        ok: false,
+        reason: reason,
+        restored: Boolean(restored),
+        concurrentChange: Boolean(concurrentChange)
+      };
+    }
+    if (!storage || typeof storage.getItem !== 'function' ||
+        typeof storage.setItem !== 'function' || typeof storage.removeItem !== 'function') {
+      return failure('無法安全存取本機存檔儲存區。', false, false);
+    }
+    if (typeof saveKey !== 'string' || !saveKey ||
+        typeof backupKey !== 'string' || !backupKey || saveKey === backupKey) {
+      return failure('主存檔或備份識別碼無效。', false, false);
+    }
+    if (!isRecord(nextAccount) || nextAccount.version !== 1 ||
+        !Array.isArray(nextAccount.slots) || nextAccount.slots.length !== SLOT_COUNT) {
+      return failure('新存檔內容無效；沒有寫入本機資料。', true, false);
+    }
+
+    let nextText;
+    try { nextText = JSON.stringify(nextAccount); } catch (_) {
+      return failure('新存檔無法序列化；沒有寫入本機資料。', true, false);
+    }
+    if (typeof nextText !== 'string') return failure('新存檔無法序列化；沒有寫入本機資料。', true, false);
+
+    let previousRaw;
+    try {
+      previousRaw = storage.getItem(saveKey);
+    } catch (_) {
+      return failure('無法讀取既有存檔；沒有寫入本機資料。', false, false);
+    }
+    if (expectedRaw !== undefined && previousRaw !== expectedRaw) {
+      return failure('存檔已由其他分頁更新，為避免覆蓋新進度，本次寫入已取消。', true, true);
+    }
+
+    function validSavedRaw(raw) {
+      if (typeof raw !== 'string' || !raw) return false;
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed && parsed.version === 1 &&
+          Array.isArray(parsed.slots) && parsed.slots.length === SLOT_COUNT &&
+          preparePortableSave(parsed).ok;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    let backupWritten = false;
+    if (previousRaw !== null && previousRaw !== nextText && validSavedRaw(previousRaw)) {
+      try {
+        storage.setItem(backupKey, previousRaw);
+        if (storage.getItem(backupKey) !== previousRaw) {
+          return failure('上一份安全備份寫入驗證失敗；主存檔尚未改寫。', true, false);
+        }
+        backupWritten = true;
+      } catch (_) {
+        return failure('無法保存上一份安全備份；主存檔尚未改寫。請檢查瀏覽器儲存空間。', true, false);
+      }
+    }
+
+    let latestRaw;
+    try { latestRaw = storage.getItem(saveKey); } catch (_) {
+      return failure('無法重新檢查主存檔；本次寫入已取消。', false, false);
+    }
+    if (latestRaw !== previousRaw) {
+      return failure('另一個分頁在備份期間更新了主存檔；本次寫入已取消。', true, true);
+    }
+
+    let primaryWriteAttempted = false;
+    try {
+      primaryWriteAttempted = true;
+      storage.setItem(saveKey, nextText);
+      const readBack = storage.getItem(saveKey);
+      if (readBack !== nextText || !validSavedRaw(readBack)) {
+        const currentRaw = storage.getItem(saveKey);
+        if (currentRaw === nextText) {
+          // Roll back only if storage still contains this transaction's exact write.
+          if (previousRaw === null) storage.removeItem(saveKey);
+          else storage.setItem(saveKey, previousRaw);
+          return failure('主存檔回讀／驗證失敗；已嘗試復原上一份存檔。', storage.getItem(saveKey) === previousRaw, false);
+        }
+        return failure('主存檔回讀／驗證失敗，且偵測到儲存區已變更；未以舊值覆蓋新資料。', false, true);
+      }
+      return {
+        ok: true,
+        serialized: nextText,
+        previousRaw: previousRaw,
+        backupWritten: backupWritten,
+        concurrentChange: false,
+        restored: false
+      };
+    } catch (error) {
+      if (!primaryWriteAttempted) return failure(error.message || '主存檔寫入失敗。', true, false);
+      let currentRaw;
+      try { currentRaw = storage.getItem(saveKey); } catch (_) {
+        return failure('主存檔寫入失敗，且無法確認目前資料內容。請先使用安全備份復原。', false, false);
+      }
+      if (currentRaw === previousRaw) {
+        return failure(error.message || '主存檔寫入失敗；原存檔仍在。', true, false);
+      }
+      if (currentRaw !== nextText) {
+        return failure((error.message || '主存檔寫入失敗。') + ' 偵測到其他操作改寫了存檔，為避免覆蓋新資料，不執行復原。', false, true);
+      }
+      try {
+        if (previousRaw === null) storage.removeItem(saveKey);
+        else storage.setItem(saveKey, previousRaw);
+        return failure(error.message || '主存檔寫入失敗。', storage.getItem(saveKey) === previousRaw, false);
+      } catch (_) {
+        return failure((error.message || '主存檔寫入失敗。') + ' 嘗試復原主存檔時也失敗；請使用安全備份復原。', false, false);
+      }
+    }
+  }
+
   function replaceStoredAccount(storage, saveKey, nextAccount) {
     function failure(reason, restored, concurrentChange) {
       return {
@@ -1174,6 +1290,7 @@
     PORTABLE_SAVE_VERSION: PORTABLE_SAVE_VERSION,
     createPortableSave: createPortableSave,
     replaceStoredAccount: replaceStoredAccount,
+    writeStoredAccountWithBackup: writeStoredAccountWithBackup,
     preparePortableSave: preparePortableSave,
     JOB_LEVEL_CAP: JOB_LEVEL_CAP,
     FIRST_JOB_LEVEL_CAP: FIRST_JOB_LEVEL_CAP,
