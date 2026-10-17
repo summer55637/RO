@@ -24,7 +24,7 @@
 | 小雞 Picky | 1049 | [1049.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1049.png) | 409 | 67b06c12d629885ad9c3cd7bf893370840d14e8e |
 | 禿鷹 Condor | 1009 | [1009.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1009.png) | 4,181 | f8029dca4c909a67650986ca272180872d587214 |
 
-- 盜蟲 Thief Bug：Mob ID 是 1051，但固定圖片包沒有 images/monsters/1051.png。盜蟲因此先使用自製向量圖，不載入 Mob 1015（殭屍）；這是臨時後備，不冒稱為 RO 原始素材。
+- 盜蟲 Thief Bug：Mob ID 是 1051，但固定圖片包沒有 images/monsters/1051.png。已找到 [Divine Pride 的 Mob 1051 圖像](https://static.divine-pride.net/images/mobs/png/1051.png) 與[圖集](https://static.divine-pride.net/images/spritesheets/npc/1051.png)，並透過 [怪物資料頁](https://www.divine-pride.net/database/monster/1051/)交叉確認名稱與 ID。由於目前尚未以可重現方式取得該 PNG 的原始 bytes、檔案大小與 Git blob SHA-1，尚未匯入清單；遊戲先使用自製向量圖，不載入 Mob 1015（殭屍），避免破壞素材完整性驗證。
 - 錯誤舊檔：原本標成 lunatic.png 的位元組其實來自 Mob 1001（蠍子）；原 fabre.png 來自 Mob 1003；原 thief_bug.png 來自 Mob 1015（殭屍）。現在重新命名為 scorpion.png、testegg.png、zombie.png，且不再對應給錯誤怪物。
 
 ## MVP 1.4 材料與消耗品原型
