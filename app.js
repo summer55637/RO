@@ -361,7 +361,13 @@
 
   async function registerServiceWorker() {
     if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
-    try { await navigator.serviceWorker.register('./sw.js'); } catch (_) { /* 不阻擋已準備的本機版本 */ }
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+      // Force an update check on every launch rather than waiting for the browser's periodic check.
+      if (registration && typeof registration.update === 'function') {
+        registration.update().catch(function () { /* Offline users can continue using the cached shell. */ });
+      }
+    } catch (_) { /* 不阻擋已準備的本機版本 */ }
   }
 
   function safeJson(value) {
@@ -1611,10 +1617,11 @@
     updateNetworkStatus();
     updateCreatePreview();
     try {
+      // Register first on every launch, even before the user has downloaded the game assets.
+      await registerServiceWorker();
       const ready = await loadCachedResources();
       if (ready) {
         setInstallMessage('已找到必要素材快取，驗證通過。', false);
-        await registerServiceWorker();
         enterSlotsWithLock(false);
       } else {
         setScreen('screen-install');

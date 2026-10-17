@@ -455,3 +455,12 @@
 - Service Worker shell cache 升至 v6；素材來源及完整性欄位記錄在 `world-data.js`，來源摘要記錄在 `assets/SOURCES.md`。
 - 新增核心測試，驗證 15 張特效畫格參照、來源路徑、編號、hash 及總 bytes；核心測試總計 12 組。
 - 下一步：接入受擊／死亡狀態動畫、技能專屬動作及特效，再補怪物動作、音樂／音效與技能樹。
+
+
+## 21. 自動版本更新與快取修正（2026-10-17）
+
+- 問題根因：舊 Service Worker 對 HTML／CSS／JavaScript 使用 cache-first，且只有手動更改快取版本名稱時才更新殼層資源；註冊 Service Worker 時也沒有明確要求每次啟動檢查新版，因此使用者常需 `Ctrl+F5`。
+- 修正策略：shell cache 升至 v7；安裝時以 `cache: 'reload'` 取得新殼層；每次遊戲啟動註冊 `sw.js` 時設定 `updateViaCache: 'none'` 並呼叫 `registration.update()`。
+- HTML／CSS／JS 改用 network-first + `cache: 'no-cache'`；請求失敗時再回退到快取，兼顧更新即時性與離線啟動。
+- Service Worker 偵測舊殼層快取後，更新 activation 會重新導覽此遊戲 scope 內已開啟的分頁，避免同一頁面仍執行舊版 JavaScript。其他同源／非殼層靜態資源保留 cache-first。
+- 新增回歸測試，確保殼層網路優先、HTTP cache revalidation、更新時分頁重新載入及每次啟動執行更新檢查。

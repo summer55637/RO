@@ -1,8 +1,23 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const world = require('../world-data.js');
 const core = require('../core.js');
+
+function testAutomaticUpdateStrategy() {
+  const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+
+  assert.match(serviceWorker, /ro-h5-shell-v7/);
+  assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
+  assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
+  assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
+  assert.match(serviceWorker, /client\.navigate\(client\.url\)/, 'open tabs should reload after a shell update');
+  assert.match(appSource, /updateViaCache: 'none'/, 'service worker script updates should bypass HTTP cache');
+  assert.match(appSource, /registration\.update\(\)/, 'check for service worker updates on each launch');
+}
 
 function testNameRules() {
   assert.equal(core.validateCharacterName('  RO_Hunter  ', []).value, 'RO_Hunter');
@@ -303,6 +318,7 @@ function testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences() {
   });
 }
 
+testAutomaticUpdateStrategy();
 testAssetManifestCoverage();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
@@ -316,4 +332,4 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (12 suites).');
+console.log('RO H5 core tests passed (13 suites).');
