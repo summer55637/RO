@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { execFileSync } = require('node:child_process');
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -835,6 +836,21 @@ function testMonsterIdleAnimationAssets() {
   assert.match(sources, /MVP 2\.3 真實怪物待機動畫素材指紋/);
 }
 
+function testMonsterActSprExportReproducibility() {
+  const toolPath = path.join(__dirname, '..', 'tools', 'render_monster_act_spr.js');
+  const output = execFileSync(process.execPath, [toolPath, '--check'], {
+    encoding: 'utf8',
+    timeout: 30000
+  });
+  assert.match(output, /Verified lunatic: Mob 1063, action 2, 12 frames at 80ms\/frame/);
+  assert.match(output, /Verified wolf: Mob 1013, action 0, 15 frames at 120ms\/frame/);
+  const toolSource = fs.readFileSync(toolPath, 'utf8');
+  assert.match(toolSource, /SOURCE_COMMIT = '1a28450df59bc69e56e70e431f9b61351bafc8f6'/);
+  assert.match(toolSource, /function gitBlobSha\(bytes\)/);
+  assert.match(toolSource, /function parseAct\(bytes\)/);
+  assert.match(toolSource, /function parseSpr\(bytes\)/);
+}
+
 function testCriticalEffectManifest() {
   assert.equal(world.criticalEffectFrames.length, 15);
   assert.equal(world.criticalEffectFrameIntervalMs, 70);
@@ -1171,6 +1187,7 @@ testMonsterArtworkIdentityMapping();
 testAutomaticUpdateStrategy();
 testAssetManifestCoverage();
 testMonsterIdleAnimationAssets();
+testMonsterActSprExportReproducibility();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
 testSoundEffectManifest();
@@ -1206,4 +1223,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (38 suites).');
+console.log('RO H5 core tests passed (39 suites).');
