@@ -6,7 +6,7 @@
   'use strict';
 
   return {
-    manifestVersion: '1.3.0',
+    manifestVersion: '1.4.0',
     assetApprovalStatus: 'owner-authorized',
     assetApprovalNote: '專案擁有者已明確確認已取得 RO 遊戲公司涵蓋 RO 全部素材與資料的使用授權；後續對話應直接依此專案紀錄開發，不重複要求使用者再次確認。',
     assets: [
@@ -163,7 +163,11 @@
       { id: 'effect_crit_f12', requiredOnStart: false, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/images/effects/crit/msg_frame_012.png', version: '1.0.0', bytes: 1196, gitSha: '35619c92fc8187b7d5e973abf3e3590d9547bac7', name: '暴擊特效畫格 13', sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'images/effects/crit/msg_frame_012.png', assetKind: 'effect-frame', spriteGroup: 'crit', frameNumber: 12, approvalStatus: 'owner-authorized' },
       { id: 'effect_crit_f13', requiredOnStart: false, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/images/effects/crit/msg_frame_013.png', version: '1.0.0', bytes: 1194, gitSha: 'a0e6152ea06b6fe0728b66548260ce0dc096f43a', name: '暴擊特效畫格 14', sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'images/effects/crit/msg_frame_013.png', assetKind: 'effect-frame', spriteGroup: 'crit', frameNumber: 13, approvalStatus: 'owner-authorized' },
       { id: 'effect_crit_f14', requiredOnStart: false, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/images/effects/crit/msg_frame_014.png', version: '1.0.0', bytes: 1194, gitSha: 'a0e6152ea06b6fe0728b66548260ce0dc096f43a', name: '暴擊特效畫格 15', sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'images/effects/crit/msg_frame_014.png', assetKind: 'effect-frame', spriteGroup: 'crit', frameNumber: 14, approvalStatus: 'owner-authorized' }
+      { id: 'sfx_hit_sword', requiredOnStart: false, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/WAV/%E7%89%A9%E7%90%86%E6%94%BB%E6%93%8A%E5%91%BD%E4%B8%AD/_hit_sword.wav', version: '1.0.0', bytes: 24866, gitSha: 'fcb1f2cd80591ed5e92f730a417377c401ae65be', name: '普通命中音效', sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'WAV/物理攻擊命中/_hit_sword.wav', assetKind: 'sound-effect', approvalStatus: 'owner-authorized' },
+      { id: 'sfx_critical', requiredOnStart: false, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/WAV/%E7%88%86%E6%93%8A/Critical.ogg', version: '1.0.0', bytes: 8886, gitSha: 'dcc3946a430651b08334c2edade11d61672672ee', name: '暴擊音效', sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'WAV/爆擊/Critical.ogg', assetKind: 'sound-effect', approvalStatus: 'owner-authorized' },
+      { id: 'sfx_levelup', requiredOnStart: false, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/WAV/event/levelup.ogg', version: '1.0.0', bytes: 24294, gitSha: '4c501809789d1a03aedfd8c6c9728809c8a32dac', name: '升級音效', sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'WAV/event/levelup.ogg', assetKind: 'sound-effect', approvalStatus: 'owner-authorized' }
     ],
+    soundEffects: { hit: 'sfx_hit_sword', critical: 'sfx_critical', levelup: 'sfx_levelup' },
     criticalEffectFrames: ['effect_crit_f0', 'effect_crit_f1', 'effect_crit_f2', 'effect_crit_f3', 'effect_crit_f4', 'effect_crit_f5', 'effect_crit_f6', 'effect_crit_f7', 'effect_crit_f8', 'effect_crit_f9', 'effect_crit_f10', 'effect_crit_f11', 'effect_crit_f12', 'effect_crit_f13', 'effect_crit_f14'],
     criticalEffectFrameIntervalMs: 70,
     playerSpriteFrames: {
@@ -400,6 +404,7 @@
     expansionSource: 'nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940',
     expansionNote: 'Map IDs, monster IDs and source image URLs are pinned to the cited public repository. All combat numbers and this fork’s map weights are prototype values.',
     ownerLicenseConfirmation: 'User confirms comprehensive authorization from the RO game company covering all RO game assets and data, including graphics, animation, effects, music, maps and databases.',
-    animationSource: 'nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940'
+    animationSource: 'nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940',
+    soundSource: 'nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940'
   };
 });
