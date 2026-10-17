@@ -1130,12 +1130,8 @@
     }
     if (result.playerDamage) {
       appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。' + (result.critical ? ' 爆擊！' : ''));
-      if (result.critical) {
-        playCriticalEffect();
-        playSoundEffect('critical');
-      } else {
-        playSoundEffect('hit');
-      }
+      if (result.critical) playCriticalEffect();
+      playSoundEffect(result.critical ? 'critical' : 'hit');
       const effect = $('#scene-effect');
       effect.textContent = (result.critical ? '爆擊 ' : '-') + result.playerDamage;
       effect.classList.remove('show');
