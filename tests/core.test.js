@@ -1711,7 +1711,7 @@ function testCrossTabSaveConflictProtection() {
   assert.match(appSource, /let lastPersistedRaw;/);
   assert.match(appSource, /function markSaveConflict\(currentRaw\)/);
   assert.match(appSource, /window\.addEventListener\('storage', handleExternalSaveChange\)/);
-  assert.match(appSource, /if \(lastPersistedRaw !== undefined && currentRaw !== lastPersistedRaw\)/);
+  assert.match(coreSource, /expectedRaw !== undefined && previousRaw !== expectedRaw/);
   assert.match(appSource, /if \(saveConflictDetected\) \{/);
   assert.match(appSource, /function exportConflictRecovery\(\)/);
   assert.match(appSource, /function reloadLatestSave\(\)/);
