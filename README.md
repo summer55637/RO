@@ -27,6 +27,10 @@
 
 不建議直接以 file:// 雙擊開啟，因為瀏覽器通常會限制安全雜湊驗證、IndexedDB 及 Service Worker。
 
+## 自動版本更新
+
+遊戲每次開啟都會檢查 Service Worker 更新；HTML、CSS、JavaScript 採網路優先並重新驗證，離線時才回退到本機快取。偵測到新版後，已開啟的遊戲分頁會自動重新載入，不需要使用者按 `Ctrl+F5`。角色進度仍保存在瀏覽器本機存檔中。
+
 ## 素材來源
 
 - 原野背景 assets/field.jpg：原樣複製自 nba9001-sys/ro-idle 的 images/maps/field.jpg。
