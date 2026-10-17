@@ -259,6 +259,7 @@
         kills: 0
       },
       personalItems: {},
+      bestiary: {},
       logs: [],
       jobNotice: false,
       jobCapReached: false,
@@ -341,6 +342,8 @@
     if (!character.skills || typeof character.skills !== 'object' || Array.isArray(character.skills)) character.skills = {};
     if (!character.stats) character.stats = { str: 1, agi: 1, vit: 1, int: 1, dex: 1, luk: 1 };
     if (!character.personalItems) character.personalItems = {};
+    // Forward-compatible per-character monster discoveries; never touch shared warehouse data.
+    if (!character.bestiary || typeof character.bestiary !== 'object' || Array.isArray(character.bestiary)) character.bestiary = {};
 
     const map = getMap(character.battle.map);
     const pool = map && map.monsters ? map.monsters : [];
@@ -424,6 +427,9 @@
     if (character.battle.monsterHp <= 0) {
       result.killed = true;
       character.battle.kills += 1;
+      // Older saves gain this optional field lazily, without resetting any existing progress.
+      if (!character.bestiary || typeof character.bestiary !== 'object' || Array.isArray(character.bestiary)) character.bestiary = {};
+      character.bestiary[monster.id] = Math.max(0, Math.floor(Number(character.bestiary[monster.id]) || 0)) + 1;
       character.baseExp += monster.baseExp;
       result.expGained = monster.baseExp;
       if (character.jobLevel < getJobLevelCap(character)) {

@@ -1324,6 +1324,63 @@
     renderDetails();
   }
 
+  function renderBestiary(content) {
+    const monsterData = window.ROWorld.monsters || {};
+    const monsterIds = Object.keys(monsterData).sort(function (left, right) {
+      return String(monsterData[left].name || left).localeCompare(String(monsterData[right].name || right), 'zh-Hant');
+    });
+    const discoveredIds = monsterIds.filter(function (id) {
+      return Math.max(0, Number((character.bestiary || {})[id]) || 0) > 0;
+    });
+    addDetailHeading(content, '怪物圖鑑');
+    addDetailRow(content, '已發現怪物', discoveredIds.length + ' / ' + monsterIds.length);
+    const hint = document.createElement('p');
+    hint.className = 'field-help';
+    hint.textContent = '擊倒怪物即可登錄圖鑑。每個角色分別記錄；既有角色會自動開始累積，不影響經驗、Zeny 或倉庫。';
+    content.appendChild(hint);
+    const list = document.createElement('div');
+    list.className = 'bestiary-list';
+    monsterIds.forEach(function (id) {
+      const monster = monsterData[id];
+      const count = Math.max(0, Math.floor(Number((character.bestiary || {})[id]) || 0));
+      const discovered = count > 0;
+      const card = document.createElement('article');
+      card.className = 'bestiary-entry' + (discovered ? '' : ' undiscovered');
+      const head = document.createElement('div');
+      head.className = 'bestiary-entry-head';
+      const emblem = document.createElement('span');
+      emblem.className = 'bestiary-emblem';
+      emblem.textContent = discovered ? '✦' : '?';
+      const copy = document.createElement('div');
+      copy.className = 'bestiary-copy';
+      const title = document.createElement('strong');
+      title.textContent = discovered ? (monster.name || id) : '??? 未遭遇';
+      const meta = document.createElement('small');
+      meta.textContent = discovered ? '擊倒 ' + formatNumber(count) + ' 隻 · HP ' + formatNumber(monster.maxHp) : '擊倒此怪物後解鎖資料';
+      copy.append(title, meta);
+      head.append(emblem, copy);
+      card.appendChild(head);
+      if (discovered) {
+        const habitats = (window.ROWorld.maps || []).filter(function (map) {
+          return (map.monsters || []).some(function (entry) { return entry.id === id; });
+        }).map(function (map) { return map.name; });
+        const habitatLine = document.createElement('p');
+        habitatLine.className = 'bestiary-entry-meta';
+        habitatLine.textContent = '出沒地點：' + (habitats.length ? habitats.join('、') : '資料整理中');
+        card.appendChild(habitatLine);
+        const drops = Array.isArray(monster.drops) ? monster.drops : [];
+        const dropLine = document.createElement('p');
+        dropLine.className = 'bestiary-entry-drops';
+        dropLine.textContent = drops.length ? '可能掉落：' + drops.map(function (drop) {
+          const chance = Number.isFinite(Number(drop.chance)) ? '（' + Math.round(Number(drop.chance) * 100) + '%）' : '';
+          return drop.name + chance;
+        }).join('、') : '可能掉落：尚無已登錄資料';
+        card.appendChild(dropLine);
+      }
+      list.appendChild(card);
+    });
+    content.appendChild(list);
+  }
   function renderDetails() {
     const content = $('#details-content');
     $$('.detail-tab').forEach(function (button) { button.classList.toggle('active', button.dataset.detail === activeDetail); });
@@ -1374,6 +1431,8 @@
         });
       }
       content.appendChild(list);
+    } else if (activeDetail === 'bestiary') {
+      renderBestiary(content);
     } else if (activeDetail === 'skills') {
       renderSkillTree(content);
     } else {
