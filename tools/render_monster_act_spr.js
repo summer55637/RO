@@ -33,6 +33,25 @@ const MONSTERS = [
     outputSha: '04461b2829cec9e95cdef5d11ce6140fa29ed5ed'
   },
   {
+    key: 'lunatic-attack',
+    name: '瘋兔',
+    animationType: 'attack',
+    canvasWidth: 176,
+    mobId: 1063,
+    actPath: 'tools/samples/lunatic.act',
+    sprPath: 'tools/samples/lunatic.spr',
+    actSha: 'fb90ed9e0d2f71392b2f25cddb4784a09a221cca',
+    sprSha: '1cdcc31c9135ede2140e0d951b59efcc1560eda2',
+    actionIndex: 18,
+    frames: 19,
+    frameMs: 40,
+    scale: 2.6,
+    centerY: 112,
+    outputPath: 'assets/lunatic_attack.svg',
+    outputBytes: 95667,
+    outputSha: '4d1e7e2ca0ac737758adb7439f48545a3dadaed6'
+  },
+  {
     key: 'wolf',
     name: '狼',
     animationType: 'idle',
@@ -50,6 +69,25 @@ const MONSTERS = [
     outputPath: 'assets/wolf_idle.svg',
     outputBytes: 265283,
     outputSha: 'bb11db5c6f0417f2565380717ec0d0f51a8b51aa'
+  },
+  {
+    key: 'wolf-attack',
+    name: '狼',
+    animationType: 'attack',
+    canvasWidth: 176,
+    mobId: 1013,
+    actPath: 'tools/samples/wolf.act',
+    sprPath: 'tools/samples/wolf.spr',
+    actSha: '93c05e86366a7d9cfab19f59d1ff8f60dd1b617d',
+    sprSha: '61b60050dce8094bbebf04d86cc87ef1e8d61706',
+    actionIndex: 16,
+    frames: 7,
+    frameMs: 120,
+    scale: 1.35,
+    centerY: 112,
+    outputPath: 'assets/wolf_attack.svg',
+    outputBytes: 112050,
+    outputSha: '54058111ce081c79625d91f1acc6f4dcc9ab7de0'
   },
   {
     key: 'poring-idle',
@@ -254,7 +292,7 @@ function renderSvg(config, actBytes, sprBytes) {
       if (Math.abs(layer.rotation) > 0.001 ||
           Math.abs(layer.scaleX - 1) > 0.001 ||
           Math.abs(layer.scaleY - 1) > 0.001) {
-        throw new Error(config.key + ' idle action uses unsupported layer transforms.');
+        throw new Error(config.key + ' ' + config.animationType + ' action uses unsupported layer transforms.');
       }
       const left = (canvasWidth - sprite.width * config.scale) / 2 + layer.x * config.scale;
       const top = config.centerY - (sprite.height * config.scale) / 2 + layer.y * config.scale;
@@ -335,7 +373,7 @@ function renderStaticSvg(config, actBytes, sprBytes) {
     if (Math.abs(layer.rotation) > 0.001 ||
         Math.abs(layer.scaleX - 1) > 0.001 ||
         Math.abs(layer.scaleY - 1) > 0.001) {
-      throw new Error(config.key + ' idle action uses unsupported layer transforms.');
+      throw new Error(config.key + ' ' + config.animationType + ' action uses unsupported layer transforms.');
     }
     const left = (config.canvasWidth - sprite.width * config.scale) / 2 + layer.x * config.scale;
     const top = config.centerY - (sprite.height * config.scale) / 2 + layer.y * config.scale;
