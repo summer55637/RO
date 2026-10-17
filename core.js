@@ -1,13 +1,17 @@
 (function (root, factory) {
-  const api = factory();
+  const api = factory(root && root.ROWorld);
   if (root) root.ROCore = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (world) {
   'use strict';
 
   const MAX_OFFLINE_SECONDS = 24 * 60 * 60;
   const SLOT_COUNT = 3;
   const JOB_LEVEL_CAP = 10;
+  const WORLD = world || {
+    maps: [{ id: 'novice_ground', name: '新手訓練場', unlockLevel: 1, monsters: [{ id: 'poring', weight: 1 }] }],
+    monsters: { poring: { id: 'poring', name: '波利', maxHp: 18, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 5, drops: [] } }
+  };
 
   function emptyAccount() {
     return { version: 1, updatedAt: Date.now(), slots: [null, null, null], gold: 0, warehouse: {}, speed: 1 };
@@ -29,15 +33,37 @@
     const duplicates = Array.isArray(existingNames) ? existingNames : [];
     for (const candidate of duplicates) {
       if (candidate == null || candidate === '') continue;
-      if (normalizeNameKey(candidate) === key) {
-        return { ok: false, value: value, reason: '此名稱已被其他角色使用。' };
-      }
+      if (normalizeNameKey(candidate) === key) return { ok: false, value: value, reason: '此名稱已被其他角色使用。' };
     }
     return { ok: true, value: value, key: key, reason: '' };
   }
 
+  function getMap(mapId) {
+    const id = mapId === 'training' ? 'novice_ground' : mapId;
+    return (WORLD.maps || []).find(function (map) { return map.id === id; }) || null;
+  }
+
+  function getMonster(monsterId) {
+    return (WORLD.monsters && WORLD.monsters[monsterId]) || WORLD.monsters.poring || null;
+  }
+
+  function chooseMonster(mapId, rng) {
+    const random = typeof rng === 'function' ? rng : Math.random;
+    const map = getMap(mapId);
+    if (!map || !map.monsters || !map.monsters.length) return getMonster('poring');
+    const total = map.monsters.reduce(function (sum, entry) { return sum + Math.max(0, Number(entry.weight) || 0); }, 0);
+    if (total <= 0) return getMonster(map.monsters[0].id);
+    let target = random() * total;
+    for (const entry of map.monsters) {
+      target -= Math.max(0, Number(entry.weight) || 0);
+      if (target < 0) return getMonster(entry.id);
+    }
+    return getMonster(map.monsters[map.monsters.length - 1].id);
+  }
+
   function makeCharacter(name, gender, look) {
     const now = Date.now();
+    const starterMonster = getMonster('poring') || { maxHp: 18 };
     return {
       id: 'char-' + now.toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       name: name,
@@ -55,7 +81,15 @@
       maxHp: 45,
       sp: 20,
       maxSp: 20,
-      battle: { map: null, paused: true, monsterHp: 18, monsterMaxHp: 18, monsterAttackClock: 0, kills: 0 },
+      battle: {
+        map: null,
+        paused: true,
+        currentMonsterId: 'poring',
+        monsterHp: starterMonster.maxHp,
+        monsterMaxHp: starterMonster.maxHp,
+        monsterAttackClock: 0,
+        kills: 0
+      },
       personalItems: {},
       logs: [],
       jobNotice: false,
@@ -79,14 +113,42 @@
     return Math.min(MAX_OFFLINE_SECONDS, Math.max(0, Math.floor((current - last) / 1000)));
   }
 
-  function ensureCombatShape(character) {
+  function startMap(character, mapId, rng) {
+    const map = getMap(mapId);
+    if (!character || !map || character.baseLevel < (map.unlockLevel || 1)) return false;
+    const monster = chooseMonster(map.id, rng);
+    if (!monster) return false;
     if (!character.battle) character.battle = {};
-    if (!Number.isFinite(character.battle.monsterMaxHp) || character.battle.monsterMaxHp < 1) character.battle.monsterMaxHp = 18;
-    if (!Number.isFinite(character.battle.monsterHp)) character.battle.monsterHp = character.battle.monsterMaxHp;
-    if (!Number.isFinite(character.battle.monsterAttackClock)) character.battle.monsterAttackClock = 0;
+    character.battle.map = map.id;
+    character.battle.paused = false;
+    character.battle.currentMonsterId = monster.id;
+    character.battle.monsterMaxHp = monster.maxHp;
+    character.battle.monsterHp = monster.maxHp;
+    character.battle.monsterAttackClock = 0;
     if (!Number.isFinite(character.battle.kills)) character.battle.kills = 0;
+    return true;
+  }
+
+  function ensureCombatShape(character, rng) {
+    if (!character.battle) character.battle = {};
+    if (character.battle.map === 'training') character.battle.map = 'novice_ground';
+    if (!Number.isFinite(character.battle.kills)) character.battle.kills = 0;
+    if (!Number.isFinite(character.battle.monsterAttackClock)) character.battle.monsterAttackClock = 0;
     if (!character.stats) character.stats = { str: 1, agi: 1, vit: 1, int: 1, dex: 1, luk: 1 };
     if (!character.personalItems) character.personalItems = {};
+
+    const map = getMap(character.battle.map);
+    const pool = map && map.monsters ? map.monsters : [];
+    const validCurrent = pool.some(function (entry) { return entry.id === character.battle.currentMonsterId; });
+    if (!character.battle.currentMonsterId || !validCurrent) {
+      const first = chooseMonster(character.battle.map, rng);
+      character.battle.currentMonsterId = first ? first.id : 'poring';
+      character.battle.monsterMaxHp = first ? first.maxHp : 18;
+      character.battle.monsterHp = character.battle.monsterMaxHp;
+    }
+    const monster = getMonster(character.battle.currentMonsterId);
+    if (!Number.isFinite(character.battle.monsterMaxHp) || character.battle.monsterMaxHp < 1) character.battle.monsterMaxHp = monster.maxHp;
+    if (!Number.isFinite(character.battle.monsterHp)) character.battle.monsterHp = character.battle.monsterMaxHp;
   }
 
   function addWarehouseItem(account, itemName, quantity) {
@@ -96,9 +158,14 @@
 
   function stepCombat(character, account, rng) {
     const random = typeof rng === 'function' ? rng : Math.random;
-    const result = { playerDamage: 0, monsterDamage: 0, killed: false, expGained: 0, jobExpGained: 0, goldGained: 0, drops: [], levelUps: [], jobCapped: false, playerDown: false };
+    const result = { playerDamage: 0, monsterDamage: 0, killed: false, monsterId: '', monsterName: '', expGained: 0, jobExpGained: 0, goldGained: 0, drops: [], levelUps: [], jobCapped: false, playerDown: false };
     if (!character || !character.battle || !character.battle.map || character.battle.paused) return result;
-    ensureCombatShape(character);
+    ensureCombatShape(character, random);
+    const monster = getMonster(character.battle.currentMonsterId);
+    if (!monster) return result;
+    result.monsterId = monster.id;
+    result.monsterName = monster.name;
+
     const damage = Math.max(1, 4 + character.baseLevel + (character.stats.str || 0) - Math.floor(random() * 3));
     character.battle.monsterHp = Math.max(0, character.battle.monsterHp - damage);
     result.playerDamage = damage;
@@ -106,26 +173,23 @@
     if (character.battle.monsterHp <= 0) {
       result.killed = true;
       character.battle.kills += 1;
-      character.battle.monsterHp = character.battle.monsterMaxHp;
-      character.baseExp += 4;
-      result.expGained = 4;
-
+      character.baseExp += monster.baseExp;
+      result.expGained = monster.baseExp;
       if (character.jobLevel < JOB_LEVEL_CAP) {
-        character.jobExp += 2;
-        result.jobExpGained = 2;
+        character.jobExp += monster.jobExp;
+        result.jobExpGained = monster.jobExp;
       }
-      const gold = 1 + Math.floor(random() * 5);
+
+      const gold = monster.zenyMin + Math.floor(random() * (monster.zenyMax - monster.zenyMin + 1));
       account.gold = Math.max(0, Number(account.gold) || 0) + gold;
       result.goldGained = gold;
 
-      if (random() < 0.35) {
-        addWarehouseItem(account, '果凍質塊', 1);
-        result.drops.push('果凍質塊');
-      }
-      if (random() < 0.08) {
-        addWarehouseItem(account, '獸毛', 1);
-        result.drops.push('獸毛');
-      }
+      (monster.drops || []).forEach(function (drop) {
+        if (random() < drop.chance) {
+          addWarehouseItem(account, drop.name, 1);
+          result.drops.push(drop.name);
+        }
+      });
 
       while (character.baseExp >= baseExpToNext(character.baseLevel)) {
         character.baseExp -= baseExpToNext(character.baseLevel);
@@ -147,13 +211,21 @@
         if (!character.jobNotice) result.jobCapped = true;
         character.jobNotice = true;
       }
+
+      const nextMonster = chooseMonster(character.battle.map, random);
+      if (nextMonster) {
+        character.battle.currentMonsterId = nextMonster.id;
+        character.battle.monsterMaxHp = nextMonster.maxHp;
+        character.battle.monsterHp = nextMonster.maxHp;
+      }
+      character.battle.monsterAttackClock = 0;
       return result;
     }
 
     character.battle.monsterAttackClock += 1;
     if (character.battle.monsterAttackClock >= 2) {
       character.battle.monsterAttackClock = 0;
-      const mobDamage = 1 + Math.floor(random() * 3);
+      const mobDamage = monster.attackMin + Math.floor(random() * (monster.attackMax - monster.attackMin + 1));
       character.hp = Math.max(0, character.hp - mobDamage);
       result.monsterDamage = mobDamage;
       if (character.hp <= 0) {
@@ -197,6 +269,10 @@
     baseExpToNext: baseExpToNext,
     jobExpToNext: jobExpToNext,
     resolveOfflineSeconds: resolveOfflineSeconds,
+    getMap: getMap,
+    getMonster: getMonster,
+    chooseMonster: chooseMonster,
+    startMap: startMap,
     stepCombat: stepCombat,
     settleOffline: settleOffline
   };
