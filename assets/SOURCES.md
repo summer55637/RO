@@ -24,7 +24,7 @@
 | 小雞 Picky | 1049 | [1049.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1049.png) | 409 | 67b06c12d629885ad9c3cd7bf893370840d14e8e |
 | 禿鷹 Condor | 1009 | [1009.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1009.png) | 4,181 | f8029dca4c909a67650986ca272180872d587214 |
 
-- 盜蟲 Thief Bug：Mob ID 是 1051，但固定圖片包沒有 images/monsters/1051.png。已找到 [Divine Pride 的 Mob 1051 圖像](https://static.divine-pride.net/images/mobs/png/1051.png) 與[圖集](https://static.divine-pride.net/images/spritesheets/npc/1051.png)，並透過 [怪物資料頁](https://www.divine-pride.net/database/monster/1051/)交叉確認名稱與 ID。由於目前尚未以可重現方式取得該 PNG 的原始 bytes、檔案大小與 Git blob SHA-1，尚未匯入清單；遊戲先使用自製向量圖，不載入 Mob 1015（殭屍），避免破壞素材完整性驗證。
+- 盜蟲 Thief Bug：Divine Pride 的[怪物資料頁](https://www.divine-pride.net/database/monster/1051/thief-bug)交叉確認名稱 `THIEF_BUG` 與 Mob ID `1051`。於 2026-10-17 從[原始 PNG URL](https://static.divine-pride.net/images/mobs/png/1051.png)取得 `image/png` 回應並固定至 `assets/thief_bug.png`；檔案為 36×27 pixels、1,783 bytes，Git blob SHA-1 `342abcc99d1c1d902751b64e65b6f56d8b309342`。`world-data.js` 將本地檔案固定為此大小／雜湊，遊戲下載至 IndexedDB 前會重新驗證，失敗時僅使用獨立向量備援，不使用 Mob 1015（殭屍）。[精靈表](https://static.divine-pride.net/images/spritesheets/npc/1051.png)已可檢視多個姿態，但本次尚未匯入該表，也未取得／解析對應 ACT 動作資料；因此此改動只接入正確靜態圖像，不宣稱已接入逐格動畫。
 - 錯誤舊檔：原本標成 lunatic.png 的位元組其實來自 Mob 1001（蠍子）；原 fabre.png 來自 Mob 1003；原 thief_bug.png 來自 Mob 1015（殭屍）。現在重新命名為 scorpion.png、testegg.png、zombie.png，且不再對應給錯誤怪物。
 
 ## MVP 1.4 材料與消耗品原型
@@ -69,7 +69,7 @@
 | assets/pupa.png | [images/monsters/1008.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1008.png) | 771 bytes | 6603da0bdf588b3f74381442fe0dc82aa574ef2c |
 | assets/zombie.png | [images/monsters/1015.png](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/images/monsters/1015.png) | 1,906 bytes | ef27e37d53ddb15fad6e551e34868083df407d54 |
 
-第一張地圖必要素材合計 170,370 bytes（約 167 KiB）；第二張地圖的蛹與盜蟲素材合計 2,677 bytes，於首次進入該地圖時才下載。
+第一張地圖必要素材合計 170,370 bytes（約 167 KiB）；需要蛹與盜蟲圖像的地圖合計 2,554 bytes（蛹 771 bytes＋盜蟲 1,783 bytes），於首次進入需要這些素材的地圖時才下載並驗證。
 
 專案擁有者已聲明取得 RO 公司相關授權。請另行保存正式授權文件及其涵蓋範圍；素材倉庫原本的程式碼／文字授權不應被誤認為 RO 第三方素材的權利來源。
 

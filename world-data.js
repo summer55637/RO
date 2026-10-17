@@ -6,7 +6,7 @@
   'use strict';
 
   return {
-    manifestVersion: '2.0.0',
+    manifestVersion: '2.1.0',
     assetApprovalStatus: 'owner-authorized',
     assetApprovalNote: '專案擁有者已明確確認已取得 RO 遊戲公司涵蓋 RO 全部素材與資料的使用授權；後續對話應直接依此專案紀錄開發，不重複要求使用者再次確認。',
     assets: [
@@ -15,6 +15,7 @@
       { id: 'lunatic', requiredOnStart: true, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/images/monsters/1063.png', version: '1.1.0', bytes: 598, gitSha: 'ae31b3bd6c29aeea5985f5b585ab0c9bb8eaa8fa', statusId: 'asset-status-lunatic', name: '瘋兔圖像', dependencies: ['monster:lunatic'], sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'images/monsters/1063.png', sourceMobId: 1063, assetKind: 'monster', approvalStatus: 'owner-authorized' },
       { id: 'fabre', requiredOnStart: true, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/images/monsters/1007.png', version: '1.1.0', bytes: 789, gitSha: 'e9f3ef887164c0c7d0aa883e82d61f49b2379d59', statusId: 'asset-status-fabre', name: '綠棉蟲圖像', dependencies: ['monster:fabre'], sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'images/monsters/1007.png', sourceMobId: 1007, assetKind: 'monster', approvalStatus: 'owner-authorized' },
       { id: 'pupa', requiredOnStart: false, path: './assets/pupa.png', version: '1.1.0', bytes: 771, gitSha: '6603da0bdf588b3f74381442fe0dc82aa574ef2c', statusId: 'asset-status-pupa', name: '蛹圖像', dependencies: ['monster:pupa'], sourcePath: 'images/monsters/1008.png', sourceMobId: 1008, assetKind: 'monster', approvalStatus: 'owner-authorized' },
+      { id: 'thief_bug', requiredOnStart: false, path: './assets/thief_bug.png', version: '1.0.0', bytes: 1783, gitSha: '342abcc99d1c1d902751b64e65b6f56d8b309342', name: '盜蟲圖像', dependencies: ['monster:thief_bug'], sourceRepository: 'divine-pride.net', sourcePath: 'images/mobs/png/1051.png', sourceUrl: 'https://static.divine-pride.net/images/mobs/png/1051.png', sourceMobId: 1051, width: 36, height: 27, assetKind: 'monster', approvalStatus: 'owner-authorized' },
 
       { id: 'wolf', requiredOnStart: false, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/images/monsters/1013.png', version: '1.1.0', bytes: 1892, gitSha: 'b597c222615da8a15634eeaf3da1833945ec9910', name: '狼圖像', dependencies: ['monster:wolf'], sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'images/monsters/1013.png', sourceMobId: 1013, assetKind: 'monster', approvalStatus: 'owner-authorized' },
       { id: 'hornet', requiredOnStart: false, path: 'https://raw.githubusercontent.com/nba9001-sys/ro-idle/2348031f3797dbea1981f399288748378a283940/images/monsters/1004.png', version: '1.1.0', bytes: 942, gitSha: '32d3c7d9cd9e71064a7e9b074b52293bc8bc97b0', name: '蜂兵圖像', dependencies: ['monster:hornet'], sourceRepository: 'nba9001-sys/ro-idle', sourcePath: 'images/monsters/1004.png', sourceMobId: 1004, assetKind: 'monster', approvalStatus: 'owner-authorized' },
