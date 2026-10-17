@@ -86,7 +86,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v38/);
+  assert.match(serviceWorker, /ro-h5-shell-v39/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -180,8 +180,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 2\.9/);
-  assert.match(sw, /ro-h5-shell-v38/);
+  assert.match(html, /MVP 3\.0/);
+  assert.match(sw, /ro-h5-shell-v39/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -234,8 +234,8 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 2\.9/);
-  assert.match(sw, /ro-h5-shell-v38/);
+  assert.match(html, /MVP 3\.0/);
+  assert.match(sw, /ro-h5-shell-v39/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -252,8 +252,8 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
-  assert.match(html, /MVP 2\.9/);
-  assert.match(sw, /ro-h5-shell-v38/);
+  assert.match(html, /MVP 3\.0/);
+  assert.match(sw, /ro-h5-shell-v39/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -427,7 +427,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 2\.9/);
+  assert.match(html, /MVP 3\.0/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -573,7 +573,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 2\.9/);
+  assert.match(html, /MVP 3\.0/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -1419,7 +1419,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 2\.9/);
+  assert.match(html, /MVP 3\.0/);
 }
 
 
@@ -1466,8 +1466,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 2\.9/);
-  assert.match(sw, /ro-h5-shell-v38/);
+  assert.match(html, /MVP 3\.0/);
+  assert.match(sw, /ro-h5-shell-v39/);
 }
 
 
@@ -1482,8 +1482,8 @@ function testOfflineSettlementCanDismiss() {
   assert.match(appSource, /\$\('#btn-offline-close'\)\.addEventListener\('click', closeOfflineReport\);/);
   assert.match(appSource, /const pendingReport = character\.pendingReport;[\s\S]*if \(!persistCurrent\(\)\) \{[\s\S]*character\.pendingReport = pendingReport;/);
   assert.match(html, /<form method="dialog"><button id="btn-offline-close" type="submit"/);
-  assert.match(html, /MVP 2\.9/);
-  assert.match(sw, /ro-h5-shell-v38/);
+  assert.match(html, /MVP 3\.0/);
+  assert.match(sw, /ro-h5-shell-v39/);
 }
 
 
@@ -1497,10 +1497,10 @@ function testPortableSaveFormatSafety() {
   account.gold = 4321;
   account.warehouse = { '果凍質塊': 12, '綠色藥草': 3 };
 
-  const envelope = core.createPortableSave(account, '2.9');
+  const envelope = core.createPortableSave(account, '3.0');
   assert.equal(envelope.format, 'ro-h5-save');
   assert.equal(envelope.formatVersion, 1);
-  assert.equal(envelope.gameVersion, '2.9');
+  assert.equal(envelope.gameVersion, '3.0');
   assert.ok(Number.isFinite(Date.parse(envelope.exportedAt)));
   assert.notEqual(envelope.account, account, 'export must create a detached snapshot');
   assert.equal(envelope.account.gold, 4321);
@@ -1544,8 +1544,116 @@ function testPortableSaveFormatSafety() {
   assert.equal(core.preparePortableSave({ format: 'other-game-save', formatVersion: 1, account: account }).ok, false, 'foreign save formats must be rejected');
 }
 
+function makeFakeStorage(initialValue, options) {
+  const values = new Map();
+  if (initialValue !== null) values.set('ro-h5-account-v1', initialValue);
+  const config = options || {};
+  let setCount = 0;
+  let readCount = 0;
+  return {
+    values: values,
+    getItem: function (key) {
+      readCount += 1;
+      if (config.throwOnRead && readCount === config.throwOnRead) throw new Error('simulated read failure');
+      if (typeof config.mutateBeforeRead === 'function') config.mutateBeforeRead(values, readCount);
+      return values.has(key) ? values.get(key) : null;
+    },
+    setItem: function (key, value) {
+      setCount += 1;
+      if (config.throwOnWrite && setCount === config.throwOnWrite) {
+        if (config.writeThenThrow) values.set(key, String(value));
+        throw new Error('simulated write failure');
+      }
+      values.set(key, String(value));
+      if (typeof config.afterWrite === 'function') config.afterWrite(values, setCount, String(value));
+    },
+    removeItem: function (key) {
+      if (config.throwOnRemove) throw new Error('simulated remove failure');
+      values.delete(key);
+    },
+    counts: function () { return { set: setCount, get: readCount }; }
+  };
+}
+
+function testStoredAccountReplaceTransactionSafety() {
+  const previousAccount = core.emptyAccount();
+  previousAccount.gold = 135;
+  previousAccount.warehouse = { '果凍質塊': 2 };
+  previousAccount.slots[0] = core.makeCharacter('PreviousHero', 'male', 'novice');
+  const previousRaw = JSON.stringify(previousAccount);
+  const incomingAccount = core.emptyAccount();
+  incomingAccount.gold = 97531;
+  incomingAccount.warehouse = { '綠色藥草': 28 };
+  incomingAccount.slots[0] = core.makeCharacter('IncomingHero', 'female', 'novice');
+
+  const storage = makeFakeStorage(previousRaw);
+  const success = core.replaceStoredAccount(storage, 'ro-h5-account-v1', incomingAccount);
+  assert.equal(success.ok, true);
+  assert.equal(success.previousRaw, previousRaw);
+  assert.equal(storage.getItem('ro-h5-account-v1'), success.serialized);
+  const saved = JSON.parse(storage.getItem('ro-h5-account-v1'));
+  assert.equal(saved.gold, 97531);
+  assert.equal(saved.warehouse['綠色藥草'], 28);
+  assert.equal(saved.slots[0].name, 'IncomingHero');
+
+  const failBeforeWrite = makeFakeStorage(previousRaw, { throwOnWrite: 1 });
+  const failedWrite = core.replaceStoredAccount(failBeforeWrite, 'ro-h5-account-v1', incomingAccount);
+  assert.equal(failedWrite.ok, false);
+  assert.equal(failedWrite.restored, true);
+  assert.equal(failedWrite.concurrentChange, false);
+  assert.equal(failBeforeWrite.getItem('ro-h5-account-v1'), previousRaw);
+
+  const writeThenThrow = makeFakeStorage(previousRaw, { throwOnWrite: 1, writeThenThrow: true });
+  const rolledBack = core.replaceStoredAccount(writeThenThrow, 'ro-h5-account-v1', incomingAccount);
+  assert.equal(rolledBack.ok, false);
+  assert.equal(rolledBack.restored, true);
+  assert.equal(writeThenThrow.getItem('ro-h5-account-v1'), previousRaw, 'a partial write must restore the original serialized save');
+
+  const concurrentRaw = JSON.stringify(Object.assign({}, previousAccount, { gold: 55555 }));
+  const concurrentStorage = makeFakeStorage(previousRaw, {
+    afterWrite: function (values, setCount) {
+      if (setCount === 1) values.set('ro-h5-account-v1', concurrentRaw);
+    }
+  });
+  const concurrent = core.replaceStoredAccount(concurrentStorage, 'ro-h5-account-v1', incomingAccount);
+  assert.equal(concurrent.ok, false);
+  assert.equal(concurrent.restored, false);
+  assert.equal(concurrent.concurrentChange, true);
+  assert.equal(concurrentStorage.getItem('ro-h5-account-v1'), concurrentRaw, 'rollback must never overwrite a concurrent newer value');
+
+  const invalid = core.replaceStoredAccount(storage, 'ro-h5-account-v1', { version: 1, slots: [null] });
+  assert.equal(invalid.ok, false);
+  assert.equal(storage.getItem('ro-h5-account-v1'), success.serialized, 'invalid imports must not write storage');
+}
+
+function testCrossTabSaveConflictProtection() {
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const coreSource = fs.readFileSync(path.join(__dirname, '..', 'core.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  assert.match(appSource, /let lastPersistedRaw;/);
+  assert.match(appSource, /function markSaveConflict\(currentRaw\)/);
+  assert.match(appSource, /window\.addEventListener\('storage', handleExternalSaveChange\)/);
+  assert.match(appSource, /if \(lastPersistedRaw !== undefined && currentRaw !== lastPersistedRaw\)/);
+  assert.match(appSource, /if \(saveConflictDetected\) \{/);
+  assert.match(appSource, /function exportConflictRecovery\(\)/);
+  assert.match(appSource, /function reloadLatestSave\(\)/);
+  assert.match(appSource, /function replaceStoredAccount|ROCore\.replaceStoredAccount\(localStorage, SAVE_KEY, pendingImportAccount\)/);
+  assert.match(coreSource, /currentRaw !== nextText/);
+  assert.match(appSource, /存檔衝突時請先下載恢復備份/);
+  assert.match(html, /id="save-conflict-banner"[^>]*class="save-conflict-banner hidden"/);
+  assert.match(html, /id="btn-save-conflict-export"/);
+  assert.match(html, /id="btn-save-conflict-reload"/);
+  assert.match(html, /MVP 3\.0/);
+  assert.match(style, /\.save-conflict-banner/);
+  assert.match(sw, /ro-h5-shell-v39/);
+  assert.doesNotMatch(appSource, /ro-h5-active-tab-v1|enterSlotsWithLock|screen-lock|screen-lost/);
+}
+
 function testPortableSaveUiWiring() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const coreSource = fs.readFileSync(path.join(__dirname, '..', 'core.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(html, /id="btn-export-save"/);
@@ -1554,15 +1662,15 @@ function testPortableSaveUiWiring() {
   assert.match(html, /id="import-save-dialog"/);
   assert.match(html, /id="import-save-ack"/);
   assert.match(html, /id="btn-import-save-continue"/);
-  assert.match(html, /MVP 2\.9/);
-  assert.match(sw, /ro-h5-shell-v38/);
+  assert.match(html, /MVP 3\.0/);
+  assert.match(sw, /ro-h5-shell-v39/);
   assert.match(appSource, /function exportSaveFile\(\)/);
   assert.match(appSource, /function handleSaveFileSelection\(event\)/);
   assert.match(appSource, /function continueImportSave\(\)/);
   assert.match(appSource, /function commitPendingImport\(\)/);
   assert.match(appSource, /pendingImportStage === 1/);
   assert.match(appSource, /pendingImportStage !== 2/);
-  assert.match(appSource, /readback verification|回讀比對失敗/);
+  assert.match(coreSource, /回讀比對失敗/);
   const selectionHandler = appSource.split('async function handleSaveFileSelection(event)')[1].split('function cancelImportSave()')[0];
   assert.doesNotMatch(selectionHandler, /localStorage\.setItem/, 'choosing/parsing a file must not write over the local save');
   assert.match(appSource, /localStorage\.setItem\(SAVE_KEY, serialized\)/, 'storage is written only in the final commit path');
@@ -1571,6 +1679,8 @@ function testPortableSaveUiWiring() {
 
 testOfflineSettlementCanDismiss();
 testPortableSaveFormatSafety();
+testStoredAccountReplaceTransactionSafety();
+testCrossTabSaveConflictProtection();
 testPortableSaveUiWiring();
 
 testMonsterArtworkIdentityMapping();
@@ -1618,4 +1728,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (47 suites).');
+console.log('RO H5 core tests passed (49 suites).');

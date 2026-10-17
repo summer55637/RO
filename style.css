@@ -186,3 +186,11 @@
 #import-save-dialog .confirm-line{display:flex;align-items:flex-start;gap:9px;line-height:1.7}
 #import-save-dialog .confirm-line input{flex:0 0 auto;margin-top:3px}
 @media(max-width:560px){.save-file-actions .button{flex:1 1 100%}.save-file-panel{padding:14px}}
+
+.save-conflict-banner{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-top:14px;padding:14px 16px;border:1px solid rgba(231,126,120,.55);border-left:4px solid var(--red);border-radius:12px;background:rgba(95,39,39,.28);box-shadow:0 8px 28px rgba(0,0,0,.12)}
+.save-conflict-copy{min-width:0;flex:1}
+.save-conflict-copy strong{display:block;color:#ffcbc6;font-size:13px}
+.save-conflict-copy p{margin:6px 0 0;color:#e2c8c5;font-size:11px;line-height:1.8}
+.save-conflict-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.save-conflict-actions .button{min-height:38px}
+@media(max-width:700px){.save-conflict-banner{flex-direction:column}.save-conflict-actions{width:100%;display:grid;grid-template-columns:1fr}.save-conflict-actions .button{width:100%}}

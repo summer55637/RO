@@ -390,6 +390,96 @@
     };
   }
 
+  function replaceStoredAccount(storage, saveKey, nextAccount) {
+    function failure(reason, restored, concurrentChange) {
+      return {
+        ok: false,
+        reason: reason,
+        restored: Boolean(restored),
+        concurrentChange: Boolean(concurrentChange)
+      };
+    }
+    if (!storage || typeof storage.getItem !== 'function' ||
+        typeof storage.setItem !== 'function' || typeof storage.removeItem !== 'function') {
+      return failure('無法安全存取本機存檔儲存區。', false, false);
+    }
+    if (typeof saveKey !== 'string' || !saveKey) {
+      return failure('存檔識別碼無效。', false, false);
+    }
+
+    const prepared = preparePortableSave(nextAccount);
+    if (!prepared.ok) return failure(prepared.reason, true, false);
+
+    let nextText;
+    try {
+      prepared.account.updatedAt = Date.now();
+      nextText = JSON.stringify(prepared.account);
+    } catch (_) {
+      return failure('匯入資料無法序列化；原存檔沒有變更。', true, false);
+    }
+
+    let previousRaw;
+    try {
+      previousRaw = storage.getItem(saveKey);
+    } catch (_) {
+      return failure('無法讀取既有存檔；原存檔沒有變更。', false, false);
+    }
+
+    let writeAttempted = false;
+    try {
+      writeAttempted = true;
+      storage.setItem(saveKey, nextText);
+      const readBack = storage.getItem(saveKey);
+      if (readBack !== nextText) throw new Error('寫入後回讀比對失敗。');
+      let parsed;
+      try { parsed = JSON.parse(readBack); } catch (_) {
+        throw new Error('寫入後的存檔無法解析。');
+      }
+      const verified = preparePortableSave(parsed);
+      if (!verified.ok) throw new Error('寫入後驗證失敗：' + verified.reason);
+      return {
+        ok: true,
+        account: verified.account,
+        serialized: nextText,
+        previousRaw: previousRaw,
+        restored: false,
+        concurrentChange: false
+      };
+    } catch (error) {
+      if (!writeAttempted) {
+        return failure(error.message || '存檔寫入失敗。', true, false);
+      }
+      let currentRaw;
+      try {
+        currentRaw = storage.getItem(saveKey);
+      } catch (_) {
+        return failure((error.message || '存檔寫入失敗。') + '；無法檢查原存檔是否仍完整。', false, false);
+      }
+
+      if (currentRaw === previousRaw) {
+        return failure(error.message || '存檔寫入失敗。', true, false);
+      }
+
+      // Roll back only if the current value is still this transaction's own write.
+      // Another tab may have written a newer value after our write; never overwrite that value.
+      if (currentRaw !== nextText) {
+        return failure((error.message || '存檔寫入失敗。') + '；偵測到其他操作已改寫存檔，為避免覆蓋新資料，不執行復原寫入。', false, true);
+      }
+
+      try {
+        if (previousRaw === null) storage.removeItem(saveKey);
+        else storage.setItem(saveKey, previousRaw);
+        const restoredRaw = storage.getItem(saveKey);
+        if (restoredRaw !== previousRaw) {
+          return failure((error.message || '存檔寫入失敗。') + '；復原後的存檔比對失敗。', false, false);
+        }
+        return failure(error.message || '存檔寫入失敗。', true, false);
+      } catch (_) {
+        return failure((error.message || '存檔寫入失敗。') + '；嘗試復原原存檔時也發生錯誤。', false, false);
+      }
+    }
+  }
+
   function normalizeNameKey(value) {
     return String(value == null ? '' : value).normalize('NFKC').trim().toLocaleLowerCase('en-US');
   }
@@ -1083,6 +1173,7 @@
     PORTABLE_SAVE_FORMAT: PORTABLE_SAVE_FORMAT,
     PORTABLE_SAVE_VERSION: PORTABLE_SAVE_VERSION,
     createPortableSave: createPortableSave,
+    replaceStoredAccount: replaceStoredAccount,
     preparePortableSave: preparePortableSave,
     JOB_LEVEL_CAP: JOB_LEVEL_CAP,
     FIRST_JOB_LEVEL_CAP: FIRST_JOB_LEVEL_CAP,
