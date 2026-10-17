@@ -351,10 +351,10 @@
     },
     items: {
       equipment: [
-        { id: 'novice_dagger', name: '初心者短刀', type: 'equipment', slot: 'weapon', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { attackBonus: 3 }, description: '輕巧的入門武器。攻擊 +3（原型）。' },
-        { id: 'cotton_adventurer_armor', name: '棉布冒險服', type: 'equipment', slot: 'armor', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { defenseBonus: 2 }, description: '簡單耐用的冒險服。防禦 +2（原型）。' },
-        { id: 'travel_sandals', name: '旅人涼鞋', type: 'equipment', slot: 'shoes', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { defenseBonus: 1 }, description: '適合長途冒險的鞋履。防禦 +1（原型）。' },
-        { id: 'four_leaf_charm', name: '幸運草護符', type: 'equipment', slot: 'accessory', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { criticalBonus: 0.02 }, description: '帶來一點好運。爆擊率 +2 個百分點（原型）。' }
+        { id: 'novice_dagger', name: '初心者短刀', type: 'equipment', slot: 'weapon', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { attackBonus: 3 }, sellPrice: 30, description: '輕巧的入門武器。攻擊 +3（原型）。' },
+        { id: 'cotton_adventurer_armor', name: '棉布冒險服', type: 'equipment', slot: 'armor', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { defenseBonus: 2 }, sellPrice: 40, description: '簡單耐用的冒險服。防禦 +2（原型）。' },
+        { id: 'travel_sandals', name: '旅人涼鞋', type: 'equipment', slot: 'shoes', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { defenseBonus: 1 }, sellPrice: 25, description: '適合長途冒險的鞋履。防禦 +1（原型）。' },
+        { id: 'four_leaf_charm', name: '幸運草護符', type: 'equipment', slot: 'accessory', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { criticalBonus: 0.02 }, sellPrice: 50, description: '帶來一點好運。爆擊率 +2 個百分點（原型）。' }
       ],
       cards: [
         { id: 'poring_card', name: '波利卡片', type: 'card', effects: { defenseBonus: 1 }, description: '鑲嵌後防禦 +1（原型）。' },
