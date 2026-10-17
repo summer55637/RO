@@ -22,7 +22,7 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.8 is being developed from `main` commit `f5287f69c70330bfb1d809066f1d3af34e20065c`, following merged PR #13. This feature branch adds monster idle/hit/defeat visuals, player damage feedback and class-specific cast animation cues; current battle formulas, local saves and reward logic remain unchanged. Service Worker shell cache is v11 in the MVP 0.8 feature branch. Most recent verified main deployment succeeded for MVP 0.7. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
+The current `main` commit before the active fix is `71c18b3ba4873e4a4c62b1d5d0d10eb0731c4168`, with MVP 0.8 deployed and Service Worker shell cache v11. The active branch `fix/stale-tab-lock-recovery` repairs stale account-tab locks: it expires inactive heartbeats after 12 seconds and auto-rechecks every 2.5 seconds while the lock screen is displayed. The account lock remains in place for a live tab; the fix does not delete or migrate player saves. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
