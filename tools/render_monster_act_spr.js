@@ -365,7 +365,8 @@ function renderSvg(config, actBytes, sprBytes) {
   }).join('');
   const groups = frameLayers.map((content, index) =>
     '<g id="frame-' + index + '" class="f' + index + '">' + content + '</g>').join('');
-  const animationLabel = config.animationType === 'attack' ? '攻擊逐格動畫' : '待機逐格動畫';
+  const animationLabel = config.animationType === 'attack' ? '攻擊逐格動畫' :
+    config.animationType === 'hurt' ? '受擊逐格動畫' : '待機逐格動畫';
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + canvasWidth + ' 128" role="img" aria-label="' +
     config.name + ' Mob ' + config.mobId + ' ' + animationLabel + '" data-mob-id="' + config.mobId +
     '" data-act-action-index="' + config.actionIndex + '" data-frame-count="' + frames.length +
