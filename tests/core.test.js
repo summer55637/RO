@@ -9,6 +9,7 @@ const core = require('../core.js');
 function testAutomaticUpdateStrategy() {
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
   assert.match(serviceWorker, /ro-h5-shell-v12/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
