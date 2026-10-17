@@ -48,3 +48,38 @@
 .skill-requirement{min-height:26px;margin:0 0 9px;color:var(--muted);font-size:9px;line-height:1.5}
 .skill-learn-button{width:100%;min-height:32px;padding:7px 9px;font-size:10px}
 @media(max-width:560px){.skill-tree-list{grid-template-columns:1fr}}
+
+
+/* MVP 0.7: lightweight skill impact effects without downloading another sprite sheet. */
+.scene-effect{z-index:7;min-width:84px;text-align:center;white-space:nowrap;font-size:clamp(15px,2.5vw,24px);font-weight:900}
+.scene-effect::before,.scene-effect::after{position:absolute;left:50%;top:50%;pointer-events:none;opacity:0;line-height:1;transform:translate(-50%,-50%) scale(.4)}
+.scene-effect.skill-fx-slash::before{content:"✦";color:#fff0a2;font-size:34px;text-shadow:0 0 9px #ffc74d}
+.scene-effect.skill-fx-slash::after{content:"╱";color:#fff9ce;font-size:52px;text-shadow:0 0 8px #ffd35c}
+.scene-effect.skill-fx-magic::before{content:"✧";color:#9bdcff;font-size:43px;text-shadow:0 0 12px #4da8ff}
+.scene-effect.skill-fx-magic::after{content:"◉";color:#d9f3ff;font-size:54px;text-shadow:0 0 14px #4da8ff}
+.scene-effect.skill-fx-arrow::before{content:"➶";color:#ffe7a8;font-size:38px;text-shadow:0 0 8px #e6a64c}
+.scene-effect.skill-fx-arrow::after{content:"»";color:#fff2cb;font-size:42px;text-shadow:0 0 7px #dfac52}
+.scene-effect.skill-fx-heavy::before{content:"✸";color:#ffe29a;font-size:43px;text-shadow:0 0 12px #ff9b42}
+.scene-effect.skill-fx-heavy::after{content:"✦";color:#fff7cc;font-size:28px}
+.scene-effect.skill-fx-poison::before{content:"✦";color:#d7a4ff;font-size:42px;text-shadow:0 0 12px #9c54dd}
+.scene-effect.skill-fx-poison::after{content:"☠";color:#e2ffc0;font-size:28px;text-shadow:0 0 8px #8fa64b}
+.scene-effect.skill-fx-heal::before{content:"✚";color:#a9f3bd;font-size:42px;text-shadow:0 0 12px #53ce83}
+.scene-effect.skill-fx-heal::after{content:"✧";color:#e6ffe9;font-size:30px;text-shadow:0 0 10px #64df91}
+.scene-effect.skill-fx-slash.show::before,.scene-effect.skill-fx-slash.show::after,
+.scene-effect.skill-fx-magic.show::before,.scene-effect.skill-fx-magic.show::after,
+.scene-effect.skill-fx-arrow.show::before,.scene-effect.skill-fx-arrow.show::after,
+.scene-effect.skill-fx-heavy.show::before,.scene-effect.skill-fx-heavy.show::after,
+.scene-effect.skill-fx-poison.show::before,.scene-effect.skill-fx-poison.show::after,
+.scene-effect.skill-fx-heal.show::before,.scene-effect.skill-fx-heal.show::after{animation:skillGlyphBurst .45s ease-out both}
+@keyframes skillGlyphBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(-25deg)}28%{opacity:1;transform:translate(-50%,-75%) scale(1.1) rotate(8deg)}100%{opacity:0;transform:translate(-50%,-135%) scale(.7) rotate(20deg)}}
+.monster-actor.skill-hit-slash img{animation:monsterSkillSlash .3s ease-out;filter:drop-shadow(0 0 10px rgba(255,211,92,.9))}
+.monster-actor.skill-hit-magic img{animation:monsterSkillMagic .32s ease-out;filter:drop-shadow(0 0 12px rgba(95,181,255,.95)) hue-rotate(165deg)}
+.monster-actor.skill-hit-arrow img{animation:monsterSkillArrow .28s ease-out;filter:drop-shadow(0 0 8px rgba(255,221,151,.9))}
+.monster-actor.skill-hit-heavy img{animation:monsterSkillHeavy .32s ease-out;filter:drop-shadow(0 0 12px rgba(255,151,65,.95)) saturate(1.5)}
+.monster-actor.skill-hit-poison img{animation:monsterSkillPoison .34s ease-out;filter:drop-shadow(0 0 10px rgba(171,106,230,.95)) hue-rotate(65deg)}
+@keyframes monsterSkillSlash{0%,100%{transform:translateX(0) rotate(0)}30%{transform:translateX(-10px) rotate(-5deg)}65%{transform:translateX(6px) rotate(3deg)}}
+@keyframes monsterSkillMagic{0%,100%{transform:scale(1);filter:brightness(1)}35%{transform:scale(.88);filter:brightness(2) saturate(1.8)}70%{transform:scale(1.06)}}
+@keyframes monsterSkillArrow{0%,100%{transform:translateX(0)}30%{transform:translateX(-9px)}60%{transform:translateX(4px)}}
+@keyframes monsterSkillHeavy{0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(7px) scale(.91)}65%{transform:translateY(-3px) scale(1.03)}}
+@keyframes monsterSkillPoison{0%,100%{transform:translateX(0);filter:brightness(1)}25%{transform:translateX(-5px);filter:brightness(1.5) hue-rotate(65deg)}70%{transform:translateX(4px);filter:brightness(.8) hue-rotate(100deg)}}
+@media(prefers-reduced-motion:reduce){.scene-effect.skill-fx-slash.show::before,.scene-effect.skill-fx-slash.show::after,.scene-effect.skill-fx-magic.show::before,.scene-effect.skill-fx-magic.show::after,.scene-effect.skill-fx-arrow.show::before,.scene-effect.skill-fx-arrow.show::after,.scene-effect.skill-fx-heavy.show::before,.scene-effect.skill-fx-heavy.show::after,.scene-effect.skill-fx-poison.show::before,.scene-effect.skill-fx-poison.show::after,.scene-effect.skill-fx-heal.show::before,.scene-effect.skill-fx-heal.show::after{animation-duration:.01ms}}
