@@ -86,7 +86,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v33/);
+  assert.match(serviceWorker, /ro-h5-shell-v34/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -132,6 +132,33 @@ function testBattleAndRewards() {
   assert.ok(character.statPoints >= 3);
 }
 
+
+function testGreenPlantDoesNotRetaliate() {
+  const character = core.makeCharacter('PlantTester', 'male', 'novice');
+  const account = core.emptyAccount();
+  character.battle.map = 'novice_ground';
+  character.battle.paused = false;
+  character.battle.currentMonsterId = 'green_plant';
+  character.battle.monsterMaxHp = 999;
+  character.battle.monsterHp = 999;
+  character.battle.monsterAttackClock = 0;
+  const hpBefore = character.hp;
+  const killsBefore = character.battle.kills;
+
+  assert.equal(world.monsters.green_plant.canRetaliate, false);
+  assert.equal(world.monsters.green_plant.sourceMobId, 1080);
+  assert.equal(world.monsters.fabre.sourceMobId, 1007);
+  for (let tick = 0; tick < 5; tick += 1) {
+    const result = core.stepCombat(character, account, function () { return 0.99; });
+    assert.equal(result.killed, false);
+    assert.equal(result.monsterDamage, 0, 'Green Plant must not damage the player');
+    assert.equal(character.battle.monsterAttackClock, 0, 'passive plant should not accumulate a counterattack clock');
+  }
+  assert.equal(character.hp, hpBefore, 'Green Plant retaliation must not reduce player HP');
+  assert.equal(character.battle.kills, killsBefore, 'passive behavior must not fake a kill');
+  assert.ok(character.battle.monsterHp < character.battle.monsterMaxHp, 'players can still damage Green Plant');
+}
+
 function testMonsterEncounterMapHints() {
   const atLevelOne = core.getMonsterEncounterMaps('poring', 1);
   assert.equal(atLevelOne.length, 3, 'Poring should have encounter data on each map where it appears');
@@ -153,8 +180,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 2\.5/);
-  assert.match(sw, /ro-h5-shell-v33/);
+  assert.match(html, /MVP 2\.6/);
+  assert.match(sw, /ro-h5-shell-v34/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -207,8 +234,8 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 2\.5/);
-  assert.match(sw, /ro-h5-shell-v33/);
+  assert.match(html, /MVP 2\.6/);
+  assert.match(sw, /ro-h5-shell-v34/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -225,8 +252,8 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
-  assert.match(html, /MVP 2\.5/);
-  assert.match(sw, /ro-h5-shell-v33/);
+  assert.match(html, /MVP 2\.6/);
+  assert.match(sw, /ro-h5-shell-v34/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -400,7 +427,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 2\.5/);
+  assert.match(html, /MVP 2\.6/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -546,7 +573,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 2\.5/);
+  assert.match(html, /MVP 2\.6/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -1251,7 +1278,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 2\.5/);
+  assert.match(html, /MVP 2\.6/);
 }
 
 
@@ -1298,8 +1325,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 2\.5/);
-  assert.match(sw, /ro-h5-shell-v33/);
+  assert.match(html, /MVP 2\.6/);
+  assert.match(sw, /ro-h5-shell-v34/);
 }
 
 testMonsterArtworkIdentityMapping();
@@ -1327,6 +1354,7 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 testMonsterEncounterMapHints();
+testGreenPlantDoesNotRetaliate();
 testVerifiedBestiaryArtworkEvidence();
 testBestiaryRestoresOnlyVerifiedCachedArtwork();
 testMonsterBestiaryProgression();
@@ -1344,4 +1372,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (41 suites).');
+console.log('RO H5 core tests passed (42 suites).');

@@ -819,6 +819,11 @@
       return result;
     }
 
+    if (monster.canRetaliate === false) {
+      character.battle.monsterAttackClock = 0;
+      return result;
+    }
+
     character.battle.monsterAttackClock += 1;
     if (character.battle.monsterAttackClock >= 2) {
       character.battle.monsterAttackClock = 0;
