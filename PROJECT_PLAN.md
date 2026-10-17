@@ -1,8 +1,8 @@
 # RO 純單機 H5 放置 RPG — 專案規畫總表
 
-- **文件版本：** V1.31
+- **文件版本：** V1.32
 - **整理日期：** 2026-10-17
-- **目前階段：** MVP 2.3.2 建立可重現 ACT／SPR 轉檔與回歸驗證
+- **目前階段：** MVP 2.4 波利待機／攻擊動畫接入
 - **實作狀態：** 使用者已於 2026-10-17 授權開始實作
 - **GitHub 倉庫：** `summer55637/RO`（預設分支 `main`）
 - **現況盤點：** 目標倉庫初始僅含本規畫文件；nba9001-sys/ro-idle 是既有原型與素材／資料參考倉庫。
@@ -669,3 +669,12 @@
 - 新增 `tools/render_monster_act_spr.js`，以 Node.js 解析樣本 ACT 的 action／frame／layer／interval 與 SPR 的 indexed RLE 圖像／palette，依已核對的 action index 與方向 0 圖層確定性輸出 SVG 畫格循環。
 - `node tools/render_monster_act_spr.js --write` 用於明確重產；`--check`（亦為預設）比對產物的 UTF-8 bytes 與 Git blob SHA-1。核心回歸測試會自動執行檢查，防止原始二進位樣本、轉檔程式或正式動畫檔出現非預期漂移。
 - 此為開發期資產工具，不改變遊戲的執行期載入方式，不新增啟動必要素材，也不更改玩家存檔、角色進度、戰鬥數值或既有功能。
+
+
+## 46. 波利真實待機與攻擊 ACT／SPR 動畫（MVP 2.4，2026-10-17）
+
+- 以固定提交 `adsonpleal/ragassets@4de4fa747431979d35c747d7edd549a872efd9e1` 中 Mob 1002 的配對 `poring.act/.spr` 為輸入，逐格核對 action 0（4 格、160ms／格）作待機，action 16（28 格、40ms／格）作攻擊。
+- 新增 `assets/poring_idle.svg` 與 `assets/poring_attack.svg`；兩者透過 manifest 大小與 Git blob SHA-1 驗證後才使用，並把原始 ACT／SPR 固定保留在 `tools/samples/`，可由同一轉檔工具重現。
+- 地圖進入與已存戰鬥恢復流程都會按需載入波利待機／攻擊資產；攻擊循環下載失敗不阻擋戰鬥，仍退回 Mob 1002 自己的靜態圖片。當波利發動攻擊或玩家閃避該攻擊時，短暫切換到 ACT action 16；完成後回到待機循環。
+- 戰鬥畫面以非阻塞方式下載動畫，使用角色 ID／角色槽／當前怪物 ID 守護計時器，避免切換角色或怪物後的舊動畫覆寫新畫面。
+- Service Worker shell cache 從 v31 升至 v32。此階段不更改帳號存檔 key、角色欄位或進度、角色數值、戰鬥結算、掉落或倉庫。

@@ -48,6 +48,9 @@
   let currentMusicAssetId = '';
   let monsterDefeatTimer = null;
   let monsterDefeatRunId = 0;
+  let monsterAnimationTimer = null;
+  let monsterAnimationRunId = 0;
+  let monsterAnimationOverride = null;
   let playerHitTimer = null;
   let playerHitRunId = 0;
   let heroSkillTimer = null;
@@ -931,6 +934,7 @@
         const monster = window.ROCore.getMonster(entry.id);
         if (monster && monster.assetId) requiredIds.add(monster.assetId);
         if (monster && monster.animationAssetId) optionalAnimationIds.add(monster.animationAssetId);
+        if (monster && monster.attackAnimationAssetId) optionalAnimationIds.add(monster.attackAnimationAssetId);
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       try { await ensureAssets(neededAssets, false); } catch (_) { /* Keep existing local image fallbacks usable. */ }
@@ -1131,6 +1135,7 @@
         const monster = window.ROCore.getMonster(entry.id);
         if (monster && monster.assetId) requiredIds.add(monster.assetId);
         if (monster && monster.animationAssetId) optionalAnimationIds.add(monster.animationAssetId);
+        if (monster && monster.attackAnimationAssetId) optionalAnimationIds.add(monster.attackAnimationAssetId);
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       await ensureAssets(neededAssets, false);
@@ -1272,6 +1277,10 @@
 
   function handleCombatResult(result) {
     if (!result || (!result.playerDamage && !result.killed && !result.skillHealingGained)) return;
+    if (result.dodged || result.monsterDamage) {
+      const attackingMonster = window.ROCore.getMonster(result.monsterId || character.battle.currentMonsterId);
+      if (attackingMonster) playMonsterActionAnimation(attackingMonster, 'attack');
+    }
     const hero = $('#hero-sprite');
     const monster = $('#monster-actor');
     const heroInner = hero ? hero.querySelector('.hero-character') : null;
@@ -1328,6 +1337,39 @@
   }
 
 
+  function playMonsterActionAnimation(monster, action) {
+    if (!monster || action !== 'attack' || !monster.attackAnimationAssetId ||
+        !assetUrls[monster.attackAnimationAssetId] || !character || !character.battle || !character.battle.map ||
+        character.battle.currentMonsterId !== monster.id) return false;
+
+    if (monsterAnimationTimer) window.clearTimeout(monsterAnimationTimer);
+    const runId = ++monsterAnimationRunId;
+    const characterId = character.id;
+    const slotIndex = activeSlot;
+    monsterAnimationOverride = {
+      monsterId: monster.id,
+      assetId: monster.attackAnimationAssetId,
+      characterId: characterId,
+      slotIndex: slotIndex
+    };
+    const image = $('#monster-image');
+    const source = assetUrls[monster.attackAnimationAssetId];
+    if (image && image.getAttribute('src') !== source) image.src = source;
+
+    const frames = Math.max(1, Number(monster.attackAnimationFrameCount) || 1);
+    const interval = Math.max(40, Number(monster.attackAnimationFrameDurationMs) || 100);
+    const duration = Math.max(200, Math.min(5000, frames * interval));
+    monsterAnimationTimer = window.setTimeout(function () {
+      if (runId !== monsterAnimationRunId) return;
+      monsterAnimationTimer = null;
+      monsterAnimationOverride = null;
+      if (character && character.id === characterId && activeSlot === slotIndex &&
+          character.battle && character.battle.map &&
+          character.battle.currentMonsterId === monster.id) renderGame();
+    }, duration);
+    return true;
+  }
+
   function getMissingMonsterArtworkSource() {
     // A missing or unverified mob image must be visibly missing, never silently replaced by another species.
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 112"><rect x="5" y="5" width="118" height="102" rx="10" fill="#182536" stroke="#617286" stroke-width="2"/><circle cx="64" cy="42" r="18" fill="none" stroke="#91a2b7" stroke-width="3"/><path d="M50 28 78 56 M78 28 50 56" stroke="#91a2b7" stroke-width="3" stroke-linecap="round"/><text x="64" y="82" text-anchor="middle" fill="#d6e0ed" font-family="sans-serif" font-size="11">圖像未載入</text></svg>';
@@ -1335,6 +1377,9 @@
   }
 
   function getMonsterArtworkSource(monster) {
+    if (monsterAnimationOverride && monster && monsterAnimationOverride.monsterId === monster.id &&
+        monsterAnimationOverride.characterId === (character && character.id) && monsterAnimationOverride.slotIndex === activeSlot &&
+        assetUrls[monsterAnimationOverride.assetId]) return assetUrls[monsterAnimationOverride.assetId];
     const animationAssetId = monster && monster.animationAssetId ? monster.animationAssetId : '';
     if (animationAssetId && assetUrls[animationAssetId]) return assetUrls[animationAssetId];
     const assetId = monster && monster.assetId ? monster.assetId : '';

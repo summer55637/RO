@@ -844,11 +844,77 @@ function testMonsterActSprExportReproducibility() {
   });
   assert.match(output, /Verified lunatic: Mob 1063, action 2, 12 frames at 80ms\/frame/);
   assert.match(output, /Verified wolf: Mob 1013, action 0, 15 frames at 120ms\/frame/);
+  assert.match(output, /Verified poring-idle: Mob 1002, action 0, 4 frames at 160ms\/frame/);
+  assert.match(output, /Verified poring-attack: Mob 1002, action 16, 28 frames at 40ms\/frame/);
   const toolSource = fs.readFileSync(toolPath, 'utf8');
   assert.match(toolSource, /SOURCE_COMMIT = '1a28450df59bc69e56e70e431f9b61351bafc8f6'/);
+  assert.match(toolSource, /RAGASSETS_COMMIT = '4de4fa747431979d35c747d7edd549a872efd9e1'/);
   assert.match(toolSource, /function gitBlobSha\(bytes\)/);
   assert.match(toolSource, /function parseAct\(bytes\)/);
   assert.match(toolSource, /function parseSpr\(bytes\)/);
+}
+
+function testPoringIdleAndAttackAnimations() {
+  const expected = [
+    {
+      id: 'poring_idle_anim', path: 'assets/poring_idle.svg', type: 'idle',
+      actionIndex: 0, frames: 4, frameMs: 160, bytes: 21378,
+      sha: 'e7f0b0d56ca3e8997e98ebcdc8e10ccdaaae0ca8',
+      actSha: '26717393629e410910ff080d204e930d945328cd',
+      sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb639ad7'
+    },
+    {
+      id: 'poring_attack_anim', path: 'assets/poring_attack.svg', type: 'attack',
+      actionIndex: 16, frames: 28, frameMs: 40, bytes: 136944,
+      sha: 'd550fe9a3edc83b241d882038657e6e6e1e3c916',
+      actSha: '26717393629e410910ff080d204e930d945328cd',
+      sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb639ad7'
+    }
+  ];
+  const poring = world.monsters.poring;
+  assert.equal(poring.sourceMobId, 1002);
+  assert.equal(poring.assetId, 'poring', 'the verified static Mob 1002 image remains the fallback');
+  assert.equal(poring.animationAssetId, 'poring_idle_anim');
+  assert.equal(poring.animationActionIndex, 0);
+  assert.equal(poring.attackAnimationAssetId, 'poring_attack_anim');
+  assert.equal(poring.attackAnimationActionIndex, 16);
+  const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
+  expected.forEach(function (want) {
+    const asset = assetMap.get(want.id);
+    assert.ok(asset, 'missing verified Poring animation: ' + want.id);
+    assert.equal(asset.sourceMobId, 1002);
+    assert.equal(asset.assetKind, 'monster-animation');
+    assert.equal(asset.animationType, want.type);
+    assert.equal(asset.actActionIndex, want.actionIndex);
+    assert.equal(asset.frameCount, want.frames);
+    assert.equal(asset.frameDurationMs, want.frameMs);
+    assert.equal(asset.requiredOnStart, false);
+    assert.equal(asset.sourceRepository, 'adsonpleal/ragassets');
+    assert.equal(asset.sourceCommit, '4de4fa747431979d35c747d7edd549a872efd9e1');
+    assert.equal(asset.sourceActSha, want.actSha);
+    assert.equal(asset.sourceSprSha, want.sprSha);
+    assert.equal(asset.bytes, want.bytes);
+    assert.equal(asset.gitSha, want.sha);
+    const file = fs.readFileSync(path.join(__dirname, '..', want.path));
+    assert.equal(file.length, want.bytes);
+    const sha = crypto.createHash('sha1').update(Buffer.concat([
+      Buffer.from('blob ' + file.length + '\0'), file
+    ])).digest('hex');
+    assert.equal(sha, want.sha, 'Poring animation must match its Git blob SHA-1');
+    const svg = file.toString('utf8');
+    assert.match(svg, /data-mob-id="1002"/);
+    assert.match(svg, new RegExp('data-act-action-index="' + want.actionIndex + '"'));
+    assert.match(svg, new RegExp('data-frame-count="' + want.frames + '"'));
+    assert.match(svg, new RegExp('data-frame-duration-ms="' + want.frameMs + '"'));
+    assert.equal((svg.match(/id="frame-/g) || []).length, want.frames);
+    assert.match(svg, new RegExp(want.type === 'attack' ? '攻擊逐格動畫' : '待機逐格動畫'));
+  });
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(appSource, /function playMonsterActionAnimation\(monster, action\)/);
+  assert.match(appSource, /monsterAnimationOverride/);
+  assert.match(appSource, /result\.dodged \|\| result\.monsterDamage/);
+  assert.match(appSource, /monster\.attackAnimationAssetId/);
+  assert.match(appSource, /optionalAnimationIds\.add\(monster\.attackAnimationAssetId\)/);
 }
 
 function testCriticalEffectManifest() {
@@ -1179,8 +1245,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 2\.3/);
-  assert.match(sw, /ro-h5-shell-v31/);
+  assert.match(html, /MVP 2\.4/);
+  assert.match(sw, /ro-h5-shell-v32/);
 }
 
 testMonsterArtworkIdentityMapping();
@@ -1188,6 +1254,7 @@ testAutomaticUpdateStrategy();
 testAssetManifestCoverage();
 testMonsterIdleAnimationAssets();
 testMonsterActSprExportReproducibility();
+testPoringIdleAndAttackAnimations();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
 testSoundEffectManifest();
@@ -1223,4 +1290,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (39 suites).');
+console.log('RO H5 core tests passed (40 suites).');
