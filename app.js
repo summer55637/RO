@@ -936,7 +936,6 @@
     if (currentRaw !== lastPersistedRaw) markSaveConflict(currentRaw);
   }
 
-  function exportSaveFile() {
   function existingNames(exceptIndex) {
     const data = account || window.ROCore.emptyAccount();
     return data.slots.filter(function (item, index) {
