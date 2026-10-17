@@ -22,7 +22,7 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.7 is being developed from `main` commit `9def3b576f14d3f7f84d458a84c05bf493226c0b`, following the merged MVP 0.6 skill-tree milestone. This feature branch adds class/skill-specific sound effects, CSS skill-impact visuals, and lazy-loaded map background music; existing local saves remain unchanged. Service Worker shell cache is v10 in the MVP 0.7 feature branch. The latest verified main deployment before this milestone succeeded. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
+MVP 0.8 is being developed from `main` commit `f5287f69c70330bfb1d809066f1d3af34e20065c`, following merged PR #13. This feature branch adds monster idle/hit/defeat visuals, player damage feedback and class-specific cast animation cues; current battle formulas, local saves and reward logic remain unchanged. Service Worker shell cache is v11 in the MVP 0.8 feature branch. Most recent verified main deployment succeeded for MVP 0.7. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
