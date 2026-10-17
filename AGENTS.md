@@ -22,7 +22,7 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-At the start of the MVP 1.2 continuation, main was 1bb138704d58e6003cb9de64b11066d7db9dae75, PR #19 had merged, MVP 1.1 refinement was deployed, and Service Worker shell cache was v16. This milestone adds safe card extraction and prototype equipment sales. Re-fetch the current main SHA and Actions runs at every continuation. The account-tab lock remains fully removed; preserve ro-h5-account-v1 and all player data. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
+At the start of the MVP 1.3 continuation, main was 022bc0014fb6c0b3d5f970e6d2c66decf2ce2957, PR #20 had merged, MVP 1.2 card extraction and prototype equipment sales were deployed, and Service Worker shell cache was v17. This milestone expands the equipment/card catalog and monster drops. Re-fetch the current main SHA and Actions runs at every continuation. The account-tab lock remains fully removed; preserve ro-h5-account-v1 and all player data. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
