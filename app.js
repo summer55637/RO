@@ -401,8 +401,8 @@
     startAutosave();
     try {
       account = readAccount();
-      $('#connection-status').textContent = '素材已就緒';
       setScreen('screen-slots');
+      updateNetworkStatus();
       renderSlots();
     } catch (error) {
       releaseLock();
