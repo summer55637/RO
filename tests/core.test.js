@@ -893,6 +893,8 @@ function testMonsterActSprExportReproducibility() {
   assert.match(output, /Verified poring-idle: Mob 1002, action 0, 4 frames at 160ms\/frame/);
   assert.match(output, /Verified poring-attack: Mob 1002, action 16, 28 frames at 40ms\/frame/);
   assert.match(output, /Verified poring-hurt: Mob 1002, action 24, 5 frames at 160ms\/frame/);
+  assert.match(output, /Verified poring-walk: Mob 1002, action 8, 10 frames at 40ms\/frame/);
+  assert.match(output, /Verified wolf-walk: Mob 1013, action 8, 8 frames at 80ms\/frame/);
   assert.match(output, /Verified green-plant: Mob 1080, action 0, 12 frames at 160ms\/frame/);
   assert.match(output, /Verified static fallback green-plant: Mob 1080/);
   const toolSource = fs.readFileSync(toolPath, 'utf8');
@@ -1080,6 +1082,99 @@ function testLunaticWolfAttackAnimations() {
   });
 }
 
+
+function testMonsterWalkEntryAnimations() {
+  const tool = require(path.join(__dirname, '..', 'tools', 'render_monster_act_spr.js'));
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const cases = [
+    {
+      name: 'Poring',
+      key: 'poring',
+      mobId: 1002,
+      assetId: 'poring_walk_anim',
+      actionIndex: 8,
+      frames: 10,
+      frameMs: 40,
+      actSha: '26717393629e410910ff080d204e930d945328cd',
+      sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb639ad7',
+      outputBytes: 50257,
+      outputSha: '4d84a80fa54aed07db0eb4ceb8ffb1592adad1c9',
+      sourceRepository: 'adsonpleal/ragassets',
+      sourceCommit: '4de4fa747431979d35c747d7edd549a872efd9e1',
+      actPath: 'poring.act',
+      sprPath: 'poring.spr'
+    },
+    {
+      name: 'Wolf',
+      key: 'wolf',
+      mobId: 1013,
+      assetId: 'wolf_walk_anim',
+      actionIndex: 8,
+      frames: 8,
+      frameMs: 80,
+      actSha: '93c05e86366a7d9cfab19f59d1ff8f60dd1b617d',
+      sprSha: '61b60050dce8094bbebf04d86cc87ef1e8d61706',
+      outputBytes: 140374,
+      outputSha: '0180f648a1d44961d2561a1d90006b1e6e45be03',
+      sourceRepository: 'MyGodIsHe/pyro-tools',
+      sourceCommit: '1a28450df59bc69e56e70e431f9b61351bafc8f6',
+      actPath: 'wolf.act',
+      sprPath: 'wolf.spr'
+    }
+  ];
+  cases.forEach(function (config) {
+    const monster = world.monsters[config.key];
+    const asset = world.assets.find(function (item) { return item.id === config.assetId; });
+    assert.ok(asset, config.name + ' walk manifest missing');
+    assert.equal(monster.sourceMobId, config.mobId);
+    assert.equal(monster.walkAnimationAssetId, config.assetId);
+    assert.equal(monster.walkAnimationActionIndex, config.actionIndex);
+    assert.equal(monster.walkAnimationFrameCount, config.frames);
+    assert.equal(monster.walkAnimationFrameDurationMs, config.frameMs);
+    assert.equal(asset.sourceMobId, config.mobId);
+    assert.equal(asset.animationType, 'walk');
+    assert.equal(asset.actActionIndex, config.actionIndex);
+    assert.equal(asset.frameCount, config.frames);
+    assert.equal(asset.frameDurationMs, config.frameMs);
+    assert.equal(asset.requiredOnStart, false);
+    assert.equal(asset.sourceRepository, config.sourceRepository);
+    assert.equal(asset.sourceCommit, config.sourceCommit);
+    assert.equal(asset.sourceActSha, config.actSha);
+    assert.equal(asset.sourceSprSha, config.sprSha);
+    assert.equal(asset.bytes, config.outputBytes);
+    assert.equal(asset.gitSha, config.outputSha);
+
+    const actBytes = fs.readFileSync(path.join(__dirname, '..', 'tools', 'samples', config.actPath));
+    const sprBytes = fs.readFileSync(path.join(__dirname, '..', 'tools', 'samples', config.sprPath));
+    assert.equal(tool.gitBlobSha(actBytes), config.actSha);
+    assert.equal(tool.gitBlobSha(sprBytes), config.sprSha);
+    const act = tool.parseAct(actBytes);
+    const spr = tool.parseSpr(sprBytes);
+    assert.equal(act.actions[config.actionIndex].length, config.frames);
+    assert.equal(Math.round(act.speeds[config.actionIndex] * 40), config.frameMs);
+    act.actions[config.actionIndex].forEach(function (layers, index) {
+      assert.equal(layers.length, 1, config.name + ' walk must have one layer per frame: ' + index);
+      assert.equal(layers[0].direction, 0, config.name + ' walk must use direction 0: ' + index);
+      assert.ok(spr.sprites[layers[0].spriteIndex], config.name + ' walk sprite ref missing: ' + index);
+      assert.equal(layers[0].rotation, 0, config.name + ' walk must not use unhandled rotation: ' + index);
+      assert.equal(layers[0].scaleX, 1, config.name + ' walk must not use unhandled scaleX: ' + index);
+      assert.equal(layers[0].scaleY, 1, config.name + ' walk must not use unhandled scaleY: ' + index);
+    });
+    const svgBytes = fs.readFileSync(path.join(__dirname, '..', asset.path.replace(/^\.\//, '')));
+    assert.equal(svgBytes.length, config.outputBytes);
+    assert.equal(tool.gitBlobSha(svgBytes), config.outputSha);
+    const svg = svgBytes.toString('utf8');
+    assert.match(svg, new RegExp('data-mob-id="' + config.mobId + '"'));
+    assert.match(svg, new RegExp('data-act-action-index="' + config.actionIndex + '"'));
+    assert.match(svg, new RegExp('data-frame-count="' + config.frames + '"'));
+    assert.match(svg, new RegExp('data-frame-duration-ms="' + config.frameMs + '"'));
+    assert.match(svg, /移動逐格動畫/);
+    assert.equal((svg.match(/id="frame-/g) || []).length, config.frames);
+  });
+  assert.match(appSource, /walkAnimationAssetId\) optionalAnimationIds\.add\(monster\.walkAnimationAssetId\)/);
+  assert.match(appSource, /walk: \{ asset: 'walkAnimationAssetId', frames: 'walkAnimationFrameCount', interval: 'walkAnimationFrameDurationMs' \}/);
+  assert.match(appSource, /playMonsterActionAnimation\(nextMonster, 'walk'\)/);
+}
 
 function testPoringHurtAnimation() {
   const tool = require(path.join(__dirname, '..', 'tools', 'render_monster_act_spr.js'));
@@ -1770,6 +1865,7 @@ testGreenPlantMob1080ActSprIdentity();
 testPoringIdleAndAttackAnimations();
 testLunaticWolfAttackAnimations();
 testPoringHurtAnimation();
+testMonsterWalkEntryAnimations();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
 testSoundEffectManifest();
@@ -1806,4 +1902,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (51 suites).');
+console.log('RO H5 core tests passed (52 suites).');
