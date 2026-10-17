@@ -383,6 +383,6 @@
     expansionSource: 'nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940',
     expansionNote: 'Map IDs, monster IDs and source image URLs are pinned to the cited public repository. All combat numbers and this fork’s map weights are prototype values.',
     ownerLicenseConfirmation: 'User confirms comprehensive authorization from the RO game company covering all RO game assets and data, including graphics, animation, effects, music, maps and databases.',
-    animationSource: '${sourceRepo}@${sourceCommit}'
+    animationSource: 'nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940'
   };
 });
