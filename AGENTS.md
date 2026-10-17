@@ -22,7 +22,7 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-At the start of the 2026-10-17 continuation, `main` was `89b99dccced6fb5684130f8f7a94bc76396d7d40`, PR #17 had merged, MVP 0.9 was deployed, and Service Worker shell cache was v14. The next milestone is MVP 1.0 gear/card mechanics. Always re-fetch the latest `main` SHA and Actions runs before work; do not treat any baseline SHA in this file as permanently current. The account-tab lock remains fully removed; preserve `ro-h5-account-v1` and all player data. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
+At the start of this continuation, `main` was `f558146c40bfd975e1382ad9004488d394806153`, PR #18 had merged, MVP 1.0 was deployed, and Service Worker shell cache was v15. The next milestone is MVP 1.1 safe equipment refinement. Always re-fetch the latest `main` SHA and Actions runs before work; do not treat any baseline SHA as permanently current. The account-tab lock remains fully removed; preserve `ro-h5-account-v1` and all player data. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
