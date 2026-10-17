@@ -232,6 +232,25 @@
     });
   }
 
+  function getMonsterEncounterMaps(monsterId, baseLevel) {
+    if (!WORLD.monsters || !Object.prototype.hasOwnProperty.call(WORLD.monsters, monsterId)) return [];
+    const level = Math.max(1, Math.floor(Number(baseLevel) || 1));
+    return (WORLD.maps || []).reduce(function (matches, map) {
+      const encounter = getMapMonsterEncounterRates(map.id).find(function (entry) { return entry.id === monsterId; });
+      if (!encounter) return matches;
+      const unlockLevel = Math.max(1, Math.floor(Number(map.unlockLevel) || 1));
+      matches.push({
+        mapId: map.id,
+        mapName: map.name,
+        weight: encounter.weight,
+        probability: encounter.probability,
+        unlockLevel: unlockLevel,
+        unlocked: level >= unlockLevel
+      });
+      return matches;
+    }, []);
+  }
+
   function getMonster(monsterId) {
     return (WORLD.monsters && WORLD.monsters[monsterId]) || WORLD.monsters.poring || null;
   }
@@ -898,6 +917,7 @@
     resolveOfflineSeconds: resolveOfflineSeconds,
     getMap: getMap,
     getMapMonsterEncounterRates: getMapMonsterEncounterRates,
+    getMonsterEncounterMaps: getMonsterEncounterMaps,
     getMonster: getMonster,
     chooseMonster: chooseMonster,
     startMap: startMap,
