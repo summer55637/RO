@@ -10,7 +10,7 @@ function testAutomaticUpdateStrategy() {
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v7/);
+  assert.match(serviceWorker, /ro-h5-shell-v8/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -318,10 +318,50 @@ function testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences() {
   });
 }
 
+
+function testSoundEffectManifest() {
+  const expected = { hit: 'sfx_hit_sword', critical: 'sfx_critical', levelup: 'sfx_levelup' };
+  assert.deepEqual(world.soundEffects, expected);
+  const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
+  const pinned = '2348031f3797dbea1981f399288748378a283940';
+  const definitions = {
+    sfx_hit_sword: { bytes: 24866, gitSha: 'fcb1f2cd80591ed5e92f730a417377c401ae65be', sourcePath: 'WAV/物理攻擊命中/_hit_sword.wav' },
+    sfx_critical: { bytes: 8886, gitSha: 'dcc3946a430651b08334c2edade11d61672672ee', sourcePath: 'WAV/爆擊/Critical.ogg' },
+    sfx_levelup: { bytes: 24294, gitSha: '4c501809789d1a03aedfd8c6c9728809c8a32dac', sourcePath: 'WAV/event/levelup.ogg' }
+  };
+  Object.entries(definitions).forEach(function (entry) {
+    const asset = assetMap.get(entry[0]);
+    assert.ok(asset, 'missing sound effect asset: ' + entry[0]);
+    assert.equal(asset.requiredOnStart, false, 'sound effects must be loaded on demand');
+    assert.equal(asset.assetKind, 'sound-effect');
+    assert.equal(asset.sourceRepository, 'nba9001-sys/ro-idle');
+    assert.equal(asset.sourcePath, entry[1].sourcePath);
+    assert.ok(asset.path.includes('/' + pinned + '/'));
+    assert.equal(asset.bytes, entry[1].bytes);
+    assert.equal(asset.gitSha, entry[1].gitSha);
+    assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
+  });
+  assert.equal(world.soundSource, 'nba9001-sys/ro-idle@' + pinned);
+}
+
+function testSoundEffectWiring() {
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(appSource, /function playSoundEffect\(type\)/);
+  assert.match(appSource, /ro-h5-sound-effects-v1/);
+  assert.match(appSource, /playSoundEffect\(result\.critical \? 'critical' : 'hit'\)/);
+  assert.match(appSource, /playSoundEffect\('levelup'\)/);
+  assert.match(appSource, /ensureAssets\(\[asset\], false\)/);
+  assert.match(html, /id="btn-sound"/);
+  assert.match(html, /aria-pressed="true"/);
+}
+
 testAutomaticUpdateStrategy();
 testAssetManifestCoverage();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
+testSoundEffectManifest();
+testSoundEffectWiring();
 testExpandedWorldContent();
 testFirstJobPromotion();
 testFirstJobCombatPassives();
@@ -332,4 +372,4 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (13 suites).');
+console.log('RO H5 core tests passed (15 suites).');

@@ -14,10 +14,18 @@
   const PLAYER_ANIMATION_FRAME_INTERVAL = Math.max(80, Number(window.ROWorld.playerAnimationFrameIntervalMs) || 140);
   const CRITICAL_EFFECT_FRAMES = window.ROWorld.criticalEffectFrames || [];
   const CRITICAL_EFFECT_FRAME_INTERVAL = Math.max(40, Number(window.ROWorld.criticalEffectFrameIntervalMs) || 70);
+  const SOUND_EFFECTS = window.ROWorld.soundEffects || {};
+  const SOUND_ENABLED_KEY = 'ro-h5-sound-effects-v1';
+  const SOUND_VOLUME = { hit: 0.16, critical: 0.23, levelup: 0.28 };
+  const SOUND_COOLDOWN_MS = { hit: 180, critical: 320, levelup: 600 };
   let playerAnimationTimer = null;
   let criticalEffectLoadPromise = null;
   let criticalEffectTimer = null;
   let criticalEffectRunId = 0;
+  let soundEnabled = true;
+  const soundPlayers = Object.create(null);
+  const soundLoadPromises = Object.create(null);
+  const lastSoundAt = Object.create(null);
   const STARTER_ASSETS = ASSETS.filter(function (asset) { return asset.requiredOnStart; });
 
   let account = null;
@@ -53,6 +61,80 @@
     if (h > 0) return h + ' 小時 ' + m + ' 分鐘';
     if (m > 0) return m + ' 分鐘 ' + s + ' 秒';
     return s + ' 秒';
+  }
+
+
+  function syncSoundToggle() {
+    const button = $('#btn-sound');
+    if (!button) return;
+    button.textContent = soundEnabled ? '音效：開' : '音效：關';
+    button.setAttribute('aria-pressed', String(soundEnabled));
+    button.title = soundEnabled ? '關閉戰鬥音效' : '開啟戰鬥音效';
+  }
+
+  function loadSoundPreference() {
+    try {
+      soundEnabled = localStorage.getItem(SOUND_ENABLED_KEY) !== 'off';
+    } catch (_) {
+      soundEnabled = true;
+    }
+    syncSoundToggle();
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    try {
+      localStorage.setItem(SOUND_ENABLED_KEY, soundEnabled ? 'on' : 'off');
+    } catch (_) {
+      // Audio preference is optional and must not interfere with saves.
+    }
+    syncSoundToggle();
+    showToast(soundEnabled ? '戰鬥音效已開啟' : '戰鬥音效已關閉');
+  }
+
+  function playSoundEffect(type) {
+    if (!soundEnabled || !Object.prototype.hasOwnProperty.call(SOUND_EFFECTS, type)) return;
+    const now = Date.now();
+    const cooldown = Number(SOUND_COOLDOWN_MS[type]) || 0;
+    if (now - (Number(lastSoundAt[type]) || 0) < cooldown) return;
+    lastSoundAt[type] = now;
+
+    const assetId = SOUND_EFFECTS[type];
+    const asset = ASSETS.find(function (entry) { return entry.id === assetId; });
+    if (!asset) return;
+
+    function playReady() {
+      if (!soundEnabled) return;
+      const source = assetUrls[assetId];
+      if (!source) return;
+      let audio = soundPlayers[type];
+      if (!audio) {
+        audio = new window.Audio(source);
+        audio.preload = 'auto';
+        audio.volume = Number(SOUND_VOLUME[type]) || 0.2;
+        soundPlayers[type] = audio;
+      } else if (audio.src !== source) {
+        audio.src = source;
+      }
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        const playback = audio.play();
+        if (playback && typeof playback.catch === 'function') playback.catch(function () {});
+      } catch (_) {
+        // Browsers may block playback until the player interacts with the page.
+      }
+    }
+
+    if (assetUrls[assetId]) {
+      playReady();
+      return;
+    }
+    if (soundLoadPromises[type]) return;
+    soundLoadPromises[type] = ensureAssets([asset], false)
+      .then(playReady)
+      .catch(function () { return null; })
+      .finally(function () { soundLoadPromises[type] = null; });
   }
 
   function setScreen(id) {
@@ -1049,6 +1131,7 @@
     if (result.playerDamage) {
       appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。' + (result.critical ? ' 爆擊！' : ''));
       if (result.critical) playCriticalEffect();
+      playSoundEffect(result.critical ? 'critical' : 'hit');
       const effect = $('#scene-effect');
       effect.textContent = (result.critical ? '爆擊 ' : '-') + result.playerDamage;
       effect.classList.remove('show');
@@ -1061,7 +1144,10 @@
       let message = '擊倒' + result.monsterName + '：Base EXP +' + result.expGained + '、Job EXP +' + result.jobExpGained + '、' + result.goldGained + ' Zeny。';
       if (result.drops.length) message += ' 掉落：' + result.drops.join('、') + '。';
       appendCharacterLog(message, 'important');
-      if (result.levelUps.length) appendCharacterLog('Base 等級提升至 ' + result.levelUps[result.levelUps.length - 1] + '。', 'important');
+      if (result.levelUps.length) {
+        appendCharacterLog('Base 等級提升至 ' + result.levelUps[result.levelUps.length - 1] + '。', 'important');
+        playSoundEffect('levelup');
+      }
       if (result.healingGained) appendCharacterLog(character.jobName + '的職業效果恢復 ' + result.healingGained + ' HP。');
       if (result.jobCapped) {
         const capMessage = character.jobId === 'novice'
@@ -1580,6 +1666,7 @@
     $('#btn-camp-back').addEventListener('click', returnToSlots);
     $('#btn-battle-camp').addEventListener('click', returnToCamp);
     $('#btn-pause').addEventListener('click', togglePause);
+    $('#btn-sound').addEventListener('click', toggleSound);
     $('#btn-save').addEventListener('click', function () { if (persistCurrent()) showToast('已保存到本機'); });
     $$('.speed-button').forEach(function (button) { button.addEventListener('click', function () { changeSpeed(button.dataset.speed); }); });
     $('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });
@@ -1612,6 +1699,7 @@
 
   async function init() {
     bindEvents();
+    loadSoundPreference();
     if (!playerAnimationTimer) playerAnimationTimer = window.setInterval(advancePlayerSprites, PLAYER_ANIMATION_FRAME_INTERVAL);
     restoreDownloadStatus();
     updateNetworkStatus();

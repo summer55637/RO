@@ -22,9 +22,9 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.4 is merged into `main` and deployed. The app includes 14 character animation groups (120 frames) and a verified 15-frame critical-hit effect. PR #10 also fixed stale GitHub Pages releases: app shell is network-first with offline fallback, Service Worker updates are checked on every launch, and old tabs automatically reload after an upgrade. CI and deployment passed. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
+MVP 0.5 is merged into `main` and deployed. The app includes 14 character animation groups (120 frames), a verified 15-frame critical-hit effect, and three lazy-loaded/verified sound effects (normal hit, critical hit, Base level-up) with a persistent on/off toggle. Service Worker shell cache is currently v8; app shell remains network-first with offline fallback, launch-time update checks, and automatic tab reload on upgrades. CI and deployment passed. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
 
 
 ## Automatic update rule
 
-The app previously used cache-first for HTML/CSS/JS, which caused stale releases and forced users to press Ctrl+F5. This fix has been merged and deployed in PR #10; the network-first shell, per-launch update check, and automatic reload after upgrades are live.
+The app previously used cache-first for HTML/CSS/JS, which caused stale releases and forced users to press Ctrl+F5. This fix has been merged and deployed in PR #10; the network-first shell, per-launch update check, and automatic reload after upgrades are live. Shell cache was subsequently advanced to v8 for the MVP 0.5 battle sound effects.
