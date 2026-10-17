@@ -29,10 +29,11 @@ self.addEventListener('activate', function (event) {
         // On upgrades, reload only this Pages app's already-open tabs so they don't remain on old JS.
         if (!oldShellCaches.length) return;
         const scopePath = new URL(self.registration.scope).pathname;
+        const normalizedScopePath = scopePath.endsWith('/') ? scopePath.slice(0, -1) : scopePath;
         return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clients) {
           return Promise.all(clients.filter(function (client) {
             const pathname = new URL(client.url).pathname;
-            return pathname === scopePath.replace(/\\/$/, '') || pathname.indexOf(scopePath) === 0;
+            return pathname === normalizedScopePath || pathname.indexOf(scopePath) === 0;
           }).map(function (client) {
             return client.navigate(client.url).catch(function () { return null; });
           }));
