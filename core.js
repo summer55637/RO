@@ -219,6 +219,19 @@
     return (WORLD.maps || []).find(function (map) { return map.id === id; }) || null;
   }
 
+  function getMapMonsterEncounterRates(mapId) {
+    const map = getMap(mapId);
+    if (!map || !Array.isArray(map.monsters)) return [];
+    const entries = map.monsters.map(function (entry) {
+      return { id: entry.id, weight: Math.max(0, Number(entry.weight) || 0) };
+    }).filter(function (entry) { return !!entry.id && Number.isFinite(entry.weight) && entry.weight > 0; });
+    const totalWeight = entries.reduce(function (sum, entry) { return sum + entry.weight; }, 0);
+    if (!(totalWeight > 0) || !Number.isFinite(totalWeight)) return [];
+    return entries.map(function (entry) {
+      return { id: entry.id, weight: entry.weight, probability: entry.weight / totalWeight };
+    });
+  }
+
   function getMonster(monsterId) {
     return (WORLD.monsters && WORLD.monsters[monsterId]) || WORLD.monsters.poring || null;
   }
@@ -884,6 +897,7 @@
     allocateStat: allocateStat,
     resolveOfflineSeconds: resolveOfflineSeconds,
     getMap: getMap,
+    getMapMonsterEncounterRates: getMapMonsterEncounterRates,
     getMonster: getMonster,
     chooseMonster: chooseMonster,
     startMap: startMap,

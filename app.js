@@ -1065,9 +1065,12 @@
       const level = document.createElement('small');
       level.textContent = unlocked ? '推薦等級：Base Lv. ' + map.recommendedLevels : '解鎖需求：Base Lv. ' + map.unlockLevel;
       const mobs = document.createElement('span');
-      mobs.textContent = '出現怪物：' + map.monsters.map(function (entry) {
+      mobs.className = 'map-monsters';
+      const encounterRates = window.ROCore.getMapMonsterEncounterRates(map.id);
+      mobs.textContent = '預估遇敵率（原型設定）：' + encounterRates.map(function (entry) {
         const monster = window.ROCore.getMonster(entry.id);
-        return monster ? monster.name : entry.id;
+        const percent = Math.round(entry.probability * 1000) / 10;
+        return (monster ? monster.name : entry.id) + ' ' + percent + '%';
       }).join('、');
       copy.append(name, level, mobs);
 
