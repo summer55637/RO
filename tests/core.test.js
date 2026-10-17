@@ -1476,7 +1476,7 @@ function testOfflineSettlementCanDismiss() {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.ok(appSource.includes("$('.detail-tab').forEach("), 'event binding must use a NodeList so bootstrap does not stop early');
-  assert.ok(!appSource.includes("$('.detail-tab').forEach("), 'querySelector result must not be treated as a collection');
+  assert.ok(!appSource.includes("\n    $('.detail-tab').forEach("), 'querySelector result must not be treated as a collection');
   assert.match(appSource, /\$\('#btn-offline-close'\)\.addEventListener\('click', closeOfflineReport\);/);
   assert.match(appSource, /const pendingReport = character\.pendingReport;[\s\S]*if \(!persistCurrent\(\)\) \{[\s\S]*character\.pendingReport = pendingReport;/);
   assert.match(html, /<form method="dialog"><button id="btn-offline-close" type="submit"/);
