@@ -5,6 +5,8 @@
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
   const SAVE_KEY = 'ro-h5-account-v1';
   const LOCK_KEY = 'ro-h5-active-tab-v1';
+  const LOCK_STALE_AFTER_MS = 12000;
+  const LOCK_RECHECK_INTERVAL_MS = 2500;
   const DB_NAME = 'ro-h5-assets-v1';
   const DB_STORE = 'assets';
   const DOWNLOAD_STATE_KEY = 'ro-h5-download-state-v1';
@@ -67,6 +69,7 @@
   let battleTimer = null;
   let heartbeatTimer = null;
   let autosaveTimer = null;
+  let lockRecheckTimer = null;
   let assetDb = null;
   let assetUrls = {};
   let activeDetail = 'status';
@@ -600,6 +603,29 @@
     } catch (_) { return null; }
   }
 
+  function lockAgeMs(lock, now) {
+    if (!lock) return LOCK_STALE_AFTER_MS;
+    const updatedAt = Number(lock.updatedAt);
+    if (!Number.isFinite(updatedAt) || updatedAt <= 0) return LOCK_STALE_AFTER_MS;
+    const age = Number(now || Date.now()) - updatedAt;
+    // A clock adjustment can make an obsolete heartbeat look like it came from the future.
+    if (age < -LOCK_STALE_AFTER_MS) return LOCK_STALE_AFTER_MS;
+    return Math.max(0, age);
+  }
+
+  function clearLockRecheck() {
+    if (lockRecheckTimer) window.clearTimeout(lockRecheckTimer);
+    lockRecheckTimer = null;
+  }
+
+  function scheduleLockRecheck() {
+    clearLockRecheck();
+    lockRecheckTimer = window.setTimeout(function () {
+      lockRecheckTimer = null;
+      if ($('#screen-lock').classList.contains('active')) enterSlotsWithLock(false);
+    }, LOCK_RECHECK_INTERVAL_MS);
+  }
+
   function isLockOwner() {
     if (!hasControl) return false;
     const lock = readLock();
@@ -609,7 +635,7 @@
   function acquireLock(force) {
     const now = Date.now();
     const current = readLock();
-    if (current && current.token !== sessionToken && now - Number(current.updatedAt || 0) < 60000 && !force) return false;
+    if (current && current.token !== sessionToken && lockAgeMs(current, now) < LOCK_STALE_AFTER_MS && !force) return false;
     const generation = current && Number.isFinite(current.generation) ? current.generation + 1 : 1;
     localStorage.setItem(LOCK_KEY, JSON.stringify({ token: sessionToken, updatedAt: now, generation: generation }));
     hasControl = true;
@@ -624,12 +650,17 @@
     }
     if (!acquired) {
       const lock = readLock();
-      const age = lock ? Math.max(0, Date.now() - Number(lock.updatedAt || 0)) : 60000;
-      $('#lock-message').textContent = age >= 60000 ? '上一個分頁已超過 60 秒沒有回應，可以接管。' : '接管前請確認另一個遊戲分頁可停止操作；接管會讓舊分頁立即進入唯讀狀態。';
-      $('#btn-takeover').textContent = age >= 60000 ? '接管逾時分頁' : '確認接管操作權';
+      const age = lockAgeMs(lock, Date.now());
+      const stale = age >= LOCK_STALE_AFTER_MS;
+      $('#lock-message').textContent = stale
+        ? '已偵測到上一個分頁停止回應，正在自動恢復操作權…'
+        : '若另一個分頁仍在遊玩，為保護存檔會暫時阻止同時寫入；若它已關閉或無回應，本頁會自動重新檢查並接管，不必等待 60 秒。';
+      $('#btn-takeover').textContent = stale ? '立即接管逾時分頁' : '確認接管操作權';
+      scheduleLockRecheck();
       setScreen('screen-lock');
       return;
     }
+    clearLockRecheck();
     startHeartbeat();
     startAutosave();
     try {
@@ -671,12 +702,14 @@
   }
 
   function releaseLock() {
+    clearLockRecheck();
     if (!isLockOwner()) { hasControl = false; return; }
     try { localStorage.removeItem(LOCK_KEY); } catch (_) { /* 關閉時盡力釋放 */ }
     hasControl = false;
   }
 
   function loseControl() {
+    clearLockRecheck();
     hasControl = false;
     stopBattleLoop();
     if (heartbeatTimer) clearInterval(heartbeatTimer);
@@ -1928,6 +1961,7 @@
   }
 
   function fatal(message) {
+    clearLockRecheck();
     stopBattleLoop();
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     if (autosaveTimer) clearInterval(autosaveTimer);
@@ -1980,7 +2014,7 @@
     $('#delete-check').addEventListener('change', checkDeleteInput);
     $('#btn-delete-cancel').addEventListener('click', function () { $('#delete-dialog').close(); pendingDeleteSlot = null; });
     $('#btn-delete-confirm').addEventListener('click', confirmDelete);
-    $('#btn-takeover').addEventListener('click', function () { enterSlotsWithLock(true); });
+    $('#btn-takeover').addEventListener('click', function () { clearLockRecheck(); enterSlotsWithLock(true); });
     $('#btn-lock-recheck').addEventListener('click', function () { enterSlotsWithLock(false); });
     $('#btn-lost-reload').addEventListener('click', function () { window.location.reload(); });
     $('#btn-error-reload').addEventListener('click', function () { window.location.reload(); });
