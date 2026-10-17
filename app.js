@@ -65,6 +65,7 @@
   let autosaveTimer = null;
   let assetDb = null;
   let assetUrls = {};
+  const bestiaryPortraitCacheReads = Object.create(null);
   let activeDetail = 'status';
   let bestiarySearchQuery = '';
   let bestiaryDiscoveryFilter = 'all';
@@ -1359,6 +1360,36 @@
     return '';
   }
 
+  function restoreCachedBestiaryPortraits(monsters, rerender, list, ownerCharacter) {
+    const candidates = [];
+    (monsters || []).forEach(function (monster) {
+      if (!monster || !monster.assetId || assetUrls[monster.assetId] || bestiaryPortraitCacheReads[monster.assetId]) return;
+      const asset = ASSETS.find(function (entry) { return entry.id === monster.assetId; });
+      if (!asset) {
+        bestiaryPortraitCacheReads[monster.assetId] = true;
+        return;
+      }
+      bestiaryPortraitCacheReads[asset.id] = true;
+      candidates.push(asset);
+    });
+    if (!candidates.length) return;
+
+    // Restore only from the existing IndexedDB cache. This helper deliberately does not fetch or download missing files.
+    Promise.all(candidates.map(function (asset) {
+      return dbGet(asset.id).then(function (cached) {
+        if (!cached || !cached.blob) return false;
+        return verifyBlob(asset, cached.blob).then(function () {
+          if (!assetUrls[asset.id]) useAssetBlob(asset, cached.blob);
+          return true;
+        }).catch(function () { return false; });
+      }).catch(function () { return false; });
+    })).then(function (restored) {
+      if (!restored.some(Boolean)) return;
+      if (character !== ownerCharacter || activeDetail !== 'bestiary' || !list.isConnected) return;
+      rerender();
+    });
+  }
+
   function renderBestiary(content) {
     const monsterData = window.ROWorld.monsters || {};
     const monsterIds = Object.keys(monsterData).sort(function (left, right) {
@@ -1533,6 +1564,7 @@
       renderEntries();
     });
     renderEntries();
+    restoreCachedBestiaryPortraits(discoveredIds.map(function (id) { return monsterData[id]; }), renderEntries, list, character);
   }
   function handleCraftConsumable(recipeId) {
     if (!character || !account) return;

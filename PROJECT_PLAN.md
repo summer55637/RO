@@ -1,8 +1,8 @@
 # RO 純單機 H5 放置 RPG — 專案規畫總表
 
-- **文件版本：** V1.25
+- **文件版本：** V1.26
 - **整理日期：** 2026-10-17
-- **目前階段：** MVP 1.9 已驗證怪物圖鑑縮圖與 Mob ID
+- **目前階段：** MVP 2.0 離線還原已快取怪物圖鑑縮圖
 - **實作狀態：** 使用者已於 2026-10-17 授權開始實作
 - **GitHub 倉庫：** `summer55637/RO`（預設分支 `main`）
 - **現況盤點：** 目標倉庫初始僅含本規畫文件；nba9001-sys/ro-idle 是既有原型與素材／資料參考倉庫。
@@ -617,3 +617,11 @@
 - 新增自動稽核，對全體 15 種怪物檢查 Mob ID、專屬 manifest entry、來源路徑、原始大小與 Git blob SHA-1；目前只有盜蟲採明確向量備援。
 - 參考 [RagnarokFileFormats 的 ACT 規格](https://github.com/rdw-archive/RagnarokFileFormats/blob/master/ACT.MD)、[ragassets](https://github.com/adsonpleal/ragassets) 與 [ragx](https://github.com/joaopedrosgs/ragx) 的 SPR／ACT 動畫處理方式。本版沒有宣稱已接入正式怪物逐格動畫，也未直接依賴不保證穩定的公開渲染服務；真正的怪物待機／攻擊／受擊／死亡逐格素材仍待逐隻取得及驗證。
 - 沒有新增或替換任何二進位素材，不更改角色存檔、掉落、戰鬥或地圖進度。Service Worker shell cache 升至 v26。
+
+
+## 40. 離線還原已快取怪物圖鑑縮圖（MVP 2.0，2026-10-17）
+
+- 每次進入怪物圖鑑時，若已發現怪物的縮圖未在目前頁面載入，前端會查詢本機 IndexedDB 既有資產；再次核對 manifest 的位元組大小及 Git blob SHA-1 後才建立顯示用 Object URL。
+- 此還原流程只讀取本機已存在快取，不會觸發網路下載；尚未快取或驗證失敗的素材保持「未載入」佔位，等待原有地圖素材流程按需載入。
+- 非同步讀取完成後，只有在同一角色仍位於圖鑑、原清單仍存在時才更新縮圖，避免晚到結果覆寫其他分頁或角色介面。反覆進入圖鑑時同一資產只讀取一次，降低 IndexedDB 工作量。
+- 不新增／修改存檔欄位，不改角色、戰鬥、掉落或地圖進度。Service Worker shell cache 升至 v27；自動測試保護「僅從本機快取復原、驗證後才顯示、不觸發下載」的約束。

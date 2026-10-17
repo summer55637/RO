@@ -62,7 +62,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v26/);
+  assert.match(serviceWorker, /ro-h5-shell-v27/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -129,8 +129,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 1\.9/);
-  assert.match(sw, /ro-h5-shell-v26/);
+  assert.match(html, /MVP 2\.0/);
+  assert.match(sw, /ro-h5-shell-v27/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -166,8 +166,26 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 1\.9/);
-  assert.match(sw, /ro-h5-shell-v26/);
+  assert.match(html, /MVP 2\.0/);
+  assert.match(sw, /ro-h5-shell-v27/);
+}
+
+function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  const start = appSource.indexOf('function restoreCachedBestiaryPortraits(');
+  const end = appSource.indexOf('function renderBestiary(content)', start);
+  assert.ok(start >= 0 && end > start, 'cached bestiary portrait restoration helper must exist');
+  const helperSource = appSource.slice(start, end);
+  assert.match(helperSource, /dbGet\(asset\.id\)/, 'must look up previously cached assets');
+  assert.match(helperSource, /verifyBlob\(asset, cached\.blob\)/, 'must verify cached bytes before displaying them');
+  assert.match(helperSource, /useAssetBlob\(asset, cached\.blob\)/, 'must only create object URLs from verified cached bytes');
+  assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
+  assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
+  assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
+  assert.match(html, /MVP 2\.0/);
+  assert.match(sw, /ro-h5-shell-v27/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -341,7 +359,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.9/);
+  assert.match(html, /MVP 2\.0/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -487,7 +505,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.9/);
+  assert.match(html, /MVP 2\.0/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -992,7 +1010,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.9/);
+  assert.match(html, /MVP 2\.0/);
 }
 
 
@@ -1039,8 +1057,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 1\.9/);
-  assert.match(sw, /ro-h5-shell-v26/);
+  assert.match(html, /MVP 2\.0/);
+  assert.match(sw, /ro-h5-shell-v27/);
 }
 
 testMonsterArtworkIdentityMapping();
@@ -1065,6 +1083,7 @@ testPause();
 testMapAndMonsterProgression();
 testMonsterEncounterMapHints();
 testVerifiedBestiaryArtworkEvidence();
+testBestiaryRestoresOnlyVerifiedCachedArtwork();
 testMonsterBestiaryProgression();
 testBestiaryUiWiring();
 testEquipmentCardMechanics();
@@ -1080,4 +1099,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (36 suites).');
+console.log('RO H5 core tests passed (37 suites).');

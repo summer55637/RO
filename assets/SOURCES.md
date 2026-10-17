@@ -252,3 +252,8 @@
 - [ragassets](https://github.com/adsonpleal/ragassets) 是 Go 實作的 RO 資產渲染服務，可將已解包的 SPR／ACT／PAL／IMF 資料渲染為 PNG／APNG／GIF；其 README 明列怪物動作索引，但渲染需使用者／營運者已有的客戶端素材。公開示範站並非本遊戲的穩定託管依賴，本階段沒有直接使用該服務下載運行時素材。
 - [ragx](https://github.com/joaopedrosgs/ragx) 提供 `ragx sprites` 匯出 SPR／ACT 精靈對應的圖集 PNG 與動畫 JSON。可作為後續建立本地、可固定版本怪物動畫素材包的處理工具參考，尚未整合到遊戲建置流程。
 - 本版僅在圖鑑顯示已驗證且已快取的現有怪物縮圖及來源 Mob ID，**不是**新增真正怪物動畫。若資產尚未載入，顯示「未載入」；不能回退成波利圖。盜蟲 Mob 1051 仍使用專屬向量圖，直到取得能固定原始大小及 Git blob SHA-1 的正確圖片。
+
+
+## MVP 2.0 本機圖鑑縮圖快取還原（2026-10-17）
+
+本階段沒有新增二進位圖片，也沒有更改素材來源。圖鑑新增只讀 IndexedDB 還原：讀取已存在的怪物素材紀錄，重新驗證原有 manifest 大小及 Git blob SHA-1，再建立 Object URL。這不是新素材來源或動畫整合；未快取或驗證失敗時仍顯示佔位，不會從外部任意 URL 載圖，也不會為圖鑑預先下載其他地圖素材。
