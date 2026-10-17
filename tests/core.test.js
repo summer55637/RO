@@ -66,6 +66,40 @@ function testMapAndMonsterProgression() {
 }
 
 
+
+function testStatPointAllocation() {
+  assert.equal(core.statPointGainForLevelUp(1), 3);
+  assert.equal(core.statPointGainForLevelUp(5), 4);
+  assert.equal(core.statPointGainForLevelUp(10), 5);
+  assert.equal(core.statPointCost(1), 2);
+  assert.equal(core.statPointCost(10), 2);
+  assert.equal(core.statPointCost(11), 3);
+
+  const character = core.makeCharacter('StatTester', 'male', 'novice');
+  character.statPoints = 7;
+  const oldMaxHp = character.maxHp;
+  const oldMaxSp = character.maxSp;
+
+  const vit = core.allocateStat(character, 'vit');
+  assert.equal(vit.ok, true);
+  assert.equal(character.stats.vit, 2);
+  assert.equal(character.statPoints, 5);
+  assert.equal(character.maxHp, oldMaxHp + 5);
+
+  const int = core.allocateStat(character, 'int');
+  assert.equal(int.ok, true);
+  assert.equal(character.maxSp, oldMaxSp + 2);
+  assert.equal(character.statPoints, 3);
+
+  assert.equal(core.allocateStat(character, 'str').ok, true);
+  assert.equal(character.statPoints, 1);
+  assert.equal(core.allocateStat(character, 'dex').ok, false);
+  assert.equal(core.allocateStat(character, 'unknown').ok, false);
+
+  character.stats.luk = core.STAT_CAP;
+  assert.equal(core.allocateStat(character, 'luk').ok, false);
+}
+
 function testAssetManifestCoverage() {
   assert.equal(world.assets.filter(function (asset) { return asset.requiredOnStart; }).length, 4);
   assert.equal(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length, 2);
@@ -81,10 +115,11 @@ function testAssetManifestCoverage() {
 }
 
 testAssetManifestCoverage();
+testStatPointAllocation();
 testNameRules();
 testOfflineTimeCap();
 testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (6 suites).');
+console.log('RO H5 core tests passed (7 suites).');
