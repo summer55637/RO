@@ -4,7 +4,7 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
   const SAVE_KEY = 'ro-h5-account-v1';
-  const GAME_VERSION = '2.9';
+  const GAME_VERSION = '3.0';
   const MAX_SAVE_FILE_BYTES = 5 * 1024 * 1024;
   const DB_NAME = 'ro-h5-assets-v1';
   const DB_STORE = 'assets';
