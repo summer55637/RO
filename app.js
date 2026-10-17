@@ -12,7 +12,12 @@
   const ASSETS = window.ROWorld.assets;
   const PLAYER_SPRITE_FRAMES = window.ROWorld.playerSpriteFrames || {};
   const PLAYER_ANIMATION_FRAME_INTERVAL = Math.max(80, Number(window.ROWorld.playerAnimationFrameIntervalMs) || 140);
+  const CRITICAL_EFFECT_FRAMES = window.ROWorld.criticalEffectFrames || [];
+  const CRITICAL_EFFECT_FRAME_INTERVAL = Math.max(40, Number(window.ROWorld.criticalEffectFrameIntervalMs) || 70);
   let playerAnimationTimer = null;
+  let criticalEffectLoadPromise = null;
+  let criticalEffectTimer = null;
+  let criticalEffectRunId = 0;
   const STARTER_ASSETS = ASSETS.filter(function (asset) { return asset.requiredOnStart; });
 
   let account = null;
@@ -715,6 +720,62 @@
     }
   }
 
+  function ensureCriticalEffectAssets() {
+    if (!CRITICAL_EFFECT_FRAMES.length) return Promise.resolve(false);
+    if (CRITICAL_EFFECT_FRAMES.every(function (id) { return Boolean(assetUrls[id]); })) return Promise.resolve(true);
+    if (!criticalEffectLoadPromise) {
+      const assets = CRITICAL_EFFECT_FRAMES.map(function (id) {
+        return ASSETS.find(function (entry) { return entry.id === id; });
+      }).filter(Boolean);
+      criticalEffectLoadPromise = ensureAssets(assets, false).then(function () {
+        return CRITICAL_EFFECT_FRAMES.every(function (id) { return Boolean(assetUrls[id]); });
+      }).catch(function () {
+        criticalEffectLoadPromise = null;
+        return false;
+      });
+    }
+    return criticalEffectLoadPromise;
+  }
+
+  function playCriticalEffect() {
+    const container = $('#critical-effect');
+    const image = $('#critical-effect-frame');
+    if (!container || !image || !CRITICAL_EFFECT_FRAMES.length) return;
+
+    const runId = ++criticalEffectRunId;
+    if (criticalEffectTimer) window.clearInterval(criticalEffectTimer);
+    criticalEffectTimer = null;
+    container.classList.remove('show');
+
+    ensureCriticalEffectAssets().then(function (ready) {
+      if (!ready || runId !== criticalEffectRunId) return;
+      const firstUrl = assetUrls[CRITICAL_EFFECT_FRAMES[0]];
+      if (!firstUrl) return;
+      let frameIndex = 0;
+      image.src = firstUrl;
+      container.classList.remove('show');
+      void container.offsetWidth;
+      container.classList.add('show');
+      criticalEffectTimer = window.setInterval(function () {
+        if (runId !== criticalEffectRunId) {
+          window.clearInterval(criticalEffectTimer);
+          criticalEffectTimer = null;
+          return;
+        }
+        frameIndex += 1;
+        if (frameIndex >= CRITICAL_EFFECT_FRAMES.length) {
+          window.clearInterval(criticalEffectTimer);
+          criticalEffectTimer = null;
+          container.classList.remove('show');
+          image.removeAttribute('src');
+          return;
+        }
+        const nextUrl = assetUrls[CRITICAL_EFFECT_FRAMES[frameIndex]];
+        if (nextUrl) image.src = nextUrl;
+      }, CRITICAL_EFFECT_FRAME_INTERVAL);
+    });
+  }
+
   async function ensureSavedBattleVisuals(target) {
     if (!target || !target.battle || !target.battle.map) return;
     const map = window.ROCore.getMap(target.battle.map);
@@ -981,6 +1042,7 @@
     }
     if (result.playerDamage) {
       appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。' + (result.critical ? ' 爆擊！' : ''));
+      if (result.critical) playCriticalEffect();
       const effect = $('#scene-effect');
       effect.textContent = (result.critical ? '爆擊 ' : '-') + result.playerDamage;
       effect.classList.remove('show');
