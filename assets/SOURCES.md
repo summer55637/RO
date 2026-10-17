@@ -115,7 +115,7 @@
 | `sfx_critical` | [WAV/爆擊/Critical.ogg](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E7%88%86%E6%93%8A/Critical.ogg) | OGG | 8,886 | `dcc3946a430651b08334c2edade11d61672672ee` |
 | `sfx_levelup` | [WAV/event/levelup.ogg](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/event/levelup.ogg) | OGG | 24,294 | `4c501809789d1a03aedfd8c6c9728809c8a32dac` |
 
-單項大小來自固定 commit 的 Git tree；普通命中音效目前用於既有角色的原型普攻聲，並不代表武器／職業音色已完整細分。地圖背景音樂、受擊與技能專用音效仍待後續按需整合。
+單項大小來自固定 commit 的 Git tree；普通命中音效目前用於既有角色的原型普攻聲，並不代表武器／職業音色已完整細分。更完整的地圖背景音樂、受擊與技能音效仍待後續按需擴充。
 
 
 ## 技能名稱與玩法參考（MVP 0.6；非新增二進位素材）
@@ -127,3 +127,32 @@
 - [RO Classic Revo-Classic 技能指南索引](https://99porings.com/revo-classic/guides/guides)：各一轉職業技能樹的額外比對參考。
 
 本次沒有新增技能美術／音效檔案；技能倍率、Job 等級門檻、前置條件、自動施放方式、SP／Zeny 消耗與冷卻全是本專案原型設定，尚未核實為台灣官方 PC RO 現行規則。
+
+
+## 第六批：職業技能專屬音效與地圖背景音樂（MVP 0.7）
+
+新增音訊固定取自 [nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940](https://github.com/nba9001-sys/ro-idle/tree/2348031f3797dbea1981f399288748378a283940)。每個資產都以固定 commit 的 raw URL 載入，先驗證檔案大小與 Git blob SHA-1，再寫入既有 IndexedDB 快取；所有音訊皆為非必要啟動資產，失敗時不阻擋戰鬥。音效與音樂提供分開的開關，偏好寫入獨立 localStorage key，不會改動角色或共用帳號存檔。
+
+### 技能音效
+
+| 遊戲資產 ID | 上游檔案 | bytes | Git blob SHA |
+|---|---|---:|---|
+| `sfx_skill_sword` | [WAV/物理攻擊揮空/_attack_sword.wav](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E7%89%A9%E7%90%86%E6%94%BB%E6%93%8A%E6%8F%AE%E7%A9%BA/_attack_sword.wav) | 12,488 | `fd1564fa6e975d02811c51a26e37d61fde106417` |
+| `sfx_skill_fire` | [WAV/魔法傷害/火箭術.wav](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E9%AD%94%E6%B3%95%E5%82%B7%E5%AE%B3/%E7%81%AB%E7%AE%AD%E8%A1%93.wav) | 34,412 | `253727c39fff8deb9ccd53df195bc47bffebddb6` |
+| `sfx_skill_soul` | [WAV/魔法傷害/其餘雷系.wav](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E9%AD%94%E6%B3%95%E5%82%B7%E5%AE%B3/%E5%85%B6%E9%A4%98%E9%9B%B7%E7%B3%BB.wav) | 20,724 | `c93e0743fbb003c055f69e9eb690789b8ee7c938` |
+| `sfx_skill_arrow` | [WAV/物理攻擊命中/_hit_arrow.wav](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E7%89%A9%E7%90%86%E6%94%BB%E6%93%8A%E5%91%BD%E4%B8%AD/_hit_arrow.wav) | 13,360 | `349f3b1a145092e9a2119d71a69063c1c1e74025` |
+| `sfx_skill_heal` | [WAV/魔法傷害/治癒術.wav](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E9%AD%94%E6%B3%95%E5%82%B7%E5%AE%B3/%E6%B2%BB%E7%99%92%E8%A1%93.wav) | 59,636 | `7447aeb13b0e6c45443f6ca01ede4e2357c20623` |
+| `sfx_skill_merchant` | [WAV/物理攻擊命中/_hit_axe.wav](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E7%89%A9%E7%90%86%E6%94%BB%E6%93%8A%E5%91%BD%E4%B8%AD/_hit_axe.wav) | 16,114 | `e7f38e344756e8b8e84cce27000b666d65353051` |
+| `sfx_skill_poison` | [WAV/異常狀態/中毒.wav](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E7%95%B0%E5%B8%B8%E7%8B%80%E6%85%8B/%E4%B8%AD%E6%AF%92.wav) | 40,564 | `a6e6614cb5688ffa70f78c9c9b6f94c8ebaffb91` |
+
+### 地圖背景音樂（按需載入）
+
+| 遊戲資產 ID | 上游檔案 | bytes | Git blob SHA |
+|---|---|---:|---|
+| `bgm_default` | [music/maps/0000.mp3](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/music/maps/0000.mp3) | 747,520 | `cad866cf9b0b98cf4892a887dd12985057cc6e13` |
+| `bgm_novice_ground` | [music/maps/5001.mp3](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/music/maps/5001.mp3) | 1,476,608 | `95997a8034476a21ba168d91d8322332dbcadf66` |
+| `bgm_prt_fild01` | [music/maps/5004.mp3](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/music/maps/5004.mp3) | 2,257,024 | `71daf34328cdc69d64d8c39172e4b2d584a8830a` |
+
+三首曲目合計約 4.48 MB，但不會預先下載整批音樂；只在進入地圖後下載當前映射的那一首。新手訓練場和普隆德拉原野・北目前分別映射 `5001.mp3`、`5004.mp3`；其餘地圖先使用 `0000.mp3` 預設曲目。此對應為遊戲原型設定，不宣稱是台灣官方 PC RO 最新的地圖音樂對照表。
+
+技能視覺效果使用 CSS 動態呈現斬擊、魔法、箭矢、重擊、毒與治癒的短動畫，並為受擊怪物套用相應的閃光／位移；不額外下載整包特效素材。若音訊尚未快取而玩家離線，該音訊略過播放，戰鬥和存檔仍照常運作。
