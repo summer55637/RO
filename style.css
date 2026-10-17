@@ -172,3 +172,8 @@
 
 /* MVP 1.7: communicate map monster encounter weights as clearly labeled prototype rates. */
 .map-copy .map-monsters{margin-top:2px;color:#cbb987;font-size:10px;line-height:1.65;overflow-wrap:anywhere}
+
+/* MVP 1.9: show discovered monsters only from validated cached artwork; never substitute another mob's sprite. */
+.bestiary-portrait{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;overflow:hidden;border:1px solid rgba(217,185,112,.24);border-radius:8px;background:rgba(0,0,0,.22)}
+.bestiary-portrait img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.bestiary-portrait-placeholder{color:var(--muted);font-size:9px;line-height:1.3;text-align:center}
