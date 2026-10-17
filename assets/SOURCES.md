@@ -225,3 +225,10 @@
 - 查閱參考：[zackdreaver/ROenglishRE — `Ragnarok/data/mp3nametable.txt`](https://github.com/zackdreaver/ROenglishRE/blob/master/Ragnarok/data/mp3nametable.txt)。該檔說明特定版本 RO 地圖（`.rsw`）對應的 BGM 檔名，但來源客戶端版本與台灣現行 PC RO 不同，**目前僅作研究索引，不當作已核實的台灣版資料**。
 - 本階段沒有從該倉庫複製或新增音樂二進位檔案，因此不宣稱新增了地圖 BGM。既有三首音樂資產的來源、bytes 與 Git blob SHA 維持第六批紀錄；完整地圖音樂擴充待取得對應音源及版本依據後按需整合。
 - MVP 0.8 本次戰鬥視覺改進全部以 CSS 動畫實作，不新增圖像素材，也不改變現有資產 manifest。
+
+
+## MVP 1.7 地圖遭遇率與後續素材盤點
+
+- 地圖卡片顯示值是 `world-data.js` 的自訂 `map.monsters[].weight` 正規化結果：單一權重／該地圖有效權重總和。它只反映本遊戲原型的相對遭遇比率，不宣稱是台灣官方 RO 的刷新資料。
+- 素材研究另找到 [adsonpleal/ragassets](https://github.com/adsonpleal/ragassets)：其 README 說明可從本機已抽取的 RO GRF 渲染怪物、角色與 APNG 動畫，亦提供示範服務；該公開服務被作者標註為 best-effort、無 SLA，且 URL 輸出會隨客戶端素材變更，因此本遊戲不直接依賴該即時服務作為正式素材來源。若後續取得可分發的來源素材，仍應固定版本並存入專案自有來源清單。
+- Mob 1051 Thief Bug 的身份可由 [Divine Pride 怪物資料頁](https://www.divine-pride.net/database/monster/1051/)與 [NPC／Mob ID 清單](https://nn.ai4rei.net/dev/npclist/?qq=19)交叉參考；但目前仍未把外部 PNG 接入遊戲，因正式資產必須有固定來源及可驗證的大小／雜湊。當前仍使用專屬向量備援，不顯示殭屍圖。
