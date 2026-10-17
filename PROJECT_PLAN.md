@@ -1,8 +1,8 @@
 # RO 純單機 H5 放置 RPG — 專案規畫總表
 
-- **文件版本：** V1.32
+- **文件版本：** V1.33
 - **整理日期：** 2026-10-17
-- **目前階段：** MVP 2.4 波利待機／攻擊動畫接入
+- **目前階段：** MVP 2.5 綠色植物 Mob 1080 待機動畫接入
 - **實作狀態：** 使用者已於 2026-10-17 授權開始實作
 - **GitHub 倉庫：** `summer55637/RO`（預設分支 `main`）
 - **現況盤點：** 目標倉庫初始僅含本規畫文件；nba9001-sys/ro-idle 是既有原型與素材／資料參考倉庫。
@@ -678,3 +678,13 @@
 - 地圖進入與已存戰鬥恢復流程都會按需載入波利待機／攻擊資產；攻擊循環下載失敗不阻擋戰鬥，仍退回 Mob 1002 自己的靜態圖片。當波利發動攻擊或玩家閃避該攻擊時，短暫切換到 ACT action 16；完成後回到待機循環。
 - 戰鬥畫面以非阻塞方式下載動畫，使用角色 ID／角色槽／當前怪物 ID 守護計時器，避免切換角色或怪物後的舊動畫覆寫新畫面。
 - Service Worker shell cache 從 v31 升至 v32。此階段不更改帳號存檔 key、角色欄位或進度、角色數值、戰鬥結算、掉落或倉庫。
+
+
+## 47. 綠色植物 Mob 1080 ACT／SPR 待機動畫（MVP 2.5，2026-10-17）
+
+- 固定取用 [MyGodIsHe/pyro-tools@1a28450df59bc69e56e70e431f9b61351bafc8f6](https://github.com/MyGodIsHe/pyro-tools/tree/1a28450df59bc69e56e70e431f9b61351bafc8f6) 的 `green_plant.act/.spr`，先比對來源 SHA、ACT／SPR 格式與畫格引用，再輸出可重現 SVG；原始二進位固定保留於 `tools/samples/`。
+- ACT v4 共 40 個 action；選用 action 0 待機（12 格、160ms／格），每格正好一個 direction-0 圖層，所有 sprite index 均有配對 SPR 圖像。SPR 為 13 個 indexed sprite、沒有 true-colour sprite。已抽樣目視核對畫格外觀是綠色植物本體，而非綠棉蟲／Fabre。
+- 固定來源資料庫 [rAthena mob_db.yml@975c87dfc27ab267b2ec0dddff77421b2e6ee87b](https://github.com/rathena/rathena/blob/975c87dfc27ab267b2ec0dddff77421b2e6ee87b/db/pre-re/mob_db.yml) 交叉確認 Mob 1080 為 Green Plant，Mob 1007 為 Fabre。此資料僅用來交叉核對名稱／ID；遊戲內 HP、攻擊、經驗、Zeny、掉落及遭遇權重均是獨立原型設定，不宣稱是台灣官方現行數值。
+- 新增同一素材第一格產生的靜態備援圖，只有動畫下載失敗時才使用；兩個資產都以 byte 數與 Git blob SHA-1 驗證。只整合待機動作；其他 action 未經語義與外觀核對前不冒充攻擊、受擊或死亡動畫。
+- 將綠色植物加入新手訓練場的原型遭遇名單，權重 10；權重為原型遭遇比例，不是官方刷新率。動畫是地圖需求的可選資產，不列為首次啟動必要素材。
+- 更新 `README.md`、`assets/SOURCES.md`、測試與 Service Worker shell cache；不更動存檔 key、角色／帳號資料結構、玩家進度、既有戰鬥結果或分頁鎖定行為。

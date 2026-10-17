@@ -86,7 +86,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v32/);
+  assert.match(serviceWorker, /ro-h5-shell-v33/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -136,7 +136,7 @@ function testMonsterEncounterMapHints() {
   const atLevelOne = core.getMonsterEncounterMaps('poring', 1);
   assert.equal(atLevelOne.length, 3, 'Poring should have encounter data on each map where it appears');
   const noviceGround = atLevelOne.find(function (entry) { return entry.mapId === 'novice_ground'; });
-  assert.equal(noviceGround.probability, 0.4, 'Novice Ground should expose its configured prototype encounter chance');
+  assert.equal(noviceGround.probability, 40 / 110, 'Novice Ground chance reflects the added Green Plant prototype weight');
   assert.equal(noviceGround.unlocked, true);
 
   const northField = atLevelOne.find(function (entry) { return entry.mapId === 'prt_fild01'; });
@@ -154,13 +154,13 @@ function testMonsterEncounterMapHints() {
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
   assert.match(html, /MVP 2\.4/);
-  assert.match(sw, /ro-h5-shell-v32/);
+  assert.match(sw, /ro-h5-shell-v33/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
   const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
   const monsterEntries = Object.entries(world.monsters);
-  assert.equal(monsterEntries.length, 15, 'all currently catalogued monsters should be audited');
+  assert.equal(monsterEntries.length, 16, 'all currently catalogued monsters should be audited');
 
   monsterEntries.forEach(function (entry) {
     const monsterId = entry[0], monster = entry[1];
@@ -174,7 +174,9 @@ function testVerifiedBestiaryArtworkEvidence() {
     assert.equal(asset.sourceMobId, monster.sourceMobId, monsterId + ' asset and monster Mob IDs must match');
     const expectedSourcePath = monsterId === 'thief_bug'
       ? 'images/mobs/png/1051.png'
-      : 'images/monsters/' + monster.sourceMobId + '.png';
+      : monsterId === 'green_plant'
+        ? 'examples/data/green_plant.act + examples/data/green_plant.spr'
+        : 'images/monsters/' + monster.sourceMobId + '.png';
     assert.equal(asset.sourcePath, expectedSourcePath, monsterId + ' source filename must match Mob ID');
     assert.ok(Number(asset.bytes) > 0, monsterId + ' asset must record a positive source size');
     assert.match(asset.gitSha || '', /^[0-9a-f]{40}$/, monsterId + ' asset must pin a Git blob SHA-1');
@@ -183,6 +185,14 @@ function testVerifiedBestiaryArtworkEvidence() {
       assert.equal(asset.bytes, 1783);
       assert.equal(asset.gitSha, '342abcc99d1c1d902751b64e65b6f56d8b309342');
       assert.equal(asset.sourceUrl, 'https://static.divine-pride.net/images/mobs/png/1051.png');
+    } else if (monsterId === 'green_plant') {
+      assert.equal(asset.path, './assets/green_plant.svg');
+      assert.equal(asset.sourceRepository, 'MyGodIsHe/pyro-tools');
+      assert.equal(asset.sourceCommit, '1a28450df59bc69e56e70e431f9b61351bafc8f6');
+      assert.equal(asset.bytes, 2552);
+      assert.equal(asset.gitSha, '1f2d87a90a16161d6f101b67a11384a1a8490b6c');
+      assert.equal(asset.sourceActSha, 'e1bda9fe10499c562baf5857ab8829d8f234bd0a');
+      assert.equal(asset.sourceSprSha, '9ea4b7f257ae0b96048e9f0415e7ed7cdf08fc8a');
     }
   });
 
@@ -198,7 +208,7 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
   assert.match(html, /MVP 2\.4/);
-  assert.match(sw, /ro-h5-shell-v32/);
+  assert.match(sw, /ro-h5-shell-v33/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -216,7 +226,7 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
   assert.match(html, /MVP 2\.4/);
-  assert.match(sw, /ro-h5-shell-v32/);
+  assert.match(sw, /ro-h5-shell-v33/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -720,7 +730,7 @@ function testAssetManifestCoverage() {
   assert.ok(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length >= 20);
   const assetIds = new Set(world.assets.map(function (asset) { return asset.id; }));
   assert.equal(assetIds.size, world.assets.length, 'asset IDs must be unique');
-  world.assets.filter(function (asset) { return asset.sourceRepository && asset.id !== 'thief_bug' && asset.assetKind !== 'monster-animation'; }).forEach(function (asset) {
+  world.assets.filter(function (asset) { return asset.sourceRepository && asset.id !== 'thief_bug' && asset.id !== 'green_plant' && asset.assetKind !== 'monster-animation'; }).forEach(function (asset) {
     assert.equal(asset.sourceRepository, 'nba9001-sys/ro-idle');
     assert.match(asset.path, /raw\.githubusercontent\.com\/nba9001-sys\/ro-idle\/2348031f3797dbea1981f399288748378a283940\//);
     assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
@@ -774,6 +784,13 @@ function testMonsterIdleAnimationAssets() {
       actSha: '93c05e86366a7d9cfab19f59d1ff8f60dd1b617d',
       sprSha: '61b60050dce8094bbebf04d86cc87ef1e8d61706',
       actionIndex: 0, frames: 15, frameMs: 120
+    },
+    green_plant: {
+      mobId: 1080, id: 'green_plant_idle_anim', path: 'assets/green_plant_idle.svg',
+      bytes: 30163, sha: 'b5442646034f744f927db495df241b560c95d435',
+      actSha: 'e1bda9fe10499c562baf5857ab8829d8f234bd0a',
+      sprSha: '9ea4b7f257ae0b96048e9f0415e7ed7cdf08fc8a',
+      actionIndex: 0, frames: 12, frameMs: 160
     }
   };
   const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
@@ -846,12 +863,48 @@ function testMonsterActSprExportReproducibility() {
   assert.match(output, /Verified wolf: Mob 1013, action 0, 15 frames at 120ms\/frame/);
   assert.match(output, /Verified poring-idle: Mob 1002, action 0, 4 frames at 160ms\/frame/);
   assert.match(output, /Verified poring-attack: Mob 1002, action 16, 28 frames at 40ms\/frame/);
+  assert.match(output, /Verified green-plant: Mob 1080, action 0, 12 frames at 160ms\/frame/);
+  assert.match(output, /Verified static fallback green-plant: Mob 1080/);
   const toolSource = fs.readFileSync(toolPath, 'utf8');
   assert.match(toolSource, /SOURCE_COMMIT = '1a28450df59bc69e56e70e431f9b61351bafc8f6'/);
   assert.match(toolSource, /RAGASSETS_COMMIT = '4de4fa747431979d35c747d7edd549a872efd9e1'/);
   assert.match(toolSource, /function gitBlobSha\(bytes\)/);
   assert.match(toolSource, /function parseAct\(bytes\)/);
   assert.match(toolSource, /function parseSpr\(bytes\)/);
+}
+
+
+function testGreenPlantMob1080ActSprIdentity() {
+  const tool = require(path.join(__dirname, '..', 'tools', 'render_monster_act_spr.js'));
+  const act = fs.readFileSync(path.join(__dirname, '..', 'tools', 'samples', 'green_plant.act'));
+  const spr = fs.readFileSync(path.join(__dirname, '..', 'tools', 'samples', 'green_plant.spr'));
+  assert.equal(act.length, 42876);
+  assert.equal(tool.gitBlobSha(act), 'e1bda9fe10499c562baf5857ab8829d8f234bd0a');
+  assert.equal(spr.length, 4763);
+  assert.equal(tool.gitBlobSha(spr), '9ea4b7f257ae0b96048e9f0415e7ed7cdf08fc8a');
+  const parsedAct = tool.parseAct(act);
+  const parsedSpr = tool.parseSpr(spr);
+  assert.equal(parsedAct.version, 4);
+  assert.equal(parsedAct.actions.length, 40);
+  assert.equal(parsedAct.actions[0].length, 12);
+  assert.equal(Math.round(parsedAct.speeds[0] * 40), 160);
+  assert.equal(parsedSpr.indexedCount, 13);
+  assert.equal(parsedSpr.trueColorCount, 0);
+  parsedAct.actions[0].forEach(function (layers, frameIndex) {
+    assert.equal(layers.length, 1, 'Green Plant idle frame ' + frameIndex + ' should have one layer');
+    assert.equal(layers[0].direction, 0, 'Green Plant idle frame ' + frameIndex + ' uses the validated direction');
+    assert.ok(parsedSpr.sprites[layers[0].spriteIndex], 'Green Plant idle frame references a valid paired SPR image');
+  });
+  assert.equal(world.monsters.green_plant.sourceMobId, 1080);
+  assert.equal(world.monsters.green_plant.animationAssetId, 'green_plant_idle_anim');
+  assert.equal(world.monsters.green_plant.animationActionIndex, 0);
+  assert.equal(world.monsters.fabre.sourceMobId, 1007, 'Fabre must remain Mob 1007, not Green Plant');
+  assert.equal(world.monsters.fabre.animationAssetId, undefined, 'Green Plant animation must never be assigned to Fabre');
+  const fallback = fs.readFileSync(path.join(__dirname, '..', 'assets', 'green_plant.svg'));
+  assert.equal(fallback.length, 2552);
+  assert.equal(tool.gitBlobSha(fallback), '1f2d87a90a16161d6f101b67a11384a1a8490b6c');
+  assert.match(fallback.toString('utf8'), /data-mob-id="1080"/);
+  assert.doesNotMatch(fallback.toString('utf8'), /@keyframes/, 'fallback is a same-species static frame');
 }
 
 function testPoringIdleAndAttackAnimations() {
@@ -1246,7 +1299,7 @@ function testConsumableUseAndUiWiring() {
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
   assert.match(html, /MVP 2\.4/);
-  assert.match(sw, /ro-h5-shell-v32/);
+  assert.match(sw, /ro-h5-shell-v33/);
 }
 
 testMonsterArtworkIdentityMapping();
@@ -1254,6 +1307,7 @@ testAutomaticUpdateStrategy();
 testAssetManifestCoverage();
 testMonsterIdleAnimationAssets();
 testMonsterActSprExportReproducibility();
+testGreenPlantMob1080ActSprIdentity();
 testPoringIdleAndAttackAnimations();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
@@ -1290,4 +1344,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (40 suites).');
+console.log('RO H5 core tests passed (41 suites).');

@@ -89,6 +89,29 @@ const MONSTERS = [
     outputBytes: 136944,
     outputSha: 'd550fe9a3edc83b241d882038657e6e6e1e3c916'
   }
+,
+  {
+    key: 'green-plant',
+    name: '綠色植物',
+    animationType: 'idle',
+    canvasWidth: 128,
+    mobId: 1080,
+    actPath: 'tools/samples/green_plant.act',
+    sprPath: 'tools/samples/green_plant.spr',
+    actSha: 'e1bda9fe10499c562baf5857ab8829d8f234bd0a',
+    sprSha: '9ea4b7f257ae0b96048e9f0415e7ed7cdf08fc8a',
+    actionIndex: 0,
+    frames: 12,
+    frameMs: 160,
+    scale: 2.6,
+    centerY: 76,
+    outputPath: 'assets/green_plant_idle.svg',
+    outputBytes: 30163,
+    outputSha: 'b5442646034f744f927db495df241b560c95d435',
+    staticOutputPath: 'assets/green_plant.svg',
+    staticOutputBytes: 2552,
+    staticOutputSha: '1f2d87a90a16161d6f101b67a11384a1a8490b6c'
+  }
 ];
 
 function gitBlobSha(bytes) {
@@ -295,6 +318,58 @@ function renderSvg(config, actBytes, sprBytes) {
     '</style>' + groups + '</svg>';
 }
 
+
+function renderStaticSvg(config, actBytes, sprBytes) {
+  if (gitBlobSha(actBytes) !== config.actSha) throw new Error(config.key + ' ACT source Git blob SHA-1 mismatch.');
+  if (gitBlobSha(sprBytes) !== config.sprSha) throw new Error(config.key + ' SPR source Git blob SHA-1 mismatch.');
+  const act = parseAct(actBytes);
+  const spr = parseSpr(sprBytes);
+  const frames = act.actions[config.actionIndex];
+  if (!frames || frames.length !== config.frames) {
+    throw new Error(config.key + ' ACT action ' + config.actionIndex + ' frame count mismatch.');
+  }
+  const visibleLayers = frames[0].filter(layer => layer.direction === 0);
+  if (!visibleLayers.length) throw new Error(config.key + ' first frame has no direction-0 layer.');
+  const content = visibleLayers.map(layer => {
+    const sprite = spr.sprites[layer.spriteIndex];
+    if (!sprite) throw new Error(config.key + ' references missing SPR frame ' + layer.spriteIndex);
+    if (Math.abs(layer.rotation) > 0.001 ||
+        Math.abs(layer.scaleX - 1) > 0.001 ||
+        Math.abs(layer.scaleY - 1) > 0.001) {
+      throw new Error(config.key + ' idle action uses unsupported layer transforms.');
+    }
+    const left = (config.canvasWidth - sprite.width * config.scale) / 2 + layer.x * config.scale;
+    const top = config.centerY - (sprite.height * config.scale) / 2 + layer.y * config.scale;
+    const pathsByColor = new Map();
+    for (let y = 0; y < sprite.height; y += 1) {
+      let x = 0;
+      while (x < sprite.width) {
+        const pixelIndex = sprite.pixels[y * sprite.width + x] || 0;
+        if (pixelIndex === 0) {
+          x += 1;
+          continue;
+        }
+        const rgb = spr.palette[pixelIndex].join(',');
+        let end = x + 1;
+        while (end < sprite.width) {
+          const nextIndex = sprite.pixels[y * sprite.width + end] || 0;
+          if (nextIndex === 0 || spr.palette[nextIndex].join(',') !== rgb) break;
+          end += 1;
+        }
+        if (!pathsByColor.has(rgb)) pathsByColor.set(rgb, []);
+        pathsByColor.get(rgb).push('M' + x + ' ' + y + 'h' + (end - x) + 'v1h-' + (end - x) + 'z');
+        x = end;
+      }
+    }
+    const paths = Array.from(pathsByColor.entries()).map(([rgb, commands]) =>
+      '<path fill="rgb(' + rgb + ')" d="' + commands.join('') + '"/>').join('');
+    return '<g transform="translate(' + left.toFixed(3) + ' ' + top.toFixed(3) + ') scale(' + config.scale + ')">' + paths + '</g>';
+  }).join('');
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="' +
+    config.name + ' Mob ' + config.mobId + ' 靜態備援" data-mob-id="' + config.mobId +
+    '"><title>' + config.name + ' · Mob ' + config.mobId + ' · first verified ACT frame</title>' + content + '</svg>';
+}
+
 function main() {
   const write = process.argv.includes('--write');
   const check = process.argv.includes('--check') || !write;
@@ -322,6 +397,28 @@ function main() {
       process.stdout.write('Verified ' + config.key + ': Mob ' + config.mobId + ', action ' +
         config.actionIndex + ', ' + config.frames + ' frames at ' + config.frameMs + 'ms/frame.\n');
     }
+
+    if (config.staticOutputPath) {
+      const staticSvg = renderStaticSvg(config, actBytes, sprBytes);
+      const staticOutputPath = path.join(ROOT, config.staticOutputPath);
+      const staticOutputBytes = Buffer.from(staticSvg, 'utf8');
+      if (staticOutputBytes.length !== config.staticOutputBytes) {
+        throw new Error(config.staticOutputPath + ' expected ' + config.staticOutputBytes + ' bytes, generated ' + staticOutputBytes.length + '.');
+      }
+      if (gitBlobSha(staticOutputBytes) !== config.staticOutputSha) {
+        throw new Error(config.staticOutputPath + ' generated Git blob SHA-1 differs from the pinned production output.');
+      }
+      if (write) {
+        fs.writeFileSync(staticOutputPath, staticOutputBytes);
+        process.stdout.write('Wrote ' + config.staticOutputPath + ' (' + staticOutputBytes.length + ' bytes).\\n');
+      } else if (check) {
+        const checkedStatic = fs.readFileSync(staticOutputPath);
+        if (!checkedStatic.equals(staticOutputBytes)) {
+          throw new Error(config.staticOutputPath + ' differs from deterministic ACT/SPR output; run node tools/render_monster_act_spr.js --write.');
+        }
+        process.stdout.write('Verified static fallback ' + config.key + ': Mob ' + config.mobId + '.\\n');
+      }
+    }
   }
 }
 
@@ -335,4 +432,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { gitBlobSha, parseAct, parseSpr, renderSvg, MONSTERS, SOURCE_COMMIT };
+module.exports = { gitBlobSha, parseAct, parseSpr, renderSvg, renderStaticSvg, MONSTERS, SOURCE_COMMIT };
