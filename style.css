@@ -146,3 +146,16 @@
 .equipment-inventory{display:grid;gap:6px}
 .equipment-inventory-item{align-items:center;margin:0;padding:9px}
 @media(max-width:520px){.equipment-slot,.equipment-inventory-item{padding:8px;gap:7px}.equipment-actions{gap:4px}.equipment-action{padding:6px}}
+
+
+/* MVP 1.4: material crafting and manually used healing supplies. */
+.crafting-list{display:grid;gap:8px}
+.crafting-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid rgba(217,185,112,.16);border-radius:9px;background:rgba(0,0,0,.12);min-width:0}
+.crafting-copy{display:grid;gap:3px;min-width:0;overflow-wrap:anywhere}
+.crafting-copy strong{color:#edf0eb;font-size:11px}
+.crafting-copy small{color:var(--muted);font-size:9px;line-height:1.6}
+.crafting-action{flex-shrink:0}
+.warehouse-use{flex-shrink:0}
+.warehouse-item{gap:8px}
+.warehouse-item span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:520px){.crafting-item{align-items:flex-start;gap:7px;padding:8px}.crafting-action{padding:6px}.warehouse-use{padding:6px 7px}}

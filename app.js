@@ -1384,6 +1384,25 @@
     });
     content.appendChild(list);
   }
+
+  function handleCraftConsumable(recipeId) {
+    if (!character || !account) return;
+    const result = window.ROCore.craftConsumable(account, recipeId, 1);
+    if (!result.ok) { showToast(result.reason || '製作失敗'); renderDetails(); return; }
+    persistCurrent();
+    renderGame();
+    showToast('製作完成：' + result.itemName + ' ×' + result.quantity);
+  }
+
+  function handleUseConsumable(itemId) {
+    if (!character || !account) return;
+    const result = window.ROCore.useConsumable(character, account, itemId);
+    if (!result.ok) { showToast(result.reason || '使用失敗'); renderDetails(); return; }
+    persistCurrent();
+    renderGame();
+    showToast('使用 ' + result.itemName + '，恢復 ' + result.healed + ' HP（剩餘 ×' + result.remaining + '）');
+  }
+
   function handleEquipInventoryItem(instanceId) {
     if (!character || !account) return;
     const result = window.ROCore.equipItem(character, account, instanceId);
@@ -1603,6 +1622,43 @@
     note.textContent = '裝備、卡片數值、出售價格與掉落率是本遊戲的原型設定，並非已核實的台灣官方 PC RO 平衡數值。卡片可以從已裝備或背包內的裝備取出並返還共用倉庫；出售裝備前須先取出卡片。';
     content.appendChild(note);
   }
+
+  function renderCraftingRecipes(content) {
+    const catalog = window.ROCore.getConsumableCatalog();
+    addDetailHeading(content, '材料製作（原型）');
+    const note = document.createElement('p');
+    note.className = 'field-help';
+    note.textContent = '使用怪物掉落的材料製作補給品。成品存放於共用倉庫，只有手動按「使用」才會恢復 HP，不會在離線戰鬥中自動消耗。';
+    content.appendChild(note);
+    const list = document.createElement('div');
+    list.className = 'crafting-list';
+    catalog.recipes.forEach(function (recipe) {
+      const row = document.createElement('article');
+      row.className = 'crafting-item';
+      const copy = document.createElement('div');
+      copy.className = 'crafting-copy';
+      const title = document.createElement('strong');
+      title.textContent = recipe.name;
+      const materials = document.createElement('small');
+      materials.textContent = '材料：' + Object.keys(recipe.ingredients).map(function (name) {
+        const required = recipe.ingredients[name];
+        const held = Math.max(0, Number(account.warehouse[name]) || 0);
+        return name + ' ' + held + '/' + required;
+      }).join('、');
+      const effect = document.createElement('small');
+      effect.textContent = '使用恢復最多 ' + recipe.heal + ' HP（本遊戲原型值）';
+      copy.append(title, materials, effect);
+      const craftButton = makeButton('製作 1 份', 'button button-secondary equipment-action crafting-action', function () {});
+      craftButton.dataset.craftRecipe = recipe.id;
+      craftButton.disabled = !Object.keys(recipe.ingredients).every(function (name) {
+        return Math.max(0, Number(account.warehouse[name]) || 0) >= recipe.ingredients[name];
+      });
+      row.append(copy, craftButton);
+      list.appendChild(row);
+    });
+    content.appendChild(list);
+  }
+
   function renderDetails() {
     const content = $('#details-content');
     $$('.detail-tab').forEach(function (button) { button.classList.toggle('active', button.dataset.detail === activeDetail); });
@@ -1632,13 +1688,16 @@
     } else if (activeDetail === 'warehouse') {
       addDetailHeading(content, '帳號共用倉庫');
       addDetailRow(content, '共用 Zeny', formatNumber(account.gold));
+      const catalog = window.ROCore.getConsumableCatalog();
+      const consumablesByName = Object.create(null);
+      catalog.consumables.forEach(function (item) { consumablesByName[item.name] = item; });
       const list = document.createElement('div');
       list.className = 'warehouse-list';
       const items = Object.entries(account.warehouse || {}).filter(function (entry) { return Number(entry[1]) > 0; }).sort(function (a, b) { return a[0].localeCompare(b[0], 'zh-Hant'); });
       if (!items.length) {
         const empty = document.createElement('p');
         empty.className = 'field-help';
-        empty.textContent = '尚無物品。擊倒波利後可能獲得果凍質塊或獸毛。';
+        empty.textContent = '尚無物品。擊倒怪物可取得材料，再於下方製作補給品。';
         list.appendChild(empty);
       } else {
         items.forEach(function (entry) {
@@ -1649,10 +1708,19 @@
           const qty = document.createElement('strong');
           qty.textContent = '× ' + formatNumber(entry[1]);
           row.append(name, qty);
+          const consumable = consumablesByName[entry[0]];
+          if (consumable) {
+            const useButton = makeButton('使用（+' + consumable.heal + ' HP）', 'button button-quiet equipment-action warehouse-use', function () {});
+            useButton.dataset.useConsumable = consumable.id;
+            useButton.disabled = Number(character.hp) >= Number(character.maxHp);
+            useButton.title = consumable.description;
+            row.appendChild(useButton);
+          }
           list.appendChild(row);
         });
       }
       content.appendChild(list);
+      renderCraftingRecipes(content);
     } else if (activeDetail === 'equipment') {
       renderEquipment(content);
     } else if (activeDetail === 'bestiary') {
@@ -2159,7 +2227,17 @@
         return;
       }
       const skillButton = event.target.closest('[data-skill-id]');
-      if (skillButton && !skillButton.disabled) allocateSkillPoint(skillButton.dataset.skillId);
+      if (skillButton && !skillButton.disabled) { allocateSkillPoint(skillButton.dataset.skillId); return; }
+      const craftButton = event.target.closest('[data-craft-recipe]');
+      if (craftButton) {
+        if (!craftButton.disabled) handleCraftConsumable(craftButton.dataset.craftRecipe);
+        return;
+      }
+      const useButton = event.target.closest('[data-use-consumable]');
+      if (useButton) {
+        if (!useButton.disabled) handleUseConsumable(useButton.dataset.useConsumable);
+        return;
+      }
     });
     $('#btn-offline-close').addEventListener('click', closeOfflineReport);
     $('#rename-name').addEventListener('input', checkRenameInput);
