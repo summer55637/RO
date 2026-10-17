@@ -588,12 +588,13 @@
     const previewCharacter = { jobId: 'novice', gender: gender };
     syncPlayerSprite($('#create-avatar'), previewCharacter);
     $('#create-preview-title').textContent = gender === 'female' ? '初心者標準造型（女性）' : '初心者標準造型（男性）';
-    const previewKey = playerSpriteGroupKey(previewCharacter);
-    ensurePlayerSprite(previewCharacter).then(function () {
-      if ($('#screen-create').classList.contains('active') && selectedRadio('gender') === gender) {
-        syncPlayerSprite($('#create-avatar'), previewCharacter);
-      }
-    }).catch(function () { /* Built-in SVG preview remains available. */ });
+    if (!$('#screen-install').classList.contains('active')) {
+      ensurePlayerSprite(previewCharacter).then(function () {
+        if ($('#screen-create').classList.contains('active') && selectedRadio('gender') === gender) {
+          syncPlayerSprite($('#create-avatar'), previewCharacter);
+        }
+      }).catch(function () { /* Built-in SVG preview remains available. */ });
+    }
   }
 
   function playerSvg(gender) {
