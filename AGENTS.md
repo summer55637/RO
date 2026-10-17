@@ -22,7 +22,7 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.5 is merged into `main` and deployed. The app includes 14 character animation groups (120 frames), a verified 15-frame critical-hit effect, and three lazy-loaded/verified sound effects (normal hit, critical hit, Base level-up) with a persistent on/off toggle. Service Worker shell cache is currently v8; app shell remains network-first with offline fallback, launch-time update checks, and automatic tab reload on upgrades. CI and deployment passed. The owner's full RO asset authorization is an established premise and must not be repeatedly questioned.
+MVP 0.6 skill trees are being developed on `feat/first-job-skill-trees`; do not call this deployed until PR CI and the GitHub Pages deployment both pass. The currently deployed main before this milestone is MVP 0.5 and includes 14 character animation groups (120 frames), a verified 15-frame critical-hit effect, and three lazy-loaded/verified sound effects with a persistent toggle. MVP 0.6 adds prototype skill trees for novice and six first-job classes, job-level skill points, passive bonuses, and auto-cast combat skills; target Service Worker shell cache is v9.
 
 
 ## Automatic update rule
