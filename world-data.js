@@ -333,11 +333,11 @@
     },
     playerAnimationFrameIntervalMs: 140,
     monsters: {
-      poring: { id: 'poring', name: '波利', assetId: 'poring', maxHp: 18, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 5, drops: [{ id: 'jellopy', name: '果凍質塊', chance: 0.35 }, { id: 'fluff', name: '獸毛', chance: 0.08 }] },
-      lunatic: { id: 'lunatic', name: '瘋兔', assetId: 'lunatic', maxHp: 24, attackMin: 2, attackMax: 3, baseExp: 5, jobExp: 3, zenyMin: 1, zenyMax: 6, drops: [{ id: 'clover', name: '三葉幸運草', chance: 0.2 }, { id: 'carrot', name: '胡蘿蔔', chance: 0.25 }] },
-      fabre: { id: 'fabre', name: '綠棉蟲', assetId: 'fabre', maxHp: 20, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 4, drops: [{ id: 'fluff', name: '獸毛', chance: 0.3 }, { id: 'chrysalis', name: '昆蟲外殼', chance: 0.12 }] },
+      poring: { id: 'poring', name: '波利', assetId: 'poring', maxHp: 18, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 5, drops: [{ id: 'jellopy', name: '果凍質塊', chance: 0.35 }, { id: 'fluff', name: '獸毛', chance: 0.08 }, { id: 'poring_card', name: '波利卡片', chance: 0.015, type: 'card' }, { id: 'novice_dagger', name: '初心者短刀', chance: 0.025, type: 'equipment' }] },
+      lunatic: { id: 'lunatic', name: '瘋兔', assetId: 'lunatic', maxHp: 24, attackMin: 2, attackMax: 3, baseExp: 5, jobExp: 3, zenyMin: 1, zenyMax: 6, drops: [{ id: 'clover', name: '三葉幸運草', chance: 0.2 }, { id: 'carrot', name: '胡蘿蔔', chance: 0.25 }, { id: 'lunatic_card', name: '瘋兔卡片', chance: 0.015, type: 'card' }, { id: 'travel_sandals', name: '旅人涼鞋', chance: 0.025, type: 'equipment' }] },
+      fabre: { id: 'fabre', name: '綠棉蟲', assetId: 'fabre', maxHp: 20, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 4, drops: [{ id: 'fluff', name: '獸毛', chance: 0.3 }, { id: 'chrysalis', name: '昆蟲外殼', chance: 0.12 }, { id: 'fabre_card', name: '綠棉蟲卡片', chance: 0.015, type: 'card' }, { id: 'cotton_adventurer_armor', name: '棉布冒險服', chance: 0.025, type: 'equipment' }] },
       pupa: { id: 'pupa', name: '蛹', assetId: 'pupa', maxHp: 30, attackMin: 1, attackMax: 2, baseExp: 5, jobExp: 3, zenyMin: 2, zenyMax: 4, drops: [{ id: 'chrysalis', name: '昆蟲外殼', chance: 0.25 }] },
-      thief_bug: { id: 'thief_bug', name: '盜蟲', assetId: 'thief_bug', maxHp: 32, attackMin: 2, attackMax: 4, baseExp: 6, jobExp: 3, zenyMin: 2, zenyMax: 6, drops: [{ id: 'insect_feeler', name: '昆蟲觸角', chance: 0.2 }] },
+      thief_bug: { id: 'thief_bug', name: '盜蟲', assetId: 'thief_bug', maxHp: 32, attackMin: 2, attackMax: 4, baseExp: 6, jobExp: 3, zenyMin: 2, zenyMax: 6, drops: [{ id: 'insect_feeler', name: '昆蟲觸角', chance: 0.2 }, { id: 'four_leaf_charm', name: '幸運草護符', chance: 0.02, type: 'equipment' }] },
       wolf: { id: 'wolf', name: '狼', assetId: 'wolf', maxHp: 42, attackMin: 3, attackMax: 5, baseExp: 8, jobExp: 5, zenyMin: 2, zenyMax: 8, drops: [{ id: 'fang', name: '尖牙', chance: 0.22 }, { id: 'animal_skin', name: '動物外皮', chance: 0.12 }] },
       hornet: { id: 'hornet', name: '蜂兵', assetId: 'hornet', maxHp: 35, attackMin: 2, attackMax: 5, baseExp: 7, jobExp: 4, zenyMin: 2, zenyMax: 7, drops: [{ id: 'insect_feeler', name: '昆蟲觸角', chance: 0.22 }, { id: 'honey', name: '蜂蜜', chance: 0.1 }] },
       goblin: { id: 'goblin', name: '哥布林', assetId: 'goblin', maxHp: 60, attackMin: 5, attackMax: 8, baseExp: 11, jobExp: 7, zenyMin: 4, zenyMax: 12, drops: [{ id: 'monster_feed', name: '寵物飼料', chance: 0.12 }, { id: 'iron', name: '鐵', chance: 0.08 }] },
@@ -348,6 +348,19 @@
       pecopeco: { id: 'pecopeco', name: '大嘴鳥', assetId: 'pecopeco', maxHp: 64, attackMin: 5, attackMax: 8, baseExp: 12, jobExp: 7, zenyMin: 4, zenyMax: 12, drops: [{ id: 'bird_feather', name: '鳥類羽毛', chance: 0.2 }, { id: 'animal_skin', name: '動物外皮', chance: 0.1 }] },
       picky: { id: 'picky', name: '小雞', assetId: 'picky', maxHp: 28, attackMin: 1, attackMax: 3, baseExp: 5, jobExp: 3, zenyMin: 1, zenyMax: 5, drops: [{ id: 'bird_feather', name: '鳥類羽毛', chance: 0.12 }] },
       condor: { id: 'condor', name: '禿鷹', assetId: 'condor', maxHp: 58, attackMin: 4, attackMax: 7, baseExp: 10, jobExp: 6, zenyMin: 3, zenyMax: 10, drops: [{ id: 'bird_feather', name: '鳥類羽毛', chance: 0.2 }, { id: 'claw', name: '獸爪', chance: 0.08 }] }
+    },
+    items: {
+      equipment: [
+        { id: 'novice_dagger', name: '初心者短刀', type: 'equipment', slot: 'weapon', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { attackBonus: 3 }, description: '輕巧的入門武器。攻擊 +3（原型）。' },
+        { id: 'cotton_adventurer_armor', name: '棉布冒險服', type: 'equipment', slot: 'armor', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { defenseBonus: 2 }, description: '簡單耐用的冒險服。防禦 +2（原型）。' },
+        { id: 'travel_sandals', name: '旅人涼鞋', type: 'equipment', slot: 'shoes', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { defenseBonus: 1 }, description: '適合長途冒險的鞋履。防禦 +1（原型）。' },
+        { id: 'four_leaf_charm', name: '幸運草護符', type: 'equipment', slot: 'accessory', cardSlots: 1, requiredLevel: 1, allowedJobs: ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'], effects: { criticalBonus: 0.02 }, description: '帶來一點好運。爆擊率 +2 個百分點（原型）。' }
+      ],
+      cards: [
+        { id: 'poring_card', name: '波利卡片', type: 'card', effects: { defenseBonus: 1 }, description: '鑲嵌後防禦 +1（原型）。' },
+        { id: 'fabre_card', name: '綠棉蟲卡片', type: 'card', effects: { attackBonus: 1 }, description: '鑲嵌後攻擊 +1（原型）。' },
+        { id: 'lunatic_card', name: '瘋兔卡片', type: 'card', effects: { criticalBonus: 0.01 }, description: '鑲嵌後爆擊率 +1 個百分點（原型）。' }
+      ]
     },
     maps: [
       {
