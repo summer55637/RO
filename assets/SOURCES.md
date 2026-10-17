@@ -358,3 +358,12 @@
 - [Fatesend Green Plant #1080](https://fatesend.org/database/monsters/green-plant-1080/)（查閱日期 2026-10-18）：頁面將其行為描述為 passive、immobile、can't attack，與植物型不反擊的實作方向一致。此網站的 pre-renewal 數值以其伺服器設定為基礎，不能直接等同台灣官方正式數值。
 - 專案以 `world.monsters.green_plant.canRetaliate = false` 表示戰鬥原型中不反擊；不新增全域規則，也不修改其他怪物。植物的原型 HP／掉落／EXP／Zeny／遭遇權重與官方參考 AI 行為分開記錄。
 - 回歸測試涵蓋玩家可正常對植物造成傷害、植物不會削減玩家 HP、反擊時鐘維持歸零，以及 Mob 1080／Fabre Mob 1007 ID 保持分離。未更動任何玩家存檔欄位或鍵值。
+
+
+## MVP 2.7 瘋兔／狼攻擊動畫來源與完整性（2026-10-18）
+
+- 原始輸入沿用固定版 [PyRO-Tools examples/data](https://github.com/MyGodIsHe/pyro-tools/tree/1a28450df59bc69e56e70e431f9b61351bafc8f6)。瘋兔 Mob 1063 配對 `lunatic.act`（129,468 bytes，Git blob SHA-1 `fb90ed9e0d2f71392b2f25cddb4784a09a221cca`）與 `lunatic.spr`（36,287 bytes，`1cdcc31c9135ede2140e0d951b59efcc1560eda2`）；狼 Mob 1013 配對 `wolf.act`（36,564 bytes，`93c05e86366a7d9cfab19f59d1ff8f60dd1b617d`）與 `wolf.spr`（104,662 bytes，`61b60050dce8094bbebf04d86cc87ef1e8d61706`）。
+- 瘋兔 action 18：19 格、每格 40ms；每格是一個 direction 0 圖層，引用的 SPR frame 均有效，沒有旋轉／縮放變換。狼 action 16：7 格、每格 120ms；同樣逐格核對 direction 0、SPR frame 引用與無額外變換。只作為本專案可重現的怪物攻擊視覺，不宣稱等同台灣官方 RO 所有版本的完整動作或 AI。
+- 固定輸出 `assets/lunatic_attack.svg`：95,667 bytes，Git blob SHA-1 `4d1e7e2ca0ac737758adb7439f48545a3dadaed6`；`assets/wolf_attack.svg`：112,050 bytes，Git blob SHA-1 `54058111ce081c79625d91f1acc6f4dcc9ab7de0`。由 `tools/render_monster_act_spr.js` 產生，`npm test` 會執行產物重現檢查。
+- 兩者皆為非必要、按需下載的攻擊素材。若載入或完整性驗證失敗，原本怪物靜態圖／待機動畫仍為備援；沒有換用其他物種素材，也不會阻擋戰鬥或離線結算。
+- 僅增加視覺行為與回歸保護；玩家存檔、角色進度、裝備、卡片、共用倉庫、Zeny、掉落表及帳號分頁鎖均保持不變。
