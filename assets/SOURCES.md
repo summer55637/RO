@@ -103,3 +103,16 @@
 上游 `nba9001-sys/ro-idle` 的 CC BY-NC-SA 4.0 只適用於上游作者可授權的原創程式碼／文字。本遊戲對 RO 相關素材的使用，依專案擁有者已確認取得的 RO 遊戲公司完整使用授權辦理。本次未複製上游遊戲程式碼或音樂播放程式。
 
 怪物數值、掉落率、新地圖出怪權重仍是本專案原型設定，不宣稱等同台灣官方 RO 的當前正式數值。
+
+
+## 第五批：戰鬥音效（MVP 0.5）
+
+三種音效固定取自 [nba9001-sys/ro-idle@2348031f3797dbea1981f399288748378a283940](https://github.com/nba9001-sys/ro-idle/tree/2348031f3797dbea1981f399288748378a283940/WAV)，只在戰鬥事件首次觸發時載入。所有音效都先驗證檔案大小與 Git blob SHA-1，再存入 IndexedDB；它們不是首次啟動必要素材，離線時若尚未下載過就略過播放。遊戲內提供「音效：開／關」切換，設定保存在本機瀏覽器。
+
+| 遊戲資產 ID | 上游路徑 | 格式 | bytes | Git blob SHA |
+|---|---|---|---:|---|
+| `sfx_hit_sword` | [WAV/物理攻擊命中/_hit_sword.wav](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E7%89%A9%E7%90%86%E6%94%BB%E6%93%8A%E5%91%BD%E4%B8%AD/_hit_sword.wav) | WAV | 24,866 | `fcb1f2cd80591ed5e92f730a417377c401ae65be` |
+| `sfx_critical` | [WAV/爆擊/Critical.ogg](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/%E7%88%86%E6%93%8A/Critical.ogg) | OGG | 8,886 | `dcc3946a430651b08334c2edade11d61672672ee` |
+| `sfx_levelup` | [WAV/event/levelup.ogg](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/event/levelup.ogg) | OGG | 24,294 | `4c501809789d1a03aedfd8c6c9728809c8a32dac` |
+
+單項大小來自固定 commit 的 Git tree；普通命中音效目前用於既有角色的原型普攻聲，並不代表武器／職業音色已完整細分。地圖背景音樂、受擊與技能專用音效仍待後續按需整合。
