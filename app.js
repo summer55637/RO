@@ -66,6 +66,9 @@
   let account = null;
   let activeSlot = null;
   let character = null;
+  let lastPersistedRaw;
+  let saveConflictDetected = false;
+  let conflictLatestRaw = null;
   let battleTimer = null;
   let autosaveTimer = null;
   let assetDb = null;
@@ -616,9 +619,29 @@
     }, 5000);
   }
 
+  function markSaveConflict(currentRaw) {
+    if (saveConflictDetected) return;
+    saveConflictDetected = true;
+    conflictLatestRaw = currentRaw;
+    $('#save-conflict-banner').classList.remove('hidden');
+    $('#save-status').textContent = '存檔衝突：寫入已暫停';
+  }
+
+  function hideSaveConflictBanner() {
+    $('#save-conflict-banner').classList.add('hidden');
+  }
+
   function readAccount() {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return window.ROCore.emptyAccount();
+    if (character && activeSlot !== null && lastPersistedRaw !== undefined && raw !== lastPersistedRaw) {
+      markSaveConflict(raw);
+      // Keep the active tab's in-memory data so it can be exported as a recovery copy.
+      if (account) return account;
+    }
+    if (!raw) {
+      if ((!character || activeSlot === null) && !saveConflictDetected) lastPersistedRaw = null;
+      return window.ROCore.emptyAccount();
+    }
     let parsed;
     try { parsed = JSON.parse(raw); } catch (_) {
       throw new Error('本機存檔不是有效 JSON。原始內容未被覆寫；請先保存瀏覽器資料再處理。');
@@ -630,13 +653,28 @@
     parsed.speed = [1, 2, 3].includes(Number(parsed.speed)) ? Number(parsed.speed) : 1;
     if (!parsed.warehouse || typeof parsed.warehouse !== 'object' || Array.isArray(parsed.warehouse)) parsed.warehouse = {};
     if (!Array.isArray(parsed.equipmentInventory)) parsed.equipmentInventory = [];
+    if ((!character || activeSlot === null) && !saveConflictDetected) lastPersistedRaw = raw;
     return parsed;
   }
 
   function writeAccount() {
+    if (saveConflictDetected) {
+      $('#save-status').textContent = '存檔衝突：寫入已暫停';
+      return false;
+    }
     try {
+      const currentRaw = localStorage.getItem(SAVE_KEY);
+      if (lastPersistedRaw !== undefined && currentRaw !== lastPersistedRaw) {
+        markSaveConflict(currentRaw);
+        return false;
+      }
       account.updatedAt = Date.now();
-      localStorage.setItem(SAVE_KEY, JSON.stringify(account));
+      const serialized = JSON.stringify(account);
+      localStorage.setItem(SAVE_KEY, serialized);
+      if (localStorage.getItem(SAVE_KEY) !== serialized) {
+        throw new Error('寫入後回讀比對失敗。');
+      }
+      lastPersistedRaw = serialized;
       $('#save-status').textContent = '已儲存 · ' + new Date().toLocaleTimeString();
       return true;
     } catch (error) {
@@ -662,6 +700,22 @@
     node.classList.toggle('error', Boolean(isError));
   }
 
+  function downloadPortableSave(snapshot, prefix) {
+    const envelope = window.ROCore.createPortableSave(snapshot, GAME_VERSION);
+    const text = JSON.stringify(envelope, null, 2);
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    link.href = url;
+    link.download = (prefix || 'ro-h5-save') + '-' + stamp + '.rosave';
+    link.hidden = true;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
   function exportSaveFile() {
     if (!$('#screen-slots').classList.contains('active')) {
       setSaveFileMessage('請先返回角色選擇畫面，再匯出存檔。', true);
@@ -669,19 +723,7 @@
     }
     try {
       const snapshot = readAccount();
-      const envelope = window.ROCore.createPortableSave(snapshot, GAME_VERSION);
-      const content = JSON.stringify(envelope, null, 2);
-      const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-      link.href = url;
-      link.download = 'ro-h5-save-' + stamp + '.rosave';
-      link.hidden = true;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      downloadPortableSave(snapshot, 'ro-h5-save');
       setSaveFileMessage('已匯出 3 個角色槽、共用 Zeny、倉庫與裝備背包。請將 .rosave 檔案保存在安全的位置。', false);
     } catch (error) {
       setSaveFileMessage('匯出失敗：' + (error.message || '無法建立存檔檔案。'), true);
@@ -848,6 +890,48 @@
     }
   }
 
+  function exportConflictRecovery() {
+    try {
+      const snapshot = account ? JSON.parse(JSON.stringify(account)) : window.ROCore.emptyAccount();
+      if (character && activeSlot !== null) {
+        snapshot.slots[activeSlot] = JSON.parse(JSON.stringify(character));
+      }
+      downloadPortableSave(snapshot, 'ro-h5-recovery');
+      $('#save-conflict-message').textContent = '已下載這個分頁的恢復備份。請確認檔案已保存，再載入最新存檔。';
+    } catch (error) {
+      $('#save-conflict-message').textContent = '恢復備份匯出失敗：' + (error.message || '未知錯誤') + '。請勿重新載入或關閉此分頁。';
+    }
+  }
+
+  function reloadLatestSave() {
+    if (!window.confirm('載入其他分頁的最新存檔？此分頁尚未保存的進度將從記憶體捨棄。請先匯出恢復備份。')) return;
+    stopBattleLoop();
+    stopMapMusic();
+    character = null;
+    activeSlot = null;
+    saveConflictDetected = false;
+    conflictLatestRaw = null;
+    lastPersistedRaw = undefined;
+    try {
+      account = readAccount();
+      hideSaveConflictBanner();
+      renderSlots();
+      setScreen('screen-slots');
+      showToast('已載入最新本機存檔');
+    } catch (error) {
+      fatal(error.message || '最新本機存檔無法安全讀取。');
+    }
+  }
+
+  function handleExternalSaveChange(event) {
+    if (event.key !== SAVE_KEY && event.key !== null) return;
+    if (!character || activeSlot === null || saveConflictDetected) return;
+    let currentRaw = event.newValue;
+    try { currentRaw = localStorage.getItem(SAVE_KEY); } catch (_) { /* Use the event value as the fallback. */ }
+    if (currentRaw !== lastPersistedRaw) markSaveConflict(currentRaw);
+  }
+
+  function exportSaveFile() {
   function existingNames(exceptIndex) {
     const data = account || window.ROCore.emptyAccount();
     return data.slots.filter(function (item, index) {
@@ -2700,6 +2784,8 @@
     });
     $('#btn-create-cancel').addEventListener('click', function () { character = null; activeSlot = null; renderSlots(); setScreen('screen-slots'); });
     $('#btn-refresh-slots').addEventListener('click', function () { account = readAccount(); renderSlots(); showToast('已重新讀取存檔'); });
+    $('#btn-save-conflict-export').addEventListener('click', exportConflictRecovery);
+    $('#btn-save-conflict-reload').addEventListener('click', reloadLatestSave);
     $('#btn-export-save').addEventListener('click', exportSaveFile);
     $('#btn-import-save').addEventListener('click', function () { $('#input-import-save').click(); });
     $('#input-import-save').addEventListener('change', handleSaveFileSelection);
@@ -2748,6 +2834,7 @@
     $('#btn-error-reload').addEventListener('click', function () { window.location.reload(); });
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
+    window.addEventListener('storage', handleExternalSaveChange);
     window.addEventListener('beforeunload', function () {
       if (character && activeSlot !== null) persistCurrent();
       stopBattleLoop();
