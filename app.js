@@ -1129,11 +1129,11 @@
       window.setTimeout(function () { if (monster.isConnected) monster.classList.remove('hit'); }, 240);
     }
     if (result.playerDamage) {
-      appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。' + (result.critical ? ' 爆擊！' : ''));
+      appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。' + (result.critical ? ' 爆擊！' : '') + (result.skillName ? '（技能：' + result.skillName + '）' : ''));
       if (result.critical) playCriticalEffect();
       playSoundEffect(result.critical ? 'critical' : 'hit');
       const effect = $('#scene-effect');
-      effect.textContent = (result.critical ? '爆擊 ' : '-') + result.playerDamage;
+      effect.textContent = (result.skillName ? result.skillName + ' ' : '') + (result.critical ? '爆擊 ' : '-') + result.playerDamage;
       effect.classList.remove('show');
       void effect.offsetWidth;
       effect.classList.add('show');
@@ -1156,6 +1156,8 @@
         appendCharacterLog(capMessage, 'warning');
       }
     }
+    if (result.skillHealingGained) appendCharacterLog('治癒術恢復 ' + result.skillHealingGained + ' HP。', 'important');
+    if (result.recoveryGained) appendCharacterLog('快速回復恢復 ' + result.recoveryGained + ' HP。');
     if (result.playerDown) appendCharacterLog('角色倒地後返回戰線，原型版不扣除經驗。', 'warning');
   }
 
@@ -1258,6 +1260,8 @@
         });
       }
       content.appendChild(list);
+    } else if (activeDetail === 'skills') {
+      renderSkillTree(content);
     } else {
       const jobCap = window.ROCore.getJobLevelCap(character);
       addDetailHeading(content, '職業進度');
@@ -1313,6 +1317,94 @@
         content.appendChild(button);
       }
     }
+  }
+
+
+  function renderSkillTree(content) {
+    const tree = window.ROCore.getSkillTree(character.jobId);
+    addDetailHeading(content, (tree ? tree.name : character.jobName) + '技能樹');
+    addDetailRow(content, '可用技能點', Math.max(0, Number(character.skillPoints) || 0));
+    const intro = document.createElement('p');
+    intro.className = 'field-help';
+    intro.textContent = '每次 Job 等級提升獲得 1 點技能點。技能會在自動戰鬥中依條件施放或提供被動效果。技能倍率、消耗與門檻均為本遊戲原型設定，不代表台灣官方 PC RO 的完整數值。';
+    content.appendChild(intro);
+
+    if (!tree || !tree.skills.length) {
+      const empty = document.createElement('p');
+      empty.className = 'field-help';
+      empty.textContent = '目前職業沒有可用技能資料。';
+      content.appendChild(empty);
+      return;
+    }
+
+    const list = document.createElement('div');
+    list.className = 'skill-tree-list';
+    tree.skills.forEach(function (skill) {
+      const level = window.ROCore.getSkillLevel(character, skill.id);
+      const card = document.createElement('article');
+      card.className = 'skill-card' + (level > 0 ? ' learned' : '');
+      const header = document.createElement('div');
+      header.className = 'skill-card-heading';
+      const title = document.createElement('strong');
+      title.textContent = skill.name;
+      const badge = document.createElement('span');
+      badge.className = 'skill-level';
+      badge.textContent = 'Lv. ' + level + ' / ' + skill.maxLevel;
+      header.append(title, badge);
+
+      const type = document.createElement('span');
+      type.className = 'skill-type';
+      type.textContent = skill.type === 'active' ? '主動技能' : '被動技能';
+      const description = document.createElement('p');
+      description.className = 'skill-description';
+      description.textContent = skill.description;
+      const requirement = document.createElement('p');
+      requirement.className = 'skill-requirement';
+      const prerequisite = skill.prerequisite
+        ? tree.skills.find(function (entry) { return entry.id === skill.prerequisite; })
+        : null;
+      requirement.textContent = 'Job Lv. ' + skill.requiredJobLevel +
+        (prerequisite ? ' · 前置：' + prerequisite.name + ' Lv. ' + skill.prerequisiteLevel : ' · 無前置技能');
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'button button-secondary skill-learn-button';
+      button.dataset.skillId = skill.id;
+      const enoughPoints = (Number(character.skillPoints) || 0) > 0;
+      let blocked = '';
+      if (level >= skill.maxLevel) blocked = '已滿級';
+      else if (Number(character.jobLevel) < skill.requiredJobLevel) blocked = '需要 Job Lv. ' + skill.requiredJobLevel;
+      else if (prerequisite && window.ROCore.getSkillLevel(character, skill.prerequisite) < skill.prerequisiteLevel) blocked = '前置技能不足';
+      else if (!enoughPoints) blocked = '技能點不足';
+      button.textContent = blocked || '學習（1 點）';
+      button.disabled = Boolean(blocked);
+      card.append(header, type, description, requirement, button);
+      list.appendChild(card);
+    });
+    content.appendChild(list);
+    const warning = document.createElement('p');
+    warning.className = 'field-help';
+    warning.textContent = '技能點一旦使用便不可退回；本版暫不提供洗點功能。初心者已學的被動技能會保留效果，轉職後可在對應職業分頁學習新技能。';
+    content.appendChild(warning);
+  }
+
+  function allocateSkillPoint(skillId) {
+    if (!character || activeSlot === null || !isLockOwner()) return loseControl();
+    account = readAccount();
+    const latest = account.slots[activeSlot];
+    if (!latest) return;
+    character = latest;
+    const result = window.ROCore.allocateSkill(character, skillId);
+    if (!result.ok) {
+      showToast(result.reason || '無法學習此技能。');
+      renderGame();
+      return;
+    }
+    appendCharacterLog('學會技能「' + result.skillName + '」Lv. ' + result.level + '。', 'important');
+    character.lastSavedAt = Date.now();
+    if (!persistCurrent()) return;
+    renderGame();
+    showToast('技能提升：' + result.skillName + ' Lv. ' + result.level);
   }
 
   function addDetailHeading(parent, title) {
@@ -1671,8 +1763,13 @@
     $$('.speed-button').forEach(function (button) { button.addEventListener('click', function () { changeSpeed(button.dataset.speed); }); });
     $('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });
     $('#details-content').addEventListener('click', function (event) {
-      const button = event.target.closest('[data-stat-key]');
-      if (button && !button.disabled) allocateStatPoint(button.dataset.statKey);
+      const statButton = event.target.closest('[data-stat-key]');
+      if (statButton && !statButton.disabled) {
+        allocateStatPoint(statButton.dataset.statKey);
+        return;
+      }
+      const skillButton = event.target.closest('[data-skill-id]');
+      if (skillButton && !skillButton.disabled) allocateSkillPoint(skillButton.dataset.skillId);
     });
     $('#btn-offline-close').addEventListener('click', closeOfflineReport);
     $('#rename-name').addEventListener('input', checkRenameInput);

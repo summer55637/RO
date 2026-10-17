@@ -116,3 +116,14 @@
 | `sfx_levelup` | [WAV/event/levelup.ogg](https://github.com/nba9001-sys/ro-idle/blob/2348031f3797dbea1981f399288748378a283940/WAV/event/levelup.ogg) | OGG | 24,294 | `4c501809789d1a03aedfd8c6c9728809c8a32dac` |
 
 單項大小來自固定 commit 的 Git tree；普通命中音效目前用於既有角色的原型普攻聲，並不代表武器／職業音色已完整細分。地圖背景音樂、受擊與技能專用音效仍待後續按需整合。
+
+
+## 技能名稱與玩法參考（MVP 0.6；非新增二進位素材）
+
+本次技能樹使用常見的 RO 初心者／一轉技能名稱，作為獨立原型的功能標籤參考，而非直接引用或下載新的技能圖像素材：
+
+- [iRO 官方 Renewal 劍士技能頁](https://renewal.playragnarok.com/gameguide/classes_skill.aspx?c=2)：Bash（狂擊）的技能名稱與技能描述參考。此頁屬 iRO Renewal，不等同台灣 PC 版資料。
+- [iRO Wiki Classic 職業概覽](https://irowiki.org/classic/Classes)：職業階段與經典技能名稱參考。
+- [RO Classic Revo-Classic 技能指南索引](https://99porings.com/revo-classic/guides/guides)：各一轉職業技能樹的額外比對參考。
+
+本次沒有新增技能美術／音效檔案；技能倍率、Job 等級門檻、前置條件、自動施放方式、SP／Zeny 消耗與冷卻全是本專案原型設定，尚未核實為台灣官方 PC RO 現行規則。
