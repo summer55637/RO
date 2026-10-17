@@ -194,3 +194,6 @@
 .save-conflict-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
 .save-conflict-actions .button{min-height:38px}
 @media(max-width:700px){.save-conflict-banner{flex-direction:column}.save-conflict-actions{width:100%;display:grid;grid-template-columns:1fr}.save-conflict-actions .button{width:100%}}
+
+.save-file-actions .button:disabled{opacity:.42;cursor:not-allowed;filter:saturate(.55)}
+#screen-error .state-card .button{margin-top:10px}
