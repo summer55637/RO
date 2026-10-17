@@ -9,3 +9,13 @@
 
 .stat-allocation-row{display:grid;grid-template-columns:minmax(86px,1fr) 32px 58px 28px;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.045);font-size:10px}.stat-allocation-name{color:#c5d0d3}.stat-allocation-value{color:#f0dba3;text-align:center;font-variant-numeric:tabular-nums}.stat-allocation-cost{color:var(--muted);text-align:right;font-size:9px;white-space:nowrap}.stat-up-button{min-width:26px;min-height:25px;border:1px solid rgba(217,185,112,.4);border-radius:6px;background:rgba(217,185,112,.09);color:var(--gold-light);font-weight:900}.stat-up-button:hover:not(:disabled){background:rgba(217,185,112,.2)}.stat-up-button:disabled{opacity:.3;cursor:not-allowed}
 @media(max-width:560px){.stat-allocation-row{grid-template-columns:minmax(86px,1fr) 28px 54px 28px}}
+
+
+/* First-job promotion panel */
+.job-choice-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0 14px}
+.job-choice-card{min-width:0;padding:12px;border:1px solid rgba(217,185,112,.22);border-radius:10px;background:rgba(0,0,0,.12)}
+.job-choice-card h4{margin:0 0 6px;color:var(--gold-light);font-size:12px}
+.job-choice-description{margin:0 0 7px;color:#c5d0d3;font-size:10px;line-height:1.6}
+.job-choice-passive{min-height:30px;margin:0 0 10px;color:#a5d5b4;font-size:10px;line-height:1.6}
+.job-choice-card .button{width:100%;min-height:34px;padding:8px 10px;font-size:10px}
+@media(max-width:560px){.job-choice-list{grid-template-columns:1fr}.job-choice-passive{min-height:0}}

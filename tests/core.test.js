@@ -100,6 +100,106 @@ function testStatPointAllocation() {
   assert.equal(core.allocateStat(character, 'luk').ok, false);
 }
 
+function testFirstJobPromotion() {
+  const character = core.makeCharacter('JobTester', 'female', 'novice');
+  character.baseLevel = 12;
+  character.baseExp = 9;
+  character.statPoints = 14;
+  character.jobLevel = 9;
+  character.jobExp = 77;
+  character.battle.map = 'novice_ground';
+  character.battle.paused = false;
+
+  assert.equal(core.getJobLevelCap(character), 10);
+  assert.equal(core.changeJob(character, 'swordsman').ok, false);
+  assert.equal(character.jobId, 'novice');
+
+  character.jobLevel = 10;
+  const result = core.changeJob(character, 'swordsman');
+  assert.equal(result.ok, true);
+  assert.equal(character.jobId, 'swordsman');
+  assert.equal(character.jobName, '劍士');
+  assert.equal(character.jobLevel, 1);
+  assert.equal(character.jobExp, 0);
+  assert.equal(character.jobNotice, false);
+  assert.equal(core.getJobLevelCap(character), 50);
+  assert.equal(character.baseLevel, 12);
+  assert.equal(character.baseExp, 9);
+  assert.equal(character.statPoints, 14);
+  assert.equal(character.battle.map, 'novice_ground');
+  assert.equal(character.battle.paused, false);
+  assert.equal(core.changeJob(character, 'mage').ok, false);
+  assert.equal(core.changeJob(character, 'unknown-job').ok, false);
+
+  const mage = core.makeCharacter('MageTester', 'male', 'novice');
+  mage.jobLevel = 10;
+  assert.equal(core.changeJob(mage, 'mage').ok, true);
+  assert.equal(mage.jobName, '魔法師');
+}
+
+function makePromotedFighter(jobId) {
+  const character = core.makeCharacter('Fighter-' + jobId, 'male', 'novice');
+  character.jobLevel = 10;
+  const promotion = core.changeJob(character, jobId);
+  assert.equal(promotion.ok, true, 'promotion should succeed for ' + jobId);
+  character.battle.map = 'novice_ground';
+  character.battle.paused = false;
+  character.battle.currentMonsterId = 'poring';
+  character.battle.monsterHp = 1000;
+  character.battle.monsterMaxHp = 1000;
+  character.battle.monsterAttackClock = 0;
+  return character;
+}
+
+function testFirstJobCombatPassives() {
+  assert.equal(core.FIRST_JOBS.length, 6);
+
+  const swordsman = makePromotedFighter('swordsman');
+  const mage = makePromotedFighter('mage');
+  const swordHit = core.stepCombat(swordsman, core.emptyAccount(), function () { return 0.99; });
+  const mageHit = core.stepCombat(mage, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(mageHit.playerDamage, swordHit.playerDamage + 1);
+
+  const acolyte = makePromotedFighter('acolyte');
+  acolyte.hp = 20;
+  acolyte.battle.monsterHp = 1;
+  acolyte.battle.monsterMaxHp = 1;
+  const acolyteResult = core.stepCombat(acolyte, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(acolyteResult.killed, true);
+  assert.equal(acolyteResult.healingGained, 3);
+  assert.equal(acolyte.hp, 23);
+
+  const merchant = makePromotedFighter('merchant');
+  merchant.battle.monsterHp = 1;
+  merchant.battle.monsterMaxHp = 1;
+  const merchantResult = core.stepCombat(merchant, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(merchantResult.goldGained, 6);
+
+  const thief = makePromotedFighter('thief');
+  thief.battle.monsterAttackClock = 1;
+  const thiefResult = core.stepCombat(thief, core.emptyAccount(), function () { return 0.05; });
+  assert.equal(thiefResult.dodged, true);
+  assert.equal(thiefResult.monsterDamage, 0);
+
+  const capped = makePromotedFighter('swordsman');
+  capped.jobLevel = 49;
+  capped.jobExp = core.jobExpToNext(49);
+  capped.battle.monsterHp = 1;
+  capped.battle.monsterMaxHp = 1;
+  const capResult = core.stepCombat(capped, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(capped.jobLevel, 50);
+  assert.equal(capped.jobExp, 0);
+  assert.equal(capResult.jobCapped, true);
+  assert.equal(capped.jobCapReached, true);
+
+  capped.jobNotice = false; // The player has inspected the job panel.
+  capped.battle.monsterHp = 1;
+  capped.battle.monsterMaxHp = 1;
+  const repeatCapResult = core.stepCombat(capped, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(repeatCapResult.jobCapped, false);
+  assert.equal(capped.jobNotice, false, 'dismissed cap notice should stay dismissed');
+}
+
 function testAssetManifestCoverage() {
   assert.equal(world.assets.filter(function (asset) { return asset.requiredOnStart; }).length, 4);
   assert.equal(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length, 2);
@@ -115,6 +215,8 @@ function testAssetManifestCoverage() {
 }
 
 testAssetManifestCoverage();
+testFirstJobPromotion();
+testFirstJobCombatPassives();
 testStatPointAllocation();
 testNameRules();
 testOfflineTimeCap();
@@ -122,4 +224,4 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (7 suites).');
+console.log('RO H5 core tests passed (9 suites).');
