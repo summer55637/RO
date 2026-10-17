@@ -312,6 +312,38 @@
           return fail('角色槽 ' + (index + 1) + ' 的 ' + field + ' 資料無效；本機存檔沒有變更。');
         }
       }
+      if (source.equipment) {
+        for (const slotName of ['weapon', 'armor', 'shoes', 'accessory']) {
+          const equipped = source.equipment[slotName];
+          if (equipped == null) continue;
+          if (!isRecord(equipped) || typeof equipped.itemId !== 'string' || !equipped.itemId) {
+            return fail('角色槽 ' + (index + 1) + ' 的已裝備物品資料無效；本機存檔沒有變更。');
+          }
+          if (equipped.cards != null &&
+              (!Array.isArray(equipped.cards) || equipped.cards.some(function (id) { return typeof id !== 'string'; }))) {
+            return fail('角色槽 ' + (index + 1) + ' 的已裝備卡片資料無效；本機存檔沒有變更。');
+          }
+          if (equipped.refineLevel != null &&
+              (!Number.isFinite(Number(equipped.refineLevel)) || Number(equipped.refineLevel) < 0)) {
+            return fail('角色槽 ' + (index + 1) + ' 的裝備精煉資料無效；本機存檔沒有變更。');
+          }
+        }
+      }
+      if (source.stats) {
+        for (const statKey of STAT_KEYS) {
+          if (source.stats[statKey] != null &&
+              (!Number.isFinite(Number(source.stats[statKey])) || Number(source.stats[statKey]) < 1)) {
+            return fail('角色槽 ' + (index + 1) + ' 的能力值資料無效；本機存檔沒有變更。');
+          }
+        }
+      }
+      if (source.personalItems) {
+        for (const itemName of Object.keys(source.personalItems)) {
+          if (!Number.isFinite(Number(source.personalItems[itemName])) || Number(source.personalItems[itemName]) < 0) {
+            return fail('角色槽 ' + (index + 1) + ' 的個人物品數量無效；本機存檔沒有變更。');
+          }
+        }
+      }
       if (source.logs != null && !Array.isArray(source.logs)) {
         return fail('角色槽 ' + (index + 1) + ' 的戰鬥紀錄格式無效；本機存檔沒有變更。');
       }
