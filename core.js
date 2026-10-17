@@ -389,7 +389,7 @@
     if (activeSkill && character.battle.skillCooldown <= 0) {
       const spCost = Math.max(0, (Number(activeEffect.spCostBase) || 0) + (Number(activeEffect.spCostPerLevel) || 0) * activeSkillLevel);
       const discount = skillBonuses.skillCostDiscount;
-      const zenyCost = Math.max(0, Math.ceil(((Number(activeEffect.zenyCostBase) || 0) + (Number(activeEffect.zenyCostPerLevel) || 0) * activeSkillLevel) * (1 - discount));
+      const zenyCost = Math.max(0, Math.ceil(((Number(activeEffect.zenyCostBase) || 0) + (Number(activeEffect.zenyCostPerLevel) || 0) * activeSkillLevel) * (1 - discount)));
       const enoughSp = (Number(character.sp) || 0) >= spCost;
       const enoughZeny = (Number(account.gold) || 0) >= zenyCost;
       const shouldHeal = activeEffect.mode === 'heal' && character.hp < character.maxHp && character.hp / Math.max(1, character.maxHp) <= (Number(activeEffect.triggerHpRatio) || 0.7);
