@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE_NAME = 'ro-h5-shell-v1';
-const SHELL_FILES = ['./', './index.html', './style.css', './core.js', './app.js'];
+const CACHE_NAME = 'ro-h5-shell-v2';
+const SHELL_FILES = ['./', './index.html', './style.css', './world-data.js', './core.js', './app.js'];
 
 self.addEventListener('install', function (event) {
   event.waitUntil(caches.open(CACHE_NAME).then(function (cache) { return cache.addAll(SHELL_FILES); }).then(function () { return self.skipWaiting(); }));

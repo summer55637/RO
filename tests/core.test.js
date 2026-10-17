@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const world = require('../world-data.js');
 const core = require('../core.js');
 
 function testNameRules() {
@@ -47,8 +48,43 @@ function testPause() {
   assert.equal(account.gold, 0);
 }
 
+
+function testMapAndMonsterProgression() {
+  const character = core.makeCharacter('Mapper', 'male', 'novice');
+  assert.equal(core.getMap('training').id, 'novice_ground');
+  assert.equal(core.startMap(character, 'prt_fild01', function () { return 0; }), false);
+  assert.equal(core.startMap(character, 'novice_ground', function () { return 0; }), true);
+  assert.equal(character.battle.currentMonsterId, 'poring');
+
+  const account = core.emptyAccount();
+  const report = core.settleOffline(character, account, 12, function () { return 0; });
+  assert.ok(report.kills >= 1);
+  assert.ok(character.baseLevel >= 2);
+  assert.equal(core.startMap(character, 'prt_fild01', function () { return 0; }), true);
+  assert.equal(character.battle.currentMonsterId, 'thief_bug');
+  assert.equal(character.battle.monsterMaxHp, core.getMonster('thief_bug').maxHp);
+}
+
+
+function testAssetManifestCoverage() {
+  assert.equal(world.assets.filter(function (asset) { return asset.requiredOnStart; }).length, 4);
+  assert.equal(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length, 2);
+  const assetIds = new Set(world.assets.map(function (asset) { return asset.id; }));
+  world.maps.forEach(function (map) {
+    assert.ok(assetIds.has(map.backgroundAssetId), 'missing map background asset: ' + map.id);
+    map.monsters.forEach(function (entry) {
+      const monster = world.monsters[entry.id];
+      assert.ok(monster, 'missing monster data: ' + entry.id);
+      assert.ok(assetIds.has(monster.assetId), 'missing monster image asset: ' + entry.id);
+    });
+  });
+}
+
+testAssetManifestCoverage();
 testNameRules();
 testOfflineTimeCap();
 testBattleAndRewards();
 testPause();
-console.log('RO H5 core tests passed (4 suites).');
+testMapAndMonsterProgression();
+
+console.log('RO H5 core tests passed (6 suites).');

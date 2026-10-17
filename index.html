@@ -7,6 +7,7 @@
   <meta name="description" content="純單機 RO 風格 H5 放置 RPG 原型。">
   <title>RO 放置冒險｜H5 單機 RPG</title>
   <link rel="stylesheet" href="./style.css">
+  <script src="./world-data.js" defer></script>
   <script src="./core.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
@@ -24,9 +25,11 @@
           <h1>準備好踏上冒險了嗎？</h1>
           <p class="lead">先準備必要素材。驗證完成後，素材會保存於此瀏覽器，之後可離線遊玩已載入的內容。</p>
           <div class="resource-box">
-            <div class="resource-heading"><strong>必要素材</strong><span>約 162 KiB</span></div>
+            <div class="resource-heading"><strong>必要素材</strong><span>約 167 KiB</span></div>
             <div class="resource-row"><span class="resource-icon">▧</span><span class="resource-copy"><strong>新手原野背景</strong><small>field.jpg · 164,403 bytes</small></span><span id="asset-status-field" class="resource-state">待準備</span></div>
             <div class="resource-row"><span class="resource-icon">✦</span><span class="resource-copy"><strong>波利圖像</strong><small>1002.png · 708 bytes</small></span><span id="asset-status-poring" class="resource-state">待準備</span></div>
+            <div class="resource-row"><span class="resource-icon">🐇</span><span class="resource-copy"><strong>瘋兔圖像</strong><small>1001.png · 4,929 bytes</small></span><span id="asset-status-lunatic" class="resource-state">待準備</span></div>
+            <div class="resource-row"><span class="resource-icon">✤</span><span class="resource-copy"><strong>綠棉蟲圖像</strong><small>1003.png · 330 bytes</small></span><span id="asset-status-fabre" class="resource-state">待準備</span></div>
             <div id="install-progress" class="progress-track"><span id="install-progress-fill"></span></div>
           </div>
           <div class="notice"><strong>注意</strong><span>按下按鈕後才開始下載。角色與共用倉庫只存於這個瀏覽器，不會上傳伺服器。</span></div>
@@ -58,7 +61,7 @@
       <section id="screen-camp" class="screen">
         <div class="page-heading"><div><p class="eyebrow">安全區域</p><h1>新手營地</h1></div><button id="btn-camp-back" class="button button-quiet">角色選擇</button></div>
         <div class="camp-banner"><div id="camp-avatar" class="avatar-frame avatar-camp"></div><div class="camp-profile"><strong id="camp-name">初心者</strong><span id="camp-job">初心者 Lv. 1</span><p>在這裡檢查狀態，準備好後選擇練功地圖。</p></div><div class="camp-level"><small>Base Lv.</small><strong id="camp-level">1</strong></div></div>
-        <div class="panel"><div class="panel-heading"><div><p class="eyebrow">第一張地圖</p><h2>選擇練功地點</h2></div><span class="status-pill status-safe">安全營地</span></div><button id="btn-enter-training" class="map-option"><img id="camp-map-thumb" alt="新手原野背景"><span class="map-copy"><strong>新手訓練場</strong><small>推薦等級：Base Lv. 1–5</small><span>怪物：波利 · 自動戰鬥與掉落測試</span></span><span class="map-arrow">進入 ›</span></button><p class="footnote">進入地圖後會開始自動戰鬥。返回營地會保留已取得獎勵，並重置未完成的怪物戰鬥。</p></div>
+        <div class="panel"><div class="panel-heading"><div><p class="eyebrow">第一張地圖</p><h2>選擇練功地點</h2></div><span class="status-pill status-safe">安全營地</span></div><div id="map-list" class="map-list"></div><p id="map-load-message" class="inline-message" aria-live="polite">其他地圖的素材會在你首次進入該地圖時下載並驗證。</p><p class="footnote">進入地圖後會開始自動戰鬥。返回營地會保留已取得獎勵，並重置未完成的怪物戰鬥。</p></div>
         <div class="panel compact-panel"><div class="panel-heading"><div><p class="eyebrow">角色狀態</p><h2>冒險者摘要</h2></div></div><div id="camp-stats" class="stat-grid"></div></div>
       </section>
 
