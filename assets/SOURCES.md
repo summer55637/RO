@@ -376,3 +376,11 @@
 - action 24 共 5 格、每格 160ms；每格僅含一個 direction 0 圖層，所有 sprite index 均可在該 SPR 找到，沒有旋轉／縮放變換。輸出 `assets/poring_hurt.svg`：28,191 bytes，Git blob SHA-1 `34ae789ab040f4e4b28bc5cedcdaf058fb2459ff`。
 - 素材為非必要按需載入。非致死命中才播放受擊片段；擊倒仍使用原有擊倒提示，動畫載入失敗不阻擋玩家結算。測試固定來源與輸出 hash，避免日後誤將其它 Mob 的動作掛到波利。
 - 此次只增加視覺及測試，未改角色或帳號存檔資料、戰鬥數值、掉落表、倉庫或 Zeny。
+
+
+## MVP 3.2 波利／狼移動動畫來源與完整性（2026-10-18）
+
+- **波利 Mob 1002：** 固定來源 [adsonpleal/ragassets@4de4fa747431979d35c747d7edd549a872efd9e1](https://github.com/adsonpleal/ragassets/tree/4de4fa747431979d35c747d7edd549a872efd9e1/gateway/internal/render/engine/testdata/fixtures/data/sprite/몬스터)。配對 poring.act（146,172 bytes，Git blob SHA-1 26717393629e410910ff080d204e930d945328cd）與 poring.spr（42,859 bytes，406b3e91bca7137e8f7a8abcd46468f3fb639ad7）。Action 8 為 10 格、每格 40ms；每格單一 direction 0 圖層、SPR 索引有效，沒有旋轉／縮放。
+- **狼 Mob 1013：** 固定來源 [MyGodIsHe/pyro-tools@1a28450df59bc69e56e70e431f9b61351bafc8f6](https://github.com/MyGodIsHe/pyro-tools/tree/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data)。配對 wolf.act（36,564 bytes，Git blob SHA-1 93c05e86366a7d9cfab19f59d1ff8f60dd1b617d）與 wolf.spr（104,662 bytes，61b60050dce8094bbebf04d86cc87ef1e8d61706）。Action 8 為 8 格、每格 80ms；每格單一 direction 0 圖層、SPR 索引有效，沒有旋轉／縮放。
+- 固定輸出 assets/poring_walk.svg：50,257 bytes、Git blob SHA-1 4d84a80fa54aed07db0eb4ceb8ffb1592adad1c9；assets/wolf_walk.svg：140,374 bytes、Git blob SHA-1 0180f648a1d44961d2561a1d90006b1e6e45be03。由 tools/render_monster_act_spr.js --check 檢查能否依固定輸入逐位元重現。
+- 兩者皆為非必要、按需載入素材，於擊倒後短暫顯示核心所選下一隻怪物的移動，再返回該物種既有待機圖。失敗時保留既有同物種備援；不修改戰鬥結果或任何玩家存檔／進度。
