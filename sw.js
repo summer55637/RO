@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'ro-h5-shell-v4';
+const CACHE_NAME = 'ro-h5-shell-v5';
 const SHELL_FILES = ['./', './index.html', './style.css', './world-data.js', './core.js', './app.js'];
 
 self.addEventListener('install', function (event) {
