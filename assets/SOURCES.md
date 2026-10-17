@@ -1,5 +1,10 @@
 # 素材來源與完整性
 
+## MVP 1.1 精煉規則資料結構參考
+
+- [rAthena `db/refine.yml`](https://github.com/rathena/rathena/blob/master/db/refine.yml) 提供精煉分組、精煉等級、加成、Zeny 價格、材料、成功率、破壞率與失敗降級等欄位，可用來確認精煉系統通常需要哪些資料項目。
+- 本專案 MVP 1.1 不直接複製該資料庫；採自訂的 +0 至 +5 保證成功、不破壞裝備、每目標等級 100 Zeny 的簡化原型規則，避免把特定 rAthena 伺服器的規則誤稱為台灣官方 PC RO 現行平衡。
+
 ## MVP 1.0 道具資料與欄位參考
 
 - 欄位概念參考 [rAthena 的 `db/item_db.yml`](https://github.com/rathena/rathena/blob/master/db/item_db.yml) 及 [道具資料格式說明](https://github.com/rathena/rathena/blob/master/doc/item_db.txt)，包括道具類型、攻擊／防禦、裝備位置、卡槽和職業需求欄位。這些是社群伺服器的資料結構參考，不是台灣官方現行道具平衡的權威來源。

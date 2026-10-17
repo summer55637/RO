@@ -6,6 +6,7 @@
   'use strict';
 
   const MAX_OFFLINE_SECONDS = 24 * 60 * 60;
+  const MAX_EQUIPMENT_REFINE_LEVEL = 5;
   const SLOT_COUNT = 3;
   const JOB_LEVEL_CAP = 10;
   const FIRST_JOB_LEVEL_CAP = 50;
@@ -238,6 +239,7 @@
       } else {
         if (!Array.isArray(equipped.cards)) equipped.cards = [];
         if (!equipped.instanceId) equipped.instanceId = 'equipment-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+        equipped.refineLevel = Math.min(MAX_EQUIPMENT_REFINE_LEVEL, Math.max(0, Math.floor(Number(equipped.refineLevel) || 0)));
       }
     });
   }
@@ -247,6 +249,7 @@
       instanceId: 'equipment-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10),
       itemId: itemId,
       cards: [],
+      refineLevel: 0,
       acquiredAt: Date.now()
     };
   }
@@ -257,6 +260,31 @@
     ensureAccountEquipmentShape(account);
     account.equipmentInventory.push(createEquipmentInstance(itemId));
     return true;
+  }
+
+  function getRefineCost(targetLevel) {
+    const level = Math.floor(Number(targetLevel) || 0);
+    if (level < 1 || level > MAX_EQUIPMENT_REFINE_LEVEL) return 0;
+    return level * 100;
+  }
+
+  function refineItem(character, account, slot) {
+    if (!character || !account) return { ok: false, reason: '角色或帳號資料尚未載入。' };
+    if (!['weapon', 'armor', 'shoes', 'accessory'].includes(slot)) return { ok: false, reason: '未知的裝備欄位。' };
+    ensureEquipmentShape(character);
+    const instance = character.equipment[slot];
+    if (!instance) return { ok: false, reason: '請先裝備要精煉的物品。' };
+    const item = getItemDefinition(instance.itemId);
+    if (!item || item.type !== 'equipment') return { ok: false, reason: '裝備資料無效，沒有變更存檔。' };
+    const currentLevel = Math.max(0, Math.floor(Number(instance.refineLevel) || 0));
+    if (currentLevel >= MAX_EQUIPMENT_REFINE_LEVEL) return { ok: false, reason: '這件裝備已達安全精煉上限 +' + MAX_EQUIPMENT_REFINE_LEVEL + '。' };
+    const targetLevel = currentLevel + 1;
+    const cost = getRefineCost(targetLevel);
+    const gold = Math.max(0, Number(account.gold) || 0);
+    if (gold < cost) return { ok: false, reason: 'Zeny 不足；精煉至 +' + targetLevel + ' 需要 ' + cost + ' Zeny。' };
+    account.gold = gold - cost;
+    instance.refineLevel = targetLevel;
+    return { ok: true, itemName: item.name, slot: slot, refineLevel: targetLevel, cost: cost, maxRefineLevel: MAX_EQUIPMENT_REFINE_LEVEL };
   }
 
   function getEquipmentBonuses(character) {
@@ -273,6 +301,10 @@
       if (!instance) return;
       const item = getItemDefinition(instance.itemId);
       if (item && item.type === 'equipment') addEffects(item);
+      const refineLevel = Math.min(MAX_EQUIPMENT_REFINE_LEVEL, Math.max(0, Math.floor(Number(instance.refineLevel) || 0)));
+      if (slot === 'weapon') bonuses.attackBonus += refineLevel * 2;
+      else if (slot === 'armor' || slot === 'shoes') bonuses.defenseBonus += refineLevel;
+      else if (slot === 'accessory') bonuses.criticalBonus += refineLevel * 0.005;
       (instance.cards || []).forEach(function (cardId) {
         const card = getItemDefinition(cardId);
         if (card && card.type === 'card') addEffects(card);
@@ -681,6 +713,7 @@
 
   return {
     MAX_OFFLINE_SECONDS: MAX_OFFLINE_SECONDS,
+    MAX_EQUIPMENT_REFINE_LEVEL: MAX_EQUIPMENT_REFINE_LEVEL,
     SLOT_COUNT: SLOT_COUNT,
     JOB_LEVEL_CAP: JOB_LEVEL_CAP,
     FIRST_JOB_LEVEL_CAP: FIRST_JOB_LEVEL_CAP,
@@ -692,6 +725,8 @@
     getItemCatalog: getItemCatalog,
     ensureEquipmentShape: ensureEquipmentShape,
     getEquipmentBonuses: getEquipmentBonuses,
+    getRefineCost: getRefineCost,
+    refineItem: refineItem,
     equipItem: equipItem,
     unequipItem: unequipItem,
     socketCard: socketCard,

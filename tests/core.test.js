@@ -11,7 +11,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v15/);
+  assert.match(serviceWorker, /ro-h5-shell-v16/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -162,6 +162,63 @@ function testEquipmentDropAndSaveCompatibility() {
   assert.deepEqual(legacyAccount.equipmentInventory[0].cards, ['fabre_card']);
 }
 
+function testEquipmentRefinementProgression() {
+  const character = core.makeCharacter('RefineTester', 'male', 'novice');
+  const account = core.emptyAccount(); account.gold = 10000;
+  account.equipmentInventory.push({ instanceId: 'refine-dagger', itemId: 'novice_dagger', cards: ['fabre_card'], refineLevel: 0 });
+  assert.equal(core.equipItem(character, account, 'refine-dagger').ok, true);
+  assert.equal(core.MAX_EQUIPMENT_REFINE_LEVEL, 5);
+  assert.equal(core.getRefineCost(1), 100);
+  assert.equal(core.getRefineCost(5), 500);
+  assert.equal(core.getRefineCost(6), 0);
+  assert.equal(core.getEquipmentBonuses(character).attackBonus, 4, 'base weapon and card bonuses apply before refinement');
+  const first = core.refineItem(character, account, 'weapon');
+  assert.deepEqual({ ok: first.ok, level: first.refineLevel, cost: first.cost }, { ok: true, level: 1, cost: 100 });
+  assert.equal(account.gold, 9900);
+  assert.equal(core.getEquipmentBonuses(character).attackBonus, 6, 'weapon refinement adds attack');
+  for (let target = 2; target <= 5; target += 1) {
+    const result = core.refineItem(character, account, 'weapon');
+    assert.equal(result.ok, true);
+    assert.equal(result.refineLevel, target);
+  }
+  const goldAtCap = account.gold;
+  const capped = core.refineItem(character, account, 'weapon');
+  assert.equal(capped.ok, false);
+  assert.equal(account.gold, goldAtCap, 'attempt beyond +5 cannot spend Zeny');
+  assert.equal(character.equipment.weapon.refineLevel, 5);
+  assert.deepEqual(character.equipment.weapon.cards, ['fabre_card'], 'refinement must preserve socketed cards');
+  assert.equal(core.getEquipmentBonuses(character).attackBonus, 14);
+
+  const poor = core.makeCharacter('PoorRefineTester', 'female', 'novice');
+  poor.equipment.weapon = { instanceId: 'poor-dagger', itemId: 'novice_dagger', cards: ['fabre_card'] };
+  const broke = core.refineItem(poor, { gold: 0 }, 'weapon');
+  assert.equal(broke.ok, false);
+  assert.equal(poor.equipment.weapon.refineLevel, 0);
+  assert.equal(core.getEquipmentBonuses(poor).attackBonus, 4, 'legacy equipped gear without refineLevel remains unchanged');
+}
+
+function testEquipmentRefinementCombatAndUi() {
+  const character = core.makeCharacter('RefineCombatTester', 'male', 'novice');
+  const baseline = core.makeCharacter('RefineBaseline', 'male', 'novice');
+  [character, baseline].forEach(function (hero) {
+    hero.battle.map = 'novice_ground'; hero.battle.paused = false;
+    hero.battle.currentMonsterId = 'poring'; hero.battle.monsterHp = 1000; hero.battle.monsterMaxHp = 1000;
+  });
+  const account = core.emptyAccount(); account.gold = 1000;
+  account.equipmentInventory.push({ instanceId: 'refine-combat-dagger', itemId: 'novice_dagger', cards: [], refineLevel: 0 });
+  assert.equal(core.equipItem(character, account, 'refine-combat-dagger').ok, true);
+  assert.equal(core.refineItem(character, account, 'weapon').ok, true);
+  const plain = core.stepCombat(baseline, core.emptyAccount(), function () { return 0.99; });
+  const refined = core.stepCombat(character, account, function () { return 0.99; });
+  assert.equal(refined.playerDamage, plain.playerDamage + 5, 'weapon base attack plus +1 refinement should affect combat');
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(appSource, /function handleRefineEquipment\(slot\)/);
+  assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
+  assert.match(appSource, /getRefineCost\(targetLevel\)/);
+  assert.match(appSource, /安全精煉上限/);
+  assert.match(html, /MVP 1\.1/);
+}
 function testEquipmentUiWiring() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -172,7 +229,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.0/);
+  assert.match(html, /MVP 1\.1/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -658,7 +715,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.0/);
+  assert.match(html, /MVP 1\.1/);
 }
 
 testAutomaticUpdateStrategy();
@@ -686,5 +743,7 @@ testEquipmentCardMechanics();
 testEquipmentCombatAndLegacyCompatibility();
 testEquipmentDropAndSaveCompatibility();
 testEquipmentUiWiring();
+testEquipmentRefinementProgression();
+testEquipmentRefinementCombatAndUi();
 
-console.log('RO H5 core tests passed (25 suites).');
+console.log('RO H5 core tests passed (27 suites).');

@@ -1393,6 +1393,31 @@
     showToast(result.swappedName ? '已裝備 ' + result.itemName + '，原裝備已放回共用背包' : '已裝備 ' + result.itemName);
   }
 
+  function handleRefineEquipment(slot) {
+    if (!character || !account) return;
+    window.ROCore.ensureEquipmentShape(character);
+    const instance = character.equipment[slot];
+    const item = instance && window.ROCore.getItemDefinition(instance.itemId);
+    if (!instance || !item) { showToast('請先裝備有效的物品。'); return; }
+    const currentLevel = Math.max(0, Number(instance.refineLevel) || 0);
+    if (currentLevel >= window.ROCore.MAX_EQUIPMENT_REFINE_LEVEL) {
+      showToast('已達安全精煉上限 +' + window.ROCore.MAX_EQUIPMENT_REFINE_LEVEL + '。');
+      return;
+    }
+    const targetLevel = currentLevel + 1;
+    const cost = window.ROCore.getRefineCost(targetLevel);
+    if ((Number(account.gold) || 0) < cost) {
+      showToast('Zeny 不足，精煉至 +' + targetLevel + ' 需要 ' + formatNumber(cost) + ' Zeny。');
+      return;
+    }
+    if (!window.confirm('將「' + item.name + '」安全精煉至 +' + targetLevel + '？\n費用：' + formatNumber(cost) + ' Zeny。\n本原型保證成功，不會破壞裝備，已鑲嵌的卡片也會保留。')) return;
+    const result = window.ROCore.refineItem(character, account, slot);
+    if (!result.ok) { showToast(result.reason || '精煉失敗'); return; }
+    persistCurrent();
+    renderGame();
+    showToast('精煉成功：' + result.itemName + ' +' + result.refineLevel + '（-' + formatNumber(result.cost) + ' Zeny）');
+  }
+
   function handleUnequipSlot(slot) {
     if (!character || !account) return;
     const result = window.ROCore.unequipItem(character, account, slot);
@@ -1437,13 +1462,14 @@
       const title = document.createElement('strong');
       title.textContent = slotNames[slot];
       const name = document.createElement('span');
-      name.textContent = item ? item.name : '尚未裝備';
+      const currentRefineLevel = instance ? Math.max(0, Number(instance.refineLevel) || 0) : 0;
+      name.textContent = item ? item.name + ' +' + currentRefineLevel : '尚未裝備';
       copy.append(title, name);
       head.appendChild(copy);
       if (instance && item) {
         const stats = document.createElement('small');
         stats.className = 'equipment-stats';
-        stats.textContent = item.description || '裝備效果依目前原型資料計算。';
+        stats.textContent = (item.description || '裝備效果依目前原型資料計算。') + ' · 安全精煉 +' + currentRefineLevel + ' / +' + window.ROCore.MAX_EQUIPMENT_REFINE_LEVEL;
         copy.appendChild(stats);
         const cardList = document.createElement('p');
         cardList.className = 'equipment-cards';
@@ -1453,6 +1479,16 @@
         row.append(head, cardList);
         const controls = document.createElement('div');
         controls.className = 'equipment-actions';
+        if (currentRefineLevel < window.ROCore.MAX_EQUIPMENT_REFINE_LEVEL) {
+          const targetLevel = currentRefineLevel + 1;
+          const refineCost = window.ROCore.getRefineCost(targetLevel);
+          const refineButton = makeButton('安全精煉 +' + targetLevel + '（' + formatNumber(refineCost) + ' Z）', 'button button-secondary equipment-action refine-action', function () { handleRefineEquipment(slot); });
+          refineButton.disabled = (Number(account.gold) || 0) < refineCost;
+          refineButton.title = '保證成功、不會破壞裝備或移除卡片';
+          controls.appendChild(refineButton);
+        } else {
+          const cap = document.createElement('small'); cap.className = 'field-help'; cap.textContent = '已達安全精煉上限 +' + window.ROCore.MAX_EQUIPMENT_REFINE_LEVEL; controls.appendChild(cap);
+        }
         if (names.length < slotCount && cardInventory.length) {
           cardInventory.forEach(function (entry) {
             controls.appendChild(makeButton('鑲嵌 ' + entry.item.name + ' ×' + entry.count, 'button button-secondary equipment-action', function () {
@@ -1490,8 +1526,8 @@
         if (!item) return;
         const row = document.createElement('article'); row.className = 'equipment-inventory-item';
         const copy = document.createElement('div'); copy.className = 'equipment-copy';
-        const name = document.createElement('strong'); name.textContent = item.name; copy.appendChild(name);
-        const details = document.createElement('small'); details.textContent = (slotNames[item.slot] || '裝備') + ' · ' + (item.description || '原型裝備'); copy.appendChild(details);
+        const name = document.createElement('strong'); name.textContent = item.name + (Number(instance.refineLevel) > 0 ? ' +' + Number(instance.refineLevel) : ''); copy.appendChild(name);
+        const details = document.createElement('small'); details.textContent = (slotNames[item.slot] || '裝備') + ' · 精煉 +' + Math.max(0, Number(instance.refineLevel) || 0) + ' · ' + (item.description || '原型裝備'); copy.appendChild(details);
         if (instance.cards && instance.cards.length) {
           const cardLine = document.createElement('small'); cardLine.textContent = '已鑲嵌：' + instance.cards.map(function (id) { const card = definition(id); return card ? card.name : id; }).join('、'); copy.appendChild(cardLine);
         }
