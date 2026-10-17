@@ -1324,6 +1324,7 @@
         if (monster && monster.animationAssetId) optionalAnimationIds.add(monster.animationAssetId);
         if (monster && monster.attackAnimationAssetId) optionalAnimationIds.add(monster.attackAnimationAssetId);
         if (monster && monster.hurtAnimationAssetId) optionalAnimationIds.add(monster.hurtAnimationAssetId);
+        if (monster && monster.walkAnimationAssetId) optionalAnimationIds.add(monster.walkAnimationAssetId);
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       try { await ensureAssets(neededAssets, false); } catch (_) { /* Keep existing local image fallbacks usable. */ }
@@ -1526,6 +1527,7 @@
         if (monster && monster.animationAssetId) optionalAnimationIds.add(monster.animationAssetId);
         if (monster && monster.attackAnimationAssetId) optionalAnimationIds.add(monster.attackAnimationAssetId);
         if (monster && monster.hurtAnimationAssetId) optionalAnimationIds.add(monster.hurtAnimationAssetId);
+        if (monster && monster.walkAnimationAssetId) optionalAnimationIds.add(monster.walkAnimationAssetId);
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       await ensureAssets(neededAssets, false);
@@ -1731,14 +1733,19 @@
     }
     if (result.recoveryGained) appendCharacterLog('快速回復恢復 ' + result.recoveryGained + ' HP。');
     if (result.playerDown) appendCharacterLog('角色倒地後返回戰線，原型版不扣除經驗。', 'warning');
-    if (result.killed) showMonsterDefeatEffect(result.monsterName);
+    if (result.killed) {
+      showMonsterDefeatEffect(result.monsterName);
+      const nextMonster = window.ROCore.getMonster(character.battle.currentMonsterId);
+      if (nextMonster) playMonsterActionAnimation(nextMonster, 'walk');
+    }
   }
 
 
   function playMonsterActionAnimation(monster, action) {
     const actionConfig = {
       attack: { asset: 'attackAnimationAssetId', frames: 'attackAnimationFrameCount', interval: 'attackAnimationFrameDurationMs' },
-      hurt: { asset: 'hurtAnimationAssetId', frames: 'hurtAnimationFrameCount', interval: 'hurtAnimationFrameDurationMs' }
+      hurt: { asset: 'hurtAnimationAssetId', frames: 'hurtAnimationFrameCount', interval: 'hurtAnimationFrameDurationMs' },
+      walk: { asset: 'walkAnimationAssetId', frames: 'walkAnimationFrameCount', interval: 'walkAnimationFrameDurationMs' }
     }[action];
     if (!monster || !actionConfig || !monster[actionConfig.asset] ||
         !assetUrls[monster[actionConfig.asset]] || !character || !character.battle || !character.battle.map ||
