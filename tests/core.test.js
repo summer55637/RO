@@ -62,7 +62,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v23/);
+  assert.match(serviceWorker, /ro-h5-shell-v24/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -279,7 +279,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.6/);
+  assert.match(html, /MVP 1\.7/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -425,7 +425,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.6/);
+  assert.match(html, /MVP 1\.7/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -444,6 +444,18 @@ function testPause() {
 function testMapAndMonsterProgression() {
   const character = core.makeCharacter('Mapper', 'male', 'novice');
   assert.equal(core.getMap('training').id, 'novice_ground');
+  assert.deepEqual(core.getMapMonsterEncounterRates('missing-map'), [], 'unknown maps should not have encounter rates');
+  world.maps.forEach(function (map) {
+    const rates = core.getMapMonsterEncounterRates(map.id);
+    assert.equal(rates.length, map.monsters.length, map.id + ' should expose every configured encounter');
+    const totalProbability = rates.reduce(function (sum, entry) { return sum + entry.probability; }, 0);
+    assert.ok(Math.abs(totalProbability - 1) < 1e-9, map.id + ' encounter chances should sum to 100%');
+    rates.forEach(function (entry) {
+      assert.ok(entry.weight > 0 && Number.isFinite(entry.probability), map.id + ' rates need positive weights');
+      assert.ok(world.monsters[entry.id], map.id + ' references a known monster');
+    });
+  });
+  assert.equal(core.getMapMonsterEncounterRates('novice_ground').find(function (entry) { return entry.id === 'poring'; }).probability, 0.4);
   assert.equal(core.startMap(character, 'prt_fild01', function () { return 0; }), false);
   assert.equal(core.startMap(character, 'novice_ground', function () { return 0; }), true);
   assert.equal(character.battle.currentMonsterId, 'poring');
@@ -664,6 +676,9 @@ function testExpandedWorldContent() {
   assert.ok(world.monsters.wolf && world.monsters.hornet && world.monsters.goblin);
   assert.ok(world.monsters.orc && world.monsters.willow && world.monsters.spore);
   assert.ok(world.monsters.poporing && world.monsters.pecopeco && world.monsters.picky && world.monsters.condor);
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(appSource, /getMapMonsterEncounterRates\(map\.id\)/, 'map choices should render calculated encounter chances');
+  assert.match(appSource, /預估遇敵率（原型設定）/, 'prototype rates must be labeled clearly');
   assert.equal(core.getMap('morroc_desert').backgroundAssetId, 'desert');
   assert.equal(core.getMap('prt_maze01').backgroundAssetId, 'cave');
 
@@ -915,7 +930,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.6/);
+  assert.match(html, /MVP 1\.7/);
 }
 
 
@@ -962,8 +977,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 1\.6/);
-  assert.match(sw, /ro-h5-shell-v23/);
+  assert.match(html, /MVP 1\.7/);
+  assert.match(sw, /ro-h5-shell-v24/);
 }
 
 testMonsterArtworkIdentityMapping();
