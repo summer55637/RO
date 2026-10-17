@@ -86,7 +86,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v39/);
+  assert.match(serviceWorker, /ro-h5-shell-v40/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -180,8 +180,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 3\.0/);
-  assert.match(sw, /ro-h5-shell-v39/);
+  assert.match(html, /MVP 3\.1/);
+  assert.match(sw, /ro-h5-shell-v40/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -234,8 +234,8 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 3\.0/);
-  assert.match(sw, /ro-h5-shell-v39/);
+  assert.match(html, /MVP 3\.1/);
+  assert.match(sw, /ro-h5-shell-v40/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -252,8 +252,8 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
-  assert.match(html, /MVP 3\.0/);
-  assert.match(sw, /ro-h5-shell-v39/);
+  assert.match(html, /MVP 3\.1/);
+  assert.match(sw, /ro-h5-shell-v40/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -427,7 +427,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 3\.0/);
+  assert.match(html, /MVP 3\.1/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -573,7 +573,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 3\.0/);
+  assert.match(html, /MVP 3\.1/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -1419,7 +1419,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 3\.0/);
+  assert.match(html, /MVP 3\.1/);
 }
 
 
@@ -1466,8 +1466,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 3\.0/);
-  assert.match(sw, /ro-h5-shell-v39/);
+  assert.match(html, /MVP 3\.1/);
+  assert.match(sw, /ro-h5-shell-v40/);
 }
 
 
@@ -1482,8 +1482,8 @@ function testOfflineSettlementCanDismiss() {
   assert.match(appSource, /\$\('#btn-offline-close'\)\.addEventListener\('click', closeOfflineReport\);/);
   assert.match(appSource, /const pendingReport = character\.pendingReport;[\s\S]*if \(!persistCurrent\(\)\) \{[\s\S]*character\.pendingReport = pendingReport;/);
   assert.match(html, /<form method="dialog"><button id="btn-offline-close" type="submit"/);
-  assert.match(html, /MVP 3\.0/);
-  assert.match(sw, /ro-h5-shell-v39/);
+  assert.match(html, /MVP 3\.1/);
+  assert.match(sw, /ro-h5-shell-v40/);
 }
 
 
@@ -1497,10 +1497,10 @@ function testPortableSaveFormatSafety() {
   account.gold = 4321;
   account.warehouse = { '果凍質塊': 12, '綠色藥草': 3 };
 
-  const envelope = core.createPortableSave(account, '3.0');
+  const envelope = core.createPortableSave(account, '3.1');
   assert.equal(envelope.format, 'ro-h5-save');
   assert.equal(envelope.formatVersion, 1);
-  assert.equal(envelope.gameVersion, '3.0');
+  assert.equal(envelope.gameVersion, '3.1');
   assert.ok(Number.isFinite(Date.parse(envelope.exportedAt)));
   assert.notEqual(envelope.account, account, 'export must create a detached snapshot');
   assert.equal(envelope.account.gold, 4321);
@@ -1626,6 +1626,74 @@ function testStoredAccountReplaceTransactionSafety() {
   assert.equal(storage.getItem('ro-h5-account-v1'), success.serialized, 'invalid imports must not write storage');
 }
 
+function testWriteStoredAccountRollingBackup() {
+  const previousAccount = core.emptyAccount();
+  previousAccount.gold = 2100;
+  previousAccount.slots[0] = core.makeCharacter('SavedHero', 'male', 'novice');
+  const previousRaw = JSON.stringify(previousAccount);
+  const newAccount = core.emptyAccount();
+  newAccount.gold = 3700;
+  newAccount.slots[0] = core.makeCharacter('NewHero', 'female', 'novice');
+  const nextText = JSON.stringify(newAccount);
+
+  const storage = makeFakeStorage(previousRaw);
+  const saved = core.writeStoredAccountWithBackup(storage, 'ro-h5-account-v1', 'ro-h5-account-backup-v1', newAccount, previousRaw);
+  assert.equal(saved.ok, true);
+  assert.equal(saved.backupWritten, true);
+  assert.equal(storage.getItem('ro-h5-account-backup-v1'), previousRaw, 'backup must be the exact prior serialized save');
+  assert.equal(storage.getItem('ro-h5-account-v1'), saved.serialized);
+  assert.equal(saved.serialized, nextText);
+
+  const backupFailure = makeFakeStorage(previousRaw, { throwOnWrite: 1 });
+  const notWritten = core.writeStoredAccountWithBackup(backupFailure, 'ro-h5-account-v1', 'ro-h5-account-backup-v1', newAccount, previousRaw);
+  assert.equal(notWritten.ok, false);
+  assert.equal(notWritten.restored, true);
+  assert.equal(backupFailure.getItem('ro-h5-account-v1'), previousRaw, 'if writing the backup fails, primary save must remain untouched');
+
+  const partialPrimaryFailure = makeFakeStorage(previousRaw, { throwOnWrite: 2, writeThenThrow: true });
+  const rolledBack = core.writeStoredAccountWithBackup(partialPrimaryFailure, 'ro-h5-account-v1', 'ro-h5-account-backup-v1', newAccount, previousRaw);
+  assert.equal(rolledBack.ok, false);
+  assert.equal(rolledBack.restored, true);
+  assert.equal(partialPrimaryFailure.getItem('ro-h5-account-v1'), previousRaw, 'if the primary write partially fails, restore its original bytes');
+
+  const concurrentRaw = JSON.stringify(Object.assign({}, previousAccount, { gold: 8900 }));
+  const concurrentStorage = makeFakeStorage(previousRaw, {
+    afterWrite: function (values, count) {
+      if (count === 1) values.set('ro-h5-account-v1', concurrentRaw);
+    }
+  });
+  const conflict = core.writeStoredAccountWithBackup(concurrentStorage, 'ro-h5-account-v1', 'ro-h5-account-backup-v1', newAccount, previousRaw);
+  assert.equal(conflict.ok, false);
+  assert.equal(conflict.concurrentChange, true);
+  assert.equal(concurrentStorage.getItem('ro-h5-account-v1'), concurrentRaw, 'concurrent newer save must not be overwritten after backup write');
+
+  const staleBaseline = makeFakeStorage(concurrentRaw);
+  const stale = core.writeStoredAccountWithBackup(staleBaseline, 'ro-h5-account-v1', 'ro-h5-account-backup-v1', newAccount, previousRaw);
+  assert.equal(stale.ok, false);
+  assert.equal(stale.concurrentChange, true);
+  assert.equal(staleBaseline.getItem('ro-h5-account-v1'), concurrentRaw);
+}
+
+function testRollingBackupAndRecoveryUi() {
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const coreSource = fs.readFileSync(path.join(__dirname, '..', 'core.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  assert.match(appSource, /const SAVE_BACKUP_KEY = 'ro-h5-account-backup-v1'/);
+  assert.match(appSource, /function isVerifiedLocalSaveRaw\(raw\)/);
+  assert.match(appSource, /ROCore\.writeStoredAccountWithBackup\(/);
+  assert.match(appSource, /function restorePreviousSaveBackup\(\)/);
+  assert.match(appSource, /function updateSaveRecoveryButtons\(\)/);
+  assert.match(appSource, /const latestRaw = localStorage\.getItem\(SAVE_KEY\)/);
+  assert.match(coreSource, /function writeStoredAccountWithBackup\(/);
+  assert.match(coreSource, /latestRaw !== previousRaw/);
+  assert.match(html, /id="btn-restore-save-backup"[^>]*disabled/);
+  assert.match(html, /id="btn-error-restore-save-backup"[^>]*disabled/);
+  assert.match(html, /MVP 3\.1/);
+  assert.match(sw, /ro-h5-shell-v40/);
+  assert.doesNotMatch(appSource, /ro-h5-active-tab-v1|enterSlotsWithLock|screen-lock|screen-lost/);
+}
+
 function testCrossTabSaveConflictProtection() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const coreSource = fs.readFileSync(path.join(__dirname, '..', 'core.js'), 'utf8');
@@ -1645,9 +1713,9 @@ function testCrossTabSaveConflictProtection() {
   assert.match(html, /id="save-conflict-banner"[^>]*class="save-conflict-banner hidden"/);
   assert.match(html, /id="btn-save-conflict-export"/);
   assert.match(html, /id="btn-save-conflict-reload"/);
-  assert.match(html, /MVP 3\.0/);
+  assert.match(html, /MVP 3\.1/);
   assert.match(style, /\.save-conflict-banner/);
-  assert.match(sw, /ro-h5-shell-v39/);
+  assert.match(sw, /ro-h5-shell-v40/);
   assert.doesNotMatch(appSource, /ro-h5-active-tab-v1|enterSlotsWithLock|screen-lock|screen-lost/);
 }
 
@@ -1662,8 +1730,8 @@ function testPortableSaveUiWiring() {
   assert.match(html, /id="import-save-dialog"/);
   assert.match(html, /id="import-save-ack"/);
   assert.match(html, /id="btn-import-save-continue"/);
-  assert.match(html, /MVP 3\.0/);
-  assert.match(sw, /ro-h5-shell-v39/);
+  assert.match(html, /MVP 3\.1/);
+  assert.match(sw, /ro-h5-shell-v40/);
   assert.match(appSource, /function exportSaveFile\(\)/);
   assert.match(appSource, /function handleSaveFileSelection\(event\)/);
   assert.match(appSource, /function continueImportSave\(\)/);
@@ -1680,6 +1748,8 @@ function testPortableSaveUiWiring() {
 testOfflineSettlementCanDismiss();
 testPortableSaveFormatSafety();
 testStoredAccountReplaceTransactionSafety();
+testWriteStoredAccountRollingBackup();
+testRollingBackupAndRecoveryUi();
 testCrossTabSaveConflictProtection();
 testPortableSaveUiWiring();
 
@@ -1728,4 +1798,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (49 suites).');
+console.log('RO H5 core tests passed (51 suites).');
