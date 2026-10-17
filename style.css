@@ -168,3 +168,7 @@
 .bestiary-results{margin:6px 0}
 .bestiary-empty{grid-column:1/-1;padding:14px;border:1px dashed rgba(255,255,255,.12);border-radius:8px;text-align:center}
 @media(max-width:520px){.bestiary-controls{grid-template-columns:1fr 1fr}.bestiary-search-control{grid-column:1/-1}}
+
+
+/* MVP 1.7: communicate map monster encounter weights as clearly labeled prototype rates. */
+.map-copy .map-monsters{margin-top:2px;color:#cbb987;font-size:10px;line-height:1.65;overflow-wrap:anywhere}
