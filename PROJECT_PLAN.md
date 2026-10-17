@@ -1,8 +1,8 @@
 # RO 純單機 H5 放置 RPG — 專案規畫總表
 
-- **文件版本：** V1.24
+- **文件版本：** V1.25
 - **整理日期：** 2026-10-17
-- **目前階段：** MVP 1.8 怪物圖鑑分地圖預估遇敵率
+- **目前階段：** MVP 1.9 已驗證怪物圖鑑縮圖與 Mob ID
 - **實作狀態：** 使用者已於 2026-10-17 授權開始實作
 - **GitHub 倉庫：** `summer55637/RO`（預設分支 `main`）
 - **現況盤點：** 目標倉庫初始僅含本規畫文件；nba9001-sys/ro-idle 是既有原型與素材／資料參考倉庫。
@@ -608,3 +608,12 @@
 - 核心新增 `getMonsterEncounterMaps(monsterId, baseLevel)`，由各地圖有效權重計算機率並回傳地圖解鎖需求；未知怪物 ID 回傳空陣列，不修改地圖權重或戰鬥選敵邏輯。
 - 機率以本遊戲原型權重為依據，顯示至小數一位，不視為台灣官方 PC RO 的實際刷新機率。
 - 不更改存檔 key、角色欄位、經驗、Zeny、倉庫或裝備，也不下載／取代任何二進位素材。Service Worker shell cache 升至 v25；新增機率來源、鎖定狀態及 UI 接線回歸測試。
+
+
+## 39. 已驗證怪物圖鑑縮圖與 Mob ID（MVP 1.9，2026-10-17）
+
+- 已發現怪物的圖鑑卡片顯示其來源 Mob ID，並在該怪物素材已於本機通過 manifest 大小／Git blob SHA-1 驗證後，顯示對應縮圖。
+- 圖鑑不得以未經驗證的網路 URL 即時載圖。若該怪物圖尚未載入／驗證，顯示「未載入」佔位，不得以波利或另一種怪物圖片代替；盜蟲 Mob 1051 維持專屬向量備援，直到正確原始 PNG 可固定驗證。
+- 新增自動稽核，對全體 15 種怪物檢查 Mob ID、專屬 manifest entry、來源路徑、原始大小與 Git blob SHA-1；目前只有盜蟲採明確向量備援。
+- 參考 [RagnarokFileFormats 的 ACT 規格](https://github.com/rdw-archive/RagnarokFileFormats/blob/master/ACT.MD)、[ragassets](https://github.com/adsonpleal/ragassets) 與 [ragx](https://github.com/joaopedrosgs/ragx) 的 SPR／ACT 動畫處理方式。本版沒有宣稱已接入正式怪物逐格動畫，也未直接依賴不保證穩定的公開渲染服務；真正的怪物待機／攻擊／受擊／死亡逐格素材仍待逐隻取得及驗證。
+- 沒有新增或替換任何二進位素材，不更改角色存檔、掉落、戰鬥或地圖進度。Service Worker shell cache 升至 v26。
