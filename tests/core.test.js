@@ -1653,6 +1653,7 @@ function testCrossTabSaveConflictProtection() {
 
 function testPortableSaveUiWiring() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const coreSource = fs.readFileSync(path.join(__dirname, '..', 'core.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(html, /id="btn-export-save"/);
@@ -1669,7 +1670,7 @@ function testPortableSaveUiWiring() {
   assert.match(appSource, /function commitPendingImport\(\)/);
   assert.match(appSource, /pendingImportStage === 1/);
   assert.match(appSource, /pendingImportStage !== 2/);
-  assert.match(appSource, /readback verification|回讀比對失敗/);
+  assert.match(coreSource, /回讀比對失敗/);
   const selectionHandler = appSource.split('async function handleSaveFileSelection(event)')[1].split('function cancelImportSave()')[0];
   assert.doesNotMatch(selectionHandler, /localStorage\.setItem/, 'choosing/parsing a file must not write over the local save');
   assert.match(appSource, /localStorage\.setItem\(SAVE_KEY, serialized\)/, 'storage is written only in the final commit path');
