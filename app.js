@@ -5,7 +5,7 @@
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
   const SAVE_KEY = 'ro-h5-account-v1';
   const SAVE_BACKUP_KEY = 'ro-h5-account-backup-v1';
-  const GAME_VERSION = '3.0';
+  const GAME_VERSION = '3.1';
   const MAX_SAVE_FILE_BYTES = 5 * 1024 * 1024;
   const DB_NAME = 'ro-h5-assets-v1';
   const DB_STORE = 'assets';
@@ -689,36 +689,24 @@
       return false;
     }
     try {
-      const currentRaw = localStorage.getItem(SAVE_KEY);
-      if (lastPersistedRaw !== undefined && currentRaw !== lastPersistedRaw) {
-        markSaveConflict(currentRaw);
-        return false;
-      }
       account.updatedAt = Date.now();
-      const serialized = JSON.stringify(account);
-
-      // Save the exact prior known-good value first. If this backup fails, leave the primary untouched.
-      if (currentRaw !== null && currentRaw !== serialized && isVerifiedLocalSaveRaw(currentRaw)) {
-        localStorage.setItem(SAVE_BACKUP_KEY, currentRaw);
-        if (localStorage.getItem(SAVE_BACKUP_KEY) !== currentRaw) {
-          throw new Error('上一份安全備份寫入驗證失敗；主存檔尚未改寫。');
+      const result = window.ROCore.writeStoredAccountWithBackup(
+        localStorage,
+        SAVE_KEY,
+        SAVE_BACKUP_KEY,
+        account,
+        lastPersistedRaw
+      );
+      if (!result.ok) {
+        if (result.concurrentChange) {
+          let latestRaw = null;
+          try { latestRaw = localStorage.getItem(SAVE_KEY); } catch (_) { /* Keep the conflict safe even when storage is temporarily unavailable. */ }
+          markSaveConflict(latestRaw);
+          return false;
         }
-        updateSaveRecoveryButtons();
+        throw new Error(result.reason || '本機存檔交易未完成。');
       }
-
-      // Narrow the race window by rechecking the primary after writing the backup.
-      const latestRaw = localStorage.getItem(SAVE_KEY);
-      if (latestRaw !== currentRaw) {
-        markSaveConflict(latestRaw);
-        return false;
-      }
-      localStorage.setItem(SAVE_KEY, serialized);
-      const savedRaw = localStorage.getItem(SAVE_KEY);
-      if (savedRaw !== serialized) {
-        markSaveConflict(savedRaw);
-        return false;
-      }
-      lastPersistedRaw = serialized;
+      lastPersistedRaw = result.serialized;
       updateSaveRecoveryButtons();
       $('#save-status').textContent = '已儲存 · ' + new Date().toLocaleTimeString();
       return true;
