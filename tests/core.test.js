@@ -347,10 +347,10 @@ function testSoundEffectManifest() {
 function testSoundEffectWiring() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  assert.match(appSource, /playSoundEffect\(result\.critical \? 'critical' : 'hit'\)/);
+  assert.match(appSource, /function playSoundEffect\(type\)/);
   assert.match(appSource, /ro-h5-sound-effects-v1/);
   assert.match(appSource, /playSoundEffect\(result\.critical \? 'critical' : 'hit'\)/);
-  assert.match(appSource, /playSoundEffect\(result\.critical \? 'critical' : 'hit'\)/);
+  assert.match(appSource, /playSoundEffect\('levelup'\)/);
   assert.match(appSource, /ensureAssets\(\[asset\], false\)/);
   assert.match(html, /id="btn-sound"/);
   assert.match(html, /aria-pressed="true"/);
