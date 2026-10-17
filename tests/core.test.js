@@ -71,4 +71,4 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (4 suites).');
+console.log('RO H5 core tests passed (5 suites).');
