@@ -241,6 +241,25 @@ function testAssetManifestCoverage() {
   });
 }
 
+function testCriticalEffectManifest() {
+  assert.equal(world.criticalEffectFrames.length, 15);
+  assert.equal(world.criticalEffectFrameIntervalMs, 70);
+  const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
+  let totalBytes = 0;
+  world.criticalEffectFrames.forEach(function (assetId, index) {
+    const asset = assetMap.get(assetId);
+    assert.ok(asset, 'critical effect references missing frame: ' + assetId);
+    assert.equal(asset.assetKind, 'effect-frame');
+    assert.equal(asset.spriteGroup, 'crit');
+    assert.equal(asset.frameNumber, index);
+    assert.equal(asset.sourcePath, 'images/effects/crit/msg_frame_' + String(index).padStart(3, '0') + '.png');
+    assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
+    assert.ok(asset.bytes > 0);
+    totalBytes += asset.bytes;
+  });
+  assert.equal(totalBytes, 17846);
+}
+
 function testExpandedWorldContent() {
   const expectedMaps = ['prt_fild00', 'payon_field', 'morroc_desert', 'prt_maze01'];
   expectedMaps.forEach(function (mapId) {
@@ -286,6 +305,7 @@ function testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences() {
 
 testAssetManifestCoverage();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
+testCriticalEffectManifest();
 testExpandedWorldContent();
 testFirstJobPromotion();
 testFirstJobCombatPassives();
@@ -296,4 +316,4 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (11 suites).');
+console.log('RO H5 core tests passed (12 suites).');
