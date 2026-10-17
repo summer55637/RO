@@ -299,3 +299,17 @@
 ### MVP 2.3.1 恢復存檔路徑補充（2026-10-17）
 
 已存角色若直接從角色選單返回仍在進行中的戰鬥地圖，也會在背景嘗試載入該地圖登場怪物的已驗證待機動畫；可選動畫失敗不阻擋回到既有戰鬥，使用已驗證的同物種靜態圖作備援。素材指紋與動畫畫格並未改變。
+
+
+## MVP 2.3.2 可重現動畫轉檔工具與固定輸入（2026-10-17）
+
+為確保正式待機 SVG 可以從原始 ACT／SPR 獨立重建，已在本倉庫的開發工具目錄固定保留下列輸入，並新增 `tools/render_monster_act_spr.js`。工具只在開發／CI 使用；不會在瀏覽器端執行。
+
+| 原始素材 | 倉庫固定路徑 | bytes | Git blob SHA-1 |
+|---|---|---:|---|
+| [lunatic.act](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/lunatic.act) | `tools/samples/lunatic.act` | 129,468 | `fb90ed9e0d2f71392b2f25cddb4784a09a221cca` |
+| [lunatic.spr](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/lunatic.spr) | `tools/samples/lunatic.spr` | 36,287 | `1cdcc31c9135ede2140e0d951b59efcc1560eda2` |
+| [wolf.act](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/wolf.act) | `tools/samples/wolf.act` | 36,564 | `93c05e86366a7d9cfab19f59d1ff8f60dd1b617d` |
+| [wolf.spr](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/wolf.spr) | `tools/samples/wolf.spr` | 104,662 | `61b60050dce8094bbebf04d86cc87ef1e8d61706` |
+
+使用固定的瘋兔 action 2（12 格、80ms）與狼 action 0（15 格、120ms）；輸出分別必須維持 `assets/lunatic_idle.svg`（58,141 bytes，`04461b2829cec9e95cdef5d11ce6140fa29ed5ed`）與 `assets/wolf_idle.svg`（265,283 bytes，`bb11db5c6f0417f2565380717ec0d0f51a8b51aa`）。`npm test` 會啟動工具的 `--check` 模式，確認產物與固定輸出完全相同；若未來有意調整縮放、位置、調色或逐格處理，需更新對應 hash 與文件，並經目視檢查。
