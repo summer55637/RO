@@ -4,7 +4,8 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
   const SAVE_KEY = 'ro-h5-account-v1';
-  const GAME_VERSION = '3.0';
+  const SAVE_BACKUP_KEY = 'ro-h5-account-backup-v1';
+  const GAME_VERSION = '3.1';
   const MAX_SAVE_FILE_BYTES = 5 * 1024 * 1024;
   const DB_NAME = 'ro-h5-assets-v1';
   const DB_STORE = 'assets';
@@ -607,6 +608,7 @@
       setScreen('screen-slots');
       updateNetworkStatus();
       renderSlots();
+      updateSaveRecoveryButtons();
     } catch (error) {
       fatal(error.message || '存檔無法安全讀取。');
     }
@@ -661,26 +663,51 @@
     return parsed;
   }
 
+  function isVerifiedLocalSaveRaw(raw) {
+    if (typeof raw !== 'string' || !raw) return false;
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.slots) || parsed.slots.length !== 3) return false;
+      return window.ROCore.preparePortableSave(parsed).ok;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function updateSaveRecoveryButtons() {
+    let available = false;
+    try { available = isVerifiedLocalSaveRaw(localStorage.getItem(SAVE_BACKUP_KEY)); } catch (_) { available = false; }
+    ['#btn-restore-save-backup', '#btn-error-restore-save-backup'].forEach(function (selector) {
+      const button = $(selector);
+      if (button) button.disabled = !available;
+    });
+  }
+
   function writeAccount() {
     if (saveConflictDetected) {
       $('#save-status').textContent = '存檔衝突：寫入已暫停';
       return false;
     }
     try {
-      const currentRaw = localStorage.getItem(SAVE_KEY);
-      if (lastPersistedRaw !== undefined && currentRaw !== lastPersistedRaw) {
-        markSaveConflict(currentRaw);
-        return false;
-      }
       account.updatedAt = Date.now();
-      const serialized = JSON.stringify(account);
-      localStorage.setItem(SAVE_KEY, serialized);
-      const savedRaw = localStorage.getItem(SAVE_KEY);
-      if (savedRaw !== serialized) {
-        markSaveConflict(savedRaw);
-        return false;
+      const result = window.ROCore.writeStoredAccountWithBackup(
+        localStorage,
+        SAVE_KEY,
+        SAVE_BACKUP_KEY,
+        account,
+        lastPersistedRaw
+      );
+      if (!result.ok) {
+        if (result.concurrentChange) {
+          let latestRaw = null;
+          try { latestRaw = localStorage.getItem(SAVE_KEY); } catch (_) { /* Keep the conflict safe even when storage is temporarily unavailable. */ }
+          markSaveConflict(latestRaw);
+          return false;
+        }
+        throw new Error(result.reason || '本機存檔交易未完成。');
       }
-      lastPersistedRaw = serialized;
+      lastPersistedRaw = result.serialized;
+      updateSaveRecoveryButtons();
       $('#save-status').textContent = '已儲存 · ' + new Date().toLocaleTimeString();
       return true;
     } catch (error) {
@@ -895,6 +922,80 @@
     }
   }
 
+  function restorePreviousSaveBackup() {
+    let backupRaw = null;
+    let currentRaw = null;
+    try {
+      backupRaw = localStorage.getItem(SAVE_BACKUP_KEY);
+      currentRaw = localStorage.getItem(SAVE_KEY);
+    } catch (error) {
+      const message = '無法讀取安全備份：' + (error.message || '瀏覽器儲存區無法存取。');
+      setSaveFileMessage(message, true);
+      const errorMessage = $('#fatal-message');
+      if (errorMessage) errorMessage.textContent = message;
+      return;
+    }
+
+    if (!isVerifiedLocalSaveRaw(backupRaw)) {
+      updateSaveRecoveryButtons();
+      const message = '找不到可驗證的上一份安全備份。本機主存檔沒有變更。';
+      setSaveFileMessage(message, true);
+      const errorMessage = $('#fatal-message');
+      if (errorMessage) errorMessage.textContent = message;
+      return;
+    }
+
+    const primaryValid = isVerifiedLocalSaveRaw(currentRaw);
+    const warning = primaryValid
+      ? '這會將存檔回退至上一個已驗證版本；備份可能比目前進度早幾秒。建議先匯出目前存檔。確定繼續？'
+      : '目前主存檔無法通過完整性檢查。這會以最後一份已驗證備份取代它。確定繼續？';
+    if (!window.confirm(warning)) return;
+
+    try {
+      const backupAccount = JSON.parse(backupRaw);
+      const result = window.ROCore.replaceStoredAccount(localStorage, SAVE_KEY, backupAccount);
+      if (!result.ok) {
+        const message = result.concurrentChange
+          ? '復原時偵測到另一個操作更新了主存檔，沒有覆蓋該資料。'
+          : (result.restored
+            ? '安全備份復原失敗；原主存檔已保留。' + (result.reason || '')
+            : '無法確認復原結果。請先保留現有 .rosave 檔案，避免重複寫入。' + (result.reason || ''));
+        setSaveFileMessage(message, true);
+        const errorMessage = $('#fatal-message');
+        if (errorMessage) errorMessage.textContent = message;
+        return;
+      }
+
+      stopBattleLoop();
+      stopMapMusic();
+      account = result.account;
+      character = null;
+      activeSlot = null;
+      lastPersistedRaw = result.serialized;
+      saveConflictDetected = false;
+      conflictLatestRaw = null;
+      pendingImportAccount = null;
+      pendingImportStage = 0;
+      pendingImportMigrated = false;
+      hideSaveConflictBanner();
+      const importDialog = $('#import-save-dialog');
+      if (importDialog.open) importDialog.close();
+      startAutosave();
+      renderSlots();
+      setScreen('screen-slots');
+      setSaveFileMessage(primaryValid
+        ? '已從上一份安全備份復原。請檢查角色、等級與共用資產後再繼續。'
+        : '已從上一份安全備份復原損壞的主存檔。請檢查角色、等級與共用資產。', false);
+      showToast('安全備份復原完成');
+      updateSaveRecoveryButtons();
+    } catch (error) {
+      const message = '安全備份復原未完成：' + (error.message || '未知錯誤') + '。請不要連續重試，先保留現有 .rosave 備份。';
+      setSaveFileMessage(message, true);
+      const errorMessage = $('#fatal-message');
+      if (errorMessage) errorMessage.textContent = message;
+    }
+  }
+
   function exportConflictRecovery() {
     try {
       const snapshot = account ? JSON.parse(JSON.stringify(account)) : window.ROCore.emptyAccount();
@@ -945,6 +1046,7 @@
 
   function renderSlots() {
     account = readAccount();
+    updateSaveRecoveryButtons();
     $('#slots-gold').textContent = formatNumber(account.gold) + ' Zeny';
     const list = $('#slot-list');
     list.replaceChildren();
@@ -2777,6 +2879,7 @@
     if (autosaveTimer) clearInterval(autosaveTimer);
     autosaveTimer = null;
     $('#fatal-message').textContent = message;
+    updateSaveRecoveryButtons();
     setScreen('screen-error');
   }
 
@@ -2793,6 +2896,8 @@
     $('#btn-create-cancel').addEventListener('click', function () { character = null; activeSlot = null; renderSlots(); setScreen('screen-slots'); });
     $('#btn-refresh-slots').addEventListener('click', function () { account = readAccount(); renderSlots(); showToast('已重新讀取存檔'); });
     $('#btn-save-conflict-export').addEventListener('click', exportConflictRecovery);
+    $('#btn-restore-save-backup').addEventListener('click', restorePreviousSaveBackup);
+    $('#btn-error-restore-save-backup').addEventListener('click', restorePreviousSaveBackup);
     $('#btn-save-conflict-reload').addEventListener('click', reloadLatestSave);
     $('#btn-export-save').addEventListener('click', exportSaveFile);
     $('#btn-import-save').addEventListener('click', function () { $('#input-import-save').click(); });
