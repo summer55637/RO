@@ -1672,6 +1672,14 @@ function testWriteStoredAccountRollingBackup() {
   assert.equal(stale.ok, false);
   assert.equal(stale.concurrentChange, true);
   assert.equal(staleBaseline.getItem('ro-h5-account-v1'), concurrentRaw);
+
+  const invalidRaw = JSON.stringify({ version: 1, slots: [null, null, null], gold: -1 });
+  const invalidPrimary = makeFakeStorage(invalidRaw);
+  const rejectedOverwrite = core.writeStoredAccountWithBackup(invalidPrimary, 'ro-h5-account-v1', 'ro-h5-account-backup-v1', newAccount, invalidRaw);
+  assert.equal(rejectedOverwrite.ok, false);
+  assert.equal(rejectedOverwrite.restored, true);
+  assert.equal(invalidPrimary.getItem('ro-h5-account-v1'), invalidRaw, 'do not overwrite an existing save that fails deep validation');
+  assert.equal(invalidPrimary.getItem('ro-h5-account-backup-v1'), null);
 }
 
 function testRollingBackupAndRecoveryUi() {
