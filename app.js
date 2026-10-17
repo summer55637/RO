@@ -4,6 +4,8 @@
   const $ = function (selector) { return document.querySelector(selector); };
   const $$ = function (selector) { return Array.from(document.querySelectorAll(selector)); };
   const SAVE_KEY = 'ro-h5-account-v1';
+  const GAME_VERSION = '2.9';
+  const MAX_SAVE_FILE_BYTES = 5 * 1024 * 1024;
   const DB_NAME = 'ro-h5-assets-v1';
   const DB_STORE = 'assets';
   const DOWNLOAD_STATE_KEY = 'ro-h5-download-state-v1';
@@ -75,6 +77,9 @@
   let bestiarySortMode = 'name';
   let pendingRenameSlot = null;
   let pendingDeleteSlot = null;
+  let pendingImportAccount = null;
+  let pendingImportStage = 0;
+  let pendingImportMigrated = false;
   let hiddenAt = 0;
   let resourceBusy = false;
   let lastNetworkOffline = (typeof navigator !== 'undefined' && navigator.onLine === false);
@@ -648,6 +653,199 @@
       account.slots[activeSlot] = character;
     }
     return writeAccount();
+  }
+
+  function setSaveFileMessage(message, isError) {
+    const node = $('#save-file-message');
+    if (!node) return;
+    node.textContent = message || '';
+    node.classList.toggle('error', Boolean(isError));
+  }
+
+  function exportSaveFile() {
+    if (!$('#screen-slots').classList.contains('active')) {
+      setSaveFileMessage('請先返回角色選擇畫面，再匯出存檔。', true);
+      return;
+    }
+    try {
+      const snapshot = readAccount();
+      const envelope = window.ROCore.createPortableSave(snapshot, GAME_VERSION);
+      const content = JSON.stringify(envelope, null, 2);
+      const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      link.href = url;
+      link.download = 'ro-h5-save-' + stamp + '.rosave';
+      link.hidden = true;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      setSaveFileMessage('已匯出 3 個角色槽、共用 Zeny、倉庫與裝備背包。請將 .rosave 檔案保存在安全的位置。', false);
+    } catch (error) {
+      setSaveFileMessage('匯出失敗：' + (error.message || '無法建立存檔檔案。'), true);
+    }
+  }
+
+  function showImportSavePreview(imported) {
+    const preview = $('#import-save-preview');
+    preview.replaceChildren();
+    const occupied = imported.slots.filter(Boolean).length;
+    const warehouseItems = Object.keys(imported.warehouse || {}).filter(function (name) {
+      return Number(imported.warehouse[name]) > 0;
+    }).length;
+    [
+      ['角色槽', occupied + ' / 3'],
+      ['共用 Zeny', formatNumber(imported.gold)],
+      ['倉庫品項', formatNumber(warehouseItems) + ' 種'],
+      ['裝備背包', formatNumber((imported.equipmentInventory || []).length) + ' 件']
+    ].forEach(function (entry) {
+      const card = document.createElement('div');
+      card.className = 'summary-stat';
+      const label = document.createElement('span');
+      label.textContent = entry[0];
+      const value = document.createElement('strong');
+      value.textContent = entry[1];
+      card.append(label, value);
+      preview.appendChild(card);
+    });
+
+    $('#import-save-title').textContent = '匯入前檢查';
+    $('#import-save-warning').textContent = '此操作會以檔案內容完整取代目前瀏覽器的 3 個角色槽、共用倉庫、裝備／卡片與 Zeny。未到最後確認之前，不會修改任何本機存檔。';
+    $('#import-save-ack-copy').textContent = '我已了解匯入會覆蓋目前這個瀏覽器的遊戲進度。';
+    $('#btn-import-save-continue').textContent = '進行最後確認';
+    $('#btn-import-save-continue').className = 'button button-primary';
+    $('#import-save-ack').checked = false;
+    $('#import-save-message').textContent = pendingImportMigrated
+      ? '這是舊版但相容的存檔；缺少的欄位會補上預設值，不會清空已有角色進度。'
+      : '檔案格式與角色槽已通過初步檢查。';
+    $('#import-save-message').classList.remove('error');
+    pendingImportStage = 1;
+    $('#import-save-dialog').dataset.stage = '1';
+    if (!$('#import-save-dialog').open) $('#import-save-dialog').showModal();
+  }
+
+  async function handleSaveFileSelection(event) {
+    const input = event.currentTarget;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    if (!$('#screen-slots').classList.contains('active')) {
+      setSaveFileMessage('請先返回角色選擇畫面，再匯入存檔。', true);
+      return;
+    }
+    if (file.size > MAX_SAVE_FILE_BYTES) {
+      setSaveFileMessage('檔案超過 5 MiB，已拒絕匯入；本機存檔沒有變更。', true);
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      let parsed;
+      try { parsed = JSON.parse(text); } catch (_) {
+        throw new Error('檔案不是有效的 JSON／.rosave 存檔。');
+      }
+      const result = window.ROCore.preparePortableSave(parsed);
+      if (!result.ok) throw new Error(result.reason);
+      pendingImportAccount = result.account;
+      pendingImportMigrated = Boolean(result.migrated);
+      showImportSavePreview(pendingImportAccount);
+      setSaveFileMessage('已檢查存檔。請閱讀覆蓋提醒並完成兩階段確認。', false);
+    } catch (error) {
+      pendingImportAccount = null;
+      pendingImportStage = 0;
+      pendingImportMigrated = false;
+      setSaveFileMessage('匯入未開始：' + (error.message || '無法驗證存檔。'), true);
+    }
+  }
+
+  function cancelImportSave() {
+    pendingImportAccount = null;
+    pendingImportStage = 0;
+    pendingImportMigrated = false;
+    $('#import-save-dialog').close();
+  }
+
+  function continueImportSave() {
+    if (!pendingImportAccount || ![1, 2].includes(pendingImportStage)) {
+      $('#import-save-dialog').close();
+      return;
+    }
+    if (!$('#screen-slots').classList.contains('active') || (character && activeSlot !== null)) {
+      $('#import-save-message').textContent = '目前不在角色選擇畫面，匯入已停止；本機存檔沒有變更。';
+      $('#import-save-message').classList.add('error');
+      return;
+    }
+    if (!$('#import-save-ack').checked) {
+      $('#import-save-message').textContent = '請先勾選確認，才能繼續。';
+      $('#import-save-message').classList.add('error');
+      return;
+    }
+    if (pendingImportStage === 1) {
+      pendingImportStage = 2;
+      $('#import-save-dialog').dataset.stage = '2';
+      $('#import-save-title').textContent = '最後確認：覆蓋本機存檔';
+      $('#import-save-warning').textContent = '再次確認：目前存檔中的所有角色、共用 Zeny、倉庫、裝備與卡片，都會被這份檔案完整取代。取消可保留目前存檔。';
+      $('#import-save-ack-copy').textContent = '我再次確認要覆蓋目前本機存檔，並匯入這份 .rosave 檔案。';
+      $('#btn-import-save-continue').textContent = '確認覆蓋並匯入';
+      $('#import-save-ack').checked = false;
+      $('#import-save-message').textContent = '目前仍未寫入存檔。最後按下「確認覆蓋並匯入」才會開始提交。';
+      $('#import-save-message').classList.remove('error');
+      return;
+    }
+    commitPendingImport();
+  }
+
+  function commitPendingImport() {
+    if (!pendingImportAccount || pendingImportStage !== 2) return;
+    if (!$('#screen-slots').classList.contains('active') || (character && activeSlot !== null)) {
+      $('#import-save-message').textContent = '目前不在角色選擇畫面，匯入已停止；本機存檔沒有變更。';
+      $('#import-save-message').classList.add('error');
+      return;
+    }
+
+    let previousRaw = null;
+    let writeAttempted = false;
+    try {
+      previousRaw = localStorage.getItem(SAVE_KEY);
+      const imported = Object.assign({}, pendingImportAccount, { updatedAt: Date.now() });
+      const serialized = JSON.stringify(imported);
+      writeAttempted = true;
+      localStorage.setItem(SAVE_KEY, serialized);
+      const saved = localStorage.getItem(SAVE_KEY);
+      if (saved !== serialized) throw new Error('寫入後回讀比對失敗。');
+      const verified = window.ROCore.preparePortableSave(JSON.parse(saved));
+      if (!verified.ok) throw new Error(verified.reason);
+      account = verified.account;
+      character = null;
+      activeSlot = null;
+      pendingImportAccount = null;
+      pendingImportStage = 0;
+      pendingImportMigrated = false;
+      $('#import-save-dialog').close();
+      renderSlots();
+      setSaveFileMessage('存檔已匯入並重新讀取驗證成功。請繼續選擇角色。', false);
+      showToast('存檔匯入完成');
+    } catch (error) {
+      let restored = true;
+      if (writeAttempted) {
+        try {
+          const currentRaw = localStorage.getItem(SAVE_KEY);
+          if (currentRaw !== previousRaw) {
+            if (previousRaw === null) localStorage.removeItem(SAVE_KEY);
+            else localStorage.setItem(SAVE_KEY, previousRaw);
+          }
+          restored = localStorage.getItem(SAVE_KEY) === previousRaw;
+        } catch (_) {
+          restored = false;
+        }
+      }
+      $('#import-save-message').textContent = restored
+        ? '匯入未完成：' + (error.message || '存檔寫入失敗。') + '；原存檔已保留。'
+        : '嚴重警告：匯入驗證失敗，且無法確認原存檔已復原。請保留原始 .rosave 備份並停止操作。';
+      $('#import-save-message').classList.add('error');
+    }
   }
 
   function existingNames(exceptIndex) {
@@ -2502,6 +2700,11 @@
     });
     $('#btn-create-cancel').addEventListener('click', function () { character = null; activeSlot = null; renderSlots(); setScreen('screen-slots'); });
     $('#btn-refresh-slots').addEventListener('click', function () { account = readAccount(); renderSlots(); showToast('已重新讀取存檔'); });
+    $('#btn-export-save').addEventListener('click', exportSaveFile);
+    $('#btn-import-save').addEventListener('click', function () { $('#input-import-save').click(); });
+    $('#input-import-save').addEventListener('change', handleSaveFileSelection);
+    $('#btn-import-save-cancel').addEventListener('click', cancelImportSave);
+    $('#btn-import-save-continue').addEventListener('click', continueImportSave);
     $('#map-list').addEventListener('click', function (event) {
       const button = event.target.closest('[data-map-id]');
       if (button && !button.disabled) enterMap(button.dataset.mapId);
