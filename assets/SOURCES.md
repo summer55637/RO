@@ -322,3 +322,31 @@
 - 原始 SPR：[poring.spr](https://github.com/adsonpleal/ragassets/blob/4de4fa747431979d35c747d7edd549a872efd9e1/gateway/internal/render/engine/testdata/fixtures/data/sprite/%EB%AA%AC%EC%8A%A4%ED%84%B0/poring.spr)，42,859 bytes，Git blob SHA-1 `406b3e91bca7137e8f7a8abcd46468f3fb639ad7`；已固定於 `tools/samples/poring.spr`。
 - 對應素材確認為 Poring Mob 1002。Action 0 在來源示例中用作 idle，action 16 用作 attack（來源示例 [ragassets README](https://github.com/adsonpleal/ragassets/tree/4de4fa747431979d35c747d7edd549a872efd9e1)）；本專案使用配對二進位逐格解析，不在遊戲 runtime 呼叫該公開 demo 服務。
 - `assets/poring_idle.svg`：21,378 UTF-8 bytes，Git blob SHA-1 `e7f0b0d56ca3e8997e98ebcdc8e10ccdaaae0ca8`，4 格／160ms；`assets/poring_attack.svg`：136,944 UTF-8 bytes，Git blob SHA-1 `d550fe9a3edc83b241d882038657e6e6e1e3c916`，28 格／40ms。轉檔工具與核心測試會驗證原始檔、action index、格數、時序、輸出大小和 SHA-1。
+
+
+## MVP 2.5 綠色植物 Mob 1080 ACT／SPR 核驗與待機動畫（2026-10-17）
+
+### 固定來源與二進位指紋
+
+來源固定於 [MyGodIsHe/pyro-tools@1a28450df59bc69e56e70e431f9b61351bafc8f6](https://github.com/MyGodIsHe/pyro-tools/tree/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data)。實際以 GitHub 回傳的二進位內容解析並驗證 magic、檔案長度、ACT／SPR 結構與畫格引用，並把完全相同的 bytes 固定到 `tools/samples/`。
+
+| 資產 | 倉庫路徑／來源路徑 | bytes | Git blob SHA-1 |
+|---|---|---:|---|
+| Green Plant ACT | `tools/samples/green_plant.act` / [green_plant.act](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/green_plant.act) | 42,876 | `e1bda9fe10499c562baf5857ab8829d8f234bd0a` |
+| Green Plant SPR | `tools/samples/green_plant.spr` / [green_plant.spr](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/green_plant.spr) | 4,763 | `9ea4b7f257ae0b96048e9f0415e7ed7cdf08fc8a` |
+| 待機動畫輸出 | `assets/green_plant_idle.svg` | 30,163 | `b5442646034f744f927db495df241b560c95d435` |
+| 靜態同物種備援 | `assets/green_plant.svg` | 2,552 | `1f2d87a90a16161d6f101b67a11384a1a8490b6c` |
+
+### 動作與物種核對
+
+- ACT header 為 `AC`、版本 4，action table 共 40 個項目；action 0 有 12 格，間隔值 4 換算為每格 160ms。每格皆有且僅有一個 direction 0 圖層，沒有套用未核實的旋轉或縮放變換。
+- SPR header 為 `SP`，有 13 個 indexed sprites、0 個 true-colour sprites，索引圖與調色盤均可完整解析。action 0 引用的每個 sprite index 都落在此 SPR 表內；沒有跨檔取用其他怪物圖層。
+- 對 action 0 的畫格作實際解碼並目視抽查，畫面是綠色植物的葉片／植株形狀，不是昆蟲幼蟲或綠棉蟲圖像。來源檔名僅當追溯線索，不單獨作為物種判定依據。
+- Mob ID 交叉核對依據：[固定版 rAthena mob_db.yml](https://github.com/rathena/rathena/blob/975c87dfc27ab267b2ec0dddff77421b2e6ee87b/db/pre-re/mob_db.yml) 中的 `Id: 1080 / AegisName: GREEN_PLANT / Name: Green Plant` 及 `Id: 1007 / AegisName: FABRE / Name: Fabre`。本專案內兩者維持不同 monster key、asset ID、來源 ID 與素材 manifest。
+- 目前只把 action 0 接成待機循環；未確認其餘 action 的動作語義，故沒有把猜測的 action index 接成攻擊／受擊／死亡動畫。靜態備援只由同一來源的 action 0 第一格生成。
+
+### 原型資料與存檔安全
+
+- 新手訓練場新增綠色植物遭遇權重 10，以及 HP、傷害、EXP、Zeny 與綠色藥草掉落機率等遊戲原型值；這些不是台灣官方 PC RO 的正式數值或刷新率。
+- 兩個新藝術資產都是非啟動必需項目，依地圖按需載入並驗證；失敗時只回退同物種靜態圖或既有未載入佔位，不會借用 Fabre Mob 1007 的圖像。
+- 不改變 `ro-h5-account-v1` 等存檔 key、不清除或重設既有存檔／角色／等級／技能／裝備／卡片／倉庫／Zeny／戰鬥進度，也不重新引入帳號分頁鎖。
