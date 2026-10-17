@@ -7,10 +7,8 @@
   const LOCK_KEY = 'ro-h5-active-tab-v1';
   const DB_NAME = 'ro-h5-assets-v1';
   const DB_STORE = 'assets';
-  const ASSETS = [
-    { id: 'field', path: './assets/field.jpg', bytes: 164403, gitSha: '138cef2baecce252bf9095f856927d0573642394', statusId: 'asset-status-field', name: '新手原野背景' },
-    { id: 'poring', path: './assets/poring.png', bytes: 708, gitSha: '9205f4b39eaea3eb175e0eabdcc6ba10ec296641', statusId: 'asset-status-poring', name: '波利圖像' }
-  ];
+  const ASSETS = window.ROWorld.assets;
+  const STARTER_ASSETS = ASSETS.filter(function (asset) { return asset.requiredOnStart; });
 
   let account = null;
   let activeSlot = null;
@@ -164,21 +162,44 @@
     assetUrls[asset.id] = URL.createObjectURL(blob);
   }
 
+  async function ensureAssets(assets, showProgress) {
+    const list = assets.slice();
+    const blobs = new Array(list.length);
+    let nextIndex = 0;
+    let completed = 0;
+    let failure = null;
+    if (showProgress) setProgress(0, list.length);
+
+    async function worker() {
+      while (!failure) {
+        const index = nextIndex++;
+        if (index >= list.length) return;
+        try {
+          const blob = await cacheAsset(list[index]);
+          blobs[index] = { asset: list[index], blob: blob };
+          completed += 1;
+          if (showProgress) setProgress(completed, list.length);
+        } catch (error) {
+          failure = error;
+        }
+      }
+    }
+
+    const workerCount = Math.min(2, list.length);
+    await Promise.all(Array.from({ length: workerCount }, function () { return worker(); }));
+    if (failure) throw failure;
+    blobs.forEach(function (item) { useAssetBlob(item.asset, item.blob); });
+    return blobs;
+  }
+
   async function prepareResources() {
     const button = $('#btn-install');
     button.disabled = true;
     button.textContent = '正在準備…';
-    setProgress(0, ASSETS.length);
-    setInstallMessage('最多同時準備 2 項素材，正在驗證大小與 Git blob 雜湊。', false);
-    let completed = 0;
+    setProgress(0, STARTER_ASSETS.length);
+    setInstallMessage('正在準備第一張地圖的必要素材；同時最多下載 2 項，完成後會驗證大小與 Git blob 雜湊。', false);
     try {
-      const blobs = await Promise.all(ASSETS.map(async function (asset) {
-        const blob = await cacheAsset(asset);
-        completed += 1;
-        setProgress(completed, ASSETS.length);
-        return { asset: asset, blob: blob };
-      }));
-      blobs.forEach(function (item) { useAssetBlob(item.asset, item.blob); });
+      await ensureAssets(STARTER_ASSETS, true);
       await registerServiceWorker();
       enterSlotsWithLock(false);
     } catch (error) {
@@ -191,17 +212,14 @@
 
   async function loadCachedResources() {
     try {
-      const blobs = await Promise.all(ASSETS.map(async function (asset) {
+      for (const asset of STARTER_ASSETS) {
         const record = await dbGet(asset.id);
-        if (!record || !record.blob) throw new Error('缺少快取');
+        if (!record || !record.blob) return false;
         await verifyBlob(asset, record.blob);
-        return { asset: asset, blob: record.blob };
-      }));
-      blobs.forEach(function (item) {
-        useAssetBlob(item.asset, item.blob);
-        setAssetStatus(item.asset, '已驗證', 'ok');
-      });
-      setProgress(ASSETS.length, ASSETS.length);
+        useAssetBlob(asset, record.blob);
+        setAssetStatus(asset, '已驗證', 'ok');
+      }
+      setProgress(STARTER_ASSETS.length, STARTER_ASSETS.length);
       return true;
     } catch (_) {
       return false;
@@ -553,7 +571,6 @@
     $('#camp-name').textContent = character.name;
     $('#camp-job').textContent = character.jobName + ' · Job Lv. ' + character.jobLevel;
     $('#camp-level').textContent = String(character.baseLevel);
-    $('#camp-map-thumb').src = assetUrls.field || './assets/field.jpg';
     $('#camp-stats').replaceChildren();
     [
       ['HP', character.hp + ' / ' + character.maxHp],
@@ -572,21 +589,83 @@
       cell.append(label, value);
       $('#camp-stats').appendChild(cell);
     });
+
+    const list = $('#map-list');
+    list.replaceChildren();
+    window.ROWorld.maps.forEach(function (map) {
+      const unlocked = character.baseLevel >= map.unlockLevel;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'map-option';
+      button.dataset.mapId = map.id;
+      button.disabled = !unlocked;
+      button.title = unlocked ? '進入 ' + map.name : '需要 Base Lv. ' + map.unlockLevel + ' 才能進入';
+
+      const image = document.createElement('img');
+      image.alt = map.name;
+      image.src = assetUrls[map.backgroundAssetId] || './assets/field.jpg';
+
+      const copy = document.createElement('span');
+      copy.className = 'map-copy';
+      const name = document.createElement('strong');
+      name.textContent = map.name;
+      const level = document.createElement('small');
+      level.textContent = unlocked ? '推薦等級：Base Lv. ' + map.recommendedLevels : '解鎖需求：Base Lv. ' + map.unlockLevel;
+      const mobs = document.createElement('span');
+      mobs.textContent = '出現怪物：' + map.monsters.map(function (entry) {
+        const monster = window.ROCore.getMonster(entry.id);
+        return monster ? monster.name : entry.id;
+      }).join('、');
+      copy.append(name, level, mobs);
+
+      const arrow = document.createElement('span');
+      arrow.className = 'map-arrow';
+      arrow.textContent = unlocked ? '進入 ›' : '未解鎖';
+      button.append(image, copy, arrow);
+      list.appendChild(button);
+    });
+    $('#map-load-message').textContent = '其他地圖素材會在首次進入時下載並驗證。';
   }
 
-  function enterTrainingMap() {
-    if (!character || !isLockOwner()) return;
-    character.battle.map = 'training';
-    character.battle.paused = false;
-    character.battle.monsterHp = character.battle.monsterMaxHp || 18;
-    character.battle.monsterAttackClock = 0;
-    character.lastSavedAt = Date.now();
-    appendCharacterLog('進入新手訓練場，發現波利。開始自動戰鬥。', 'important');
-    if (!writeAccount()) return;
-    setScreen('screen-battle');
-    activeDetail = 'status';
-    renderGame();
-    startBattleLoop();
+  async function enterMap(mapId) {
+    if (!character || !isLockOwner()) return loseControl();
+    const map = window.ROCore.getMap(mapId);
+    if (!map) {
+      $('#map-load-message').textContent = '找不到這張地圖的資料。';
+      return;
+    }
+    if (character.baseLevel < map.unlockLevel) {
+      $('#map-load-message').textContent = '此地圖需要 Base Lv. ' + map.unlockLevel + '。';
+      return;
+    }
+    const mapButton = Array.from($('#map-list').querySelectorAll('[data-map-id]')).find(function (item) { return item.dataset.mapId === map.id; });
+    if (mapButton) mapButton.disabled = true;
+    $('#map-load-message').textContent = '正在準備「' + map.name + '」的素材並驗證完整性…';
+
+    try {
+      const requiredIds = new Set([map.backgroundAssetId]);
+      map.monsters.forEach(function (entry) {
+        const monster = window.ROCore.getMonster(entry.id);
+        if (monster && monster.assetId) requiredIds.add(monster.assetId);
+      });
+      const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
+      await ensureAssets(neededAssets, false);
+      if (!isLockOwner()) return loseControl();
+      if (!window.ROCore.startMap(character, map.id)) throw new Error('目前等級尚未符合地圖需求。');
+      character.lastSavedAt = Date.now();
+      const monster = window.ROCore.getMonster(character.battle.currentMonsterId);
+      appendCharacterLog('進入「' + map.name + '」，開始自動戰鬥。', 'important');
+      if (monster) appendCharacterLog('目前遭遇：' + monster.name + '。');
+      if (!writeAccount()) return;
+      setScreen('screen-battle');
+      activeDetail = 'status';
+      renderGame();
+      startBattleLoop();
+    } catch (error) {
+      $('#map-load-message').textContent = (error && error.message ? error.message : '地圖素材準備失敗。') + ' 可檢查網路後再次進入。';
+    } finally {
+      if (mapButton && mapButton.isConnected) mapButton.disabled = character ? character.baseLevel < map.unlockLevel : false;
+    }
   }
 
   function returnToCamp() {
@@ -653,16 +732,16 @@
       window.setTimeout(function () { if (monster.isConnected) monster.classList.remove('hit'); }, 240);
     }
     if (result.playerDamage) {
-      appendCharacterLog('對波利造成 ' + result.playerDamage + ' 傷害。');
+      appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。');
       const effect = $('#scene-effect');
       effect.textContent = '-' + result.playerDamage;
       effect.classList.remove('show');
       void effect.offsetWidth;
       effect.classList.add('show');
     }
-    if (result.monsterDamage) appendCharacterLog('受到波利 ' + result.monsterDamage + ' 點傷害。', result.playerDown ? 'warning' : '');
+    if (result.monsterDamage) appendCharacterLog('受到' + result.monsterName + ' ' + result.monsterDamage + ' 點傷害。', result.playerDown ? 'warning' : '');
     if (result.killed) {
-      let message = '擊倒波利：Base EXP +4、Job EXP +' + result.jobExpGained + '、' + result.goldGained + ' Zeny。';
+      let message = '擊倒' + result.monsterName + '：Base EXP +4、Job EXP +' + result.jobExpGained + '、' + result.goldGained + ' Zeny。';
       if (result.drops.length) message += ' 掉落：' + result.drops.join('、') + '。';
       appendCharacterLog(message, 'important');
       if (result.levelUps.length) appendCharacterLog('Base 等級提升至 ' + result.levelUps[result.levelUps.length - 1] + '。', 'important');
@@ -676,15 +755,19 @@
     $('#battle-character-name').textContent = character.name;
     $('#hud-name').textContent = character.name;
     $('#hud-job').textContent = character.jobName + ' · Job Lv. ' + character.jobLevel;
-    $('#battle-map-name').textContent = character.battle.map === 'training' ? '新手訓練場' : '安全營地';
+    const currentMap = window.ROCore.getMap(character.battle.map);
+    $('#battle-map-name').textContent = currentMap ? currentMap.name : '安全營地';
     $('#battle-avatar').innerHTML = playerSvg(character.gender);
     const hero = $('#hero-sprite');
     if (hero.dataset.gender !== character.gender) {
       hero.innerHTML = '<div class="hero-character">' + playerSvg(character.gender) + '</div>';
       hero.dataset.gender = character.gender;
     }
-    $('#scene-background').src = assetUrls.field || './assets/field.jpg';
-    $('#monster-image').src = assetUrls.poring || './assets/poring.png';
+    const currentMonster = window.ROCore.getMonster(character.battle.currentMonsterId);
+    $('#scene-background').src = assetUrls[(currentMap && currentMap.backgroundAssetId) || 'field'] || './assets/field.jpg';
+    $('.monster-label strong').textContent = currentMonster ? currentMonster.name : '怪物';
+    $('#monster-image').src = assetUrls[(currentMonster && currentMonster.assetId) || 'poring'] || './assets/poring.png';
+    $('#monster-image').alt = currentMonster ? currentMonster.name : '怪物';
     $('#hp-text').textContent = formatNumber(character.hp) + ' / ' + formatNumber(character.maxHp);
     $('#sp-text').textContent = formatNumber(character.sp) + ' / ' + formatNumber(character.maxSp);
     $('#hp-fill').style.width = Math.max(0, Math.min(100, character.hp / Math.max(1, character.maxHp) * 100)) + '%';
@@ -1018,7 +1101,10 @@
     });
     $('#btn-create-cancel').addEventListener('click', function () { character = null; activeSlot = null; renderSlots(); setScreen('screen-slots'); });
     $('#btn-refresh-slots').addEventListener('click', function () { account = readAccount(); renderSlots(); showToast('已重新讀取存檔'); });
-    $('#btn-enter-training').addEventListener('click', enterTrainingMap);
+    $('#map-list').addEventListener('click', function (event) {
+      const button = event.target.closest('[data-map-id]');
+      if (button && !button.disabled) enterMap(button.dataset.mapId);
+    });
     $('#btn-camp-back').addEventListener('click', returnToSlots);
     $('#btn-battle-camp').addEventListener('click', returnToCamp);
     $('#btn-pause').addEventListener('click', togglePause);
