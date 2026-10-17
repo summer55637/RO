@@ -86,7 +86,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v40/);
+  assert.match(serviceWorker, /ro-h5-shell-v41/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -180,8 +180,8 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 3\.1/);
-  assert.match(sw, /ro-h5-shell-v40/);
+  assert.match(html, /MVP 3\.2/);
+  assert.match(sw, /ro-h5-shell-v41/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -234,8 +234,8 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
-  assert.match(html, /MVP 3\.1/);
-  assert.match(sw, /ro-h5-shell-v40/);
+  assert.match(html, /MVP 3\.2/);
+  assert.match(sw, /ro-h5-shell-v41/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -252,8 +252,8 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.doesNotMatch(helperSource, /cacheAsset\(|fetch\(/, 'portrait hydration must not trigger network downloads');
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
-  assert.match(html, /MVP 3\.1/);
-  assert.match(sw, /ro-h5-shell-v40/);
+  assert.match(html, /MVP 3\.2/);
+  assert.match(sw, /ro-h5-shell-v41/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -427,7 +427,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 3\.1/);
+  assert.match(html, /MVP 3\.2/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -573,7 +573,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 3\.1/);
+  assert.match(html, /MVP 3\.2/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -1514,7 +1514,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 3\.1/);
+  assert.match(html, /MVP 3\.2/);
 }
 
 
@@ -1561,8 +1561,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 3\.1/);
-  assert.match(sw, /ro-h5-shell-v40/);
+  assert.match(html, /MVP 3\.2/);
+  assert.match(sw, /ro-h5-shell-v41/);
 }
 
 
@@ -1577,8 +1577,8 @@ function testOfflineSettlementCanDismiss() {
   assert.match(appSource, /\$\('#btn-offline-close'\)\.addEventListener\('click', closeOfflineReport\);/);
   assert.match(appSource, /const pendingReport = character\.pendingReport;[\s\S]*if \(!persistCurrent\(\)\) \{[\s\S]*character\.pendingReport = pendingReport;/);
   assert.match(html, /<form method="dialog"><button id="btn-offline-close" type="submit"/);
-  assert.match(html, /MVP 3\.1/);
-  assert.match(sw, /ro-h5-shell-v40/);
+  assert.match(html, /MVP 3\.2/);
+  assert.match(sw, /ro-h5-shell-v41/);
 }
 
 
@@ -1792,8 +1792,8 @@ function testRollingBackupAndRecoveryUi() {
   assert.match(coreSource, /latestRaw !== previousRaw/);
   assert.match(html, /id="btn-restore-save-backup"[^>]*disabled/);
   assert.match(html, /id="btn-error-restore-save-backup"[^>]*disabled/);
-  assert.match(html, /MVP 3\.1/);
-  assert.match(sw, /ro-h5-shell-v40/);
+  assert.match(html, /MVP 3\.2/);
+  assert.match(sw, /ro-h5-shell-v41/);
   assert.doesNotMatch(appSource, /ro-h5-active-tab-v1|enterSlotsWithLock|screen-lock|screen-lost/);
 }
 
@@ -1816,9 +1816,9 @@ function testCrossTabSaveConflictProtection() {
   assert.match(html, /id="save-conflict-banner"[^>]*class="save-conflict-banner hidden"/);
   assert.match(html, /id="btn-save-conflict-export"/);
   assert.match(html, /id="btn-save-conflict-reload"/);
-  assert.match(html, /MVP 3\.1/);
+  assert.match(html, /MVP 3\.2/);
   assert.match(style, /\.save-conflict-banner/);
-  assert.match(sw, /ro-h5-shell-v40/);
+  assert.match(sw, /ro-h5-shell-v41/);
   assert.doesNotMatch(appSource, /ro-h5-active-tab-v1|enterSlotsWithLock|screen-lock|screen-lost/);
 }
 
@@ -1833,8 +1833,8 @@ function testPortableSaveUiWiring() {
   assert.match(html, /id="import-save-dialog"/);
   assert.match(html, /id="import-save-ack"/);
   assert.match(html, /id="btn-import-save-continue"/);
-  assert.match(html, /MVP 3\.1/);
-  assert.match(sw, /ro-h5-shell-v40/);
+  assert.match(html, /MVP 3\.2/);
+  assert.match(sw, /ro-h5-shell-v41/);
   assert.match(appSource, /function exportSaveFile\(\)/);
   assert.match(appSource, /function handleSaveFileSelection\(event\)/);
   assert.match(appSource, /function continueImportSave\(\)/);
