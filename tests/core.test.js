@@ -11,7 +11,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v14/);
+  assert.match(serviceWorker, /ro-h5-shell-v15/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -82,6 +82,98 @@ function testBestiaryUiWiring() {
   assert.match(appSource, /character\.bestiary/);
   assert.match(html, /data-detail="bestiary">怪物圖鑑/);
   assert.match(css, /\.bestiary-entry/);
+}
+
+function testEquipmentCardMechanics() {
+  const catalog = core.getItemCatalog();
+  assert.equal(catalog.equipment.length, 4);
+  assert.equal(catalog.cards.length, 3);
+  const character = core.makeCharacter('GearTester', 'male', 'novice');
+  const account = core.emptyAccount();
+  const dagger = { instanceId: 'test-dagger', itemId: 'novice_dagger', cards: [] };
+  account.equipmentInventory.push(dagger);
+  assert.equal(core.getEquipmentBonuses(character).attackBonus, 0);
+  const equipped = core.equipItem(character, account, dagger.instanceId);
+  assert.equal(equipped.ok, true);
+  assert.equal(character.equipment.weapon.instanceId, 'test-dagger');
+  assert.equal(account.equipmentInventory.length, 0);
+  assert.equal(core.getEquipmentBonuses(character).attackBonus, 3);
+  account.warehouse['綠棉蟲卡片'] = 1;
+  const socketed = core.socketCard(character, account, 'weapon', 'fabre_card');
+  assert.equal(socketed.ok, true);
+  assert.equal(account.warehouse['綠棉蟲卡片'], undefined, 'socketing consumes one shared card');
+  assert.deepEqual(character.equipment.weapon.cards, ['fabre_card']);
+  assert.equal(core.getEquipmentBonuses(character).attackBonus, 4, 'the attached card contributes attack');
+  const removed = core.unequipItem(character, account, 'weapon');
+  assert.equal(removed.ok, true);
+  assert.equal(character.equipment.weapon, null);
+  assert.equal(account.equipmentInventory[0].instanceId, 'test-dagger');
+  assert.deepEqual(account.equipmentInventory[0].cards, ['fabre_card'], 'socketed card remains attached when gear is unequipped');
+}
+
+function testEquipmentCombatAndLegacyCompatibility() {
+  const character = core.makeCharacter('GearCombatTester', 'male', 'novice');
+  const baseline = core.makeCharacter('BaselineTester', 'male', 'novice');
+  [character, baseline].forEach(function (hero) {
+    hero.battle.map = 'novice_ground'; hero.battle.paused = false;
+    hero.battle.currentMonsterId = 'poring'; hero.battle.monsterHp = 1000; hero.battle.monsterMaxHp = 1000;
+    hero.battle.monsterAttackClock = 0;
+  });
+  const account = core.emptyAccount();
+  account.equipmentInventory.push({ instanceId: 'gear-weapon', itemId: 'novice_dagger', cards: [] });
+  core.equipItem(character, account, 'gear-weapon');
+  const plainHit = core.stepCombat(baseline, core.emptyAccount(), function () { return 0.99; });
+  const gearHit = core.stepCombat(character, account, function () { return 0.99; });
+  assert.equal(gearHit.playerDamage, plainHit.playerDamage + 3, 'weapon attack bonus must be used in combat');
+  const armor = { instanceId: 'gear-armor', itemId: 'cotton_adventurer_armor', cards: [] };
+  account.equipmentInventory.push(armor);
+  core.equipItem(character, account, armor.instanceId);
+  character.battle.monsterAttackClock = 1; baseline.battle.monsterAttackClock = 1;
+  const hpBefore = character.hp; const baselineHpBefore = baseline.hp;
+  const armored = core.stepCombat(character, account, function () { return 0.99; });
+  const unarmored = core.stepCombat(baseline, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(armored.monsterDamage, Math.max(1, unarmored.monsterDamage - 2));
+  assert.equal(hpBefore - character.hp, armored.monsterDamage);
+  assert.equal(baselineHpBefore - baseline.hp, unarmored.monsterDamage);
+
+  const legacy = core.makeCharacter('LegacyGear', 'female', 'novice');
+  delete legacy.equipment;
+  legacy.battle.map = 'novice_ground'; legacy.battle.paused = false;
+  legacy.battle.monsterHp = legacy.battle.monsterMaxHp = 1000;
+  core.stepCombat(legacy, { gold: 0, warehouse: {} }, function () { return 0.99; });
+  assert.deepEqual(legacy.equipment, { weapon: null, armor: null, shoes: null, accessory: null });
+}
+
+function testEquipmentDropAndSaveCompatibility() {
+  const character = core.makeCharacter('GearDropTester', 'male', 'novice');
+  const account = core.emptyAccount();
+  character.battle.map = 'novice_ground'; character.battle.paused = false;
+  character.battle.currentMonsterId = 'poring'; character.battle.monsterHp = 1; character.battle.monsterMaxHp = 18;
+  const result = core.stepCombat(character, account, function () { return 0; });
+  assert.equal(result.killed, true);
+  assert.ok(account.equipmentInventory.some(function (item) { return item.itemId === 'novice_dagger'; }));
+  assert.equal(Number(account.warehouse['波利卡片']) || 0, 1);
+  assert.ok(result.drops.includes('初心者短刀'));
+  const legacyAccount = core.emptyAccount(); delete legacyAccount.equipmentInventory;
+  const legacyHero = core.makeCharacter('DeleteCompatibility', 'male', 'novice');
+  legacyHero.equipment.weapon = { instanceId: 'preserve-cards', itemId: 'novice_dagger', cards: ['fabre_card'] };
+  if (!Array.isArray(legacyAccount.equipmentInventory)) legacyAccount.equipmentInventory = [];
+  legacyAccount.equipmentInventory.push(legacyHero.equipment.weapon);
+  assert.deepEqual(legacyAccount.equipmentInventory[0].cards, ['fabre_card']);
+}
+
+function testEquipmentUiWiring() {
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  assert.match(appSource, /function renderEquipment\(content\)/);
+  assert.match(appSource, /window\.ROCore\.equipItem\(character, account, instanceId\)/);
+  assert.match(appSource, /window\.ROCore\.socketCard\(character, account, slot, cardId\)/);
+  assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
+  assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
+  assert.match(html, /data-detail="equipment">裝備／卡片/);
+  assert.match(html, /MVP 1\.0/);
+  assert.match(css, /\.equipment-slot/);
 }
 
 function testPause() {
@@ -566,7 +658,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 0\.9/);
+  assert.match(html, /MVP 1\.0/);
 }
 
 testAutomaticUpdateStrategy();
@@ -590,5 +682,9 @@ testPause();
 testMapAndMonsterProgression();
 testMonsterBestiaryProgression();
 testBestiaryUiWiring();
+testEquipmentCardMechanics();
+testEquipmentCombatAndLegacyCompatibility();
+testEquipmentDropAndSaveCompatibility();
+testEquipmentUiWiring();
 
-console.log('RO H5 core tests passed (21 suites).');
+console.log('RO H5 core tests passed (25 suites).');
