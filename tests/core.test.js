@@ -202,8 +202,15 @@ function testFirstJobCombatPassives() {
 
 function testAssetManifestCoverage() {
   assert.equal(world.assets.filter(function (asset) { return asset.requiredOnStart; }).length, 4);
-  assert.equal(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length, 2);
+  assert.ok(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length >= 20);
   const assetIds = new Set(world.assets.map(function (asset) { return asset.id; }));
+  assert.equal(assetIds.size, world.assets.length, 'asset IDs must be unique');
+  world.assets.filter(function (asset) { return asset.sourceRepository; }).forEach(function (asset) {
+    assert.equal(asset.sourceRepository, 'nba9001-sys/ro-idle');
+    assert.match(asset.path, /raw\.githubusercontent\.com\/nba9001-sys\/ro-idle\/2348031f3797dbea1981f399288748378a283940\//);
+    assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
+    assert.ok(asset.bytes > 0);
+  });
   world.maps.forEach(function (map) {
     assert.ok(assetIds.has(map.backgroundAssetId), 'missing map background asset: ' + map.id);
     map.monsters.forEach(function (entry) {
@@ -214,7 +221,35 @@ function testAssetManifestCoverage() {
   });
 }
 
+function testExpandedWorldContent() {
+  const expectedMaps = ['prt_fild00', 'payon_field', 'morroc_desert', 'prt_maze01'];
+  expectedMaps.forEach(function (mapId) {
+    assert.ok(core.getMap(mapId), 'expected expanded map: ' + mapId);
+  });
+  assert.ok(world.monsters.wolf && world.monsters.hornet && world.monsters.goblin);
+  assert.ok(world.monsters.orc && world.monsters.willow && world.monsters.spore);
+  assert.ok(world.monsters.poporing && world.monsters.pecopeco && world.monsters.picky && world.monsters.condor);
+  assert.equal(core.getMap('morroc_desert').backgroundAssetId, 'desert');
+  assert.equal(core.getMap('prt_maze01').backgroundAssetId, 'cave');
+
+  const character = core.makeCharacter('MapUnlockTester', 'male', 'novice');
+  character.baseLevel = 5;
+  assert.equal(core.startMap(character, 'morroc_desert', function () { return 0; }), false);
+  character.baseLevel = 6;
+  assert.equal(core.startMap(character, 'morroc_desert', function () { return 0; }), true);
+  assert.equal(character.battle.currentMonsterId, 'pecopeco');
+  assert.equal(character.battle.monsterMaxHp, world.monsters.pecopeco.maxHp);
+
+  character.battle.paused = true;
+  character.baseLevel = 6;
+  assert.equal(core.startMap(character, 'prt_maze01', function () { return 0; }), false);
+  character.baseLevel = 7;
+  assert.equal(core.startMap(character, 'prt_maze01', function () { return 0; }), true);
+  assert.equal(character.battle.currentMonsterId, 'thief_bug');
+}
+
 testAssetManifestCoverage();
+testExpandedWorldContent();
 testFirstJobPromotion();
 testFirstJobCombatPassives();
 testStatPointAllocation();
@@ -224,4 +259,4 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (9 suites).');
+console.log('RO H5 core tests passed (10 suites).');
