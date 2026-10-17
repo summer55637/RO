@@ -22,4 +22,4 @@ An upstream repository's own license applies only to material its author can lic
 
 ## Current state
 
-MVP 0.2 is deployed on GitHub Pages. Branch `feat/animated-job-sprites` implements 14 first-job/novice gender animation groups (120 frames), lazy loading with size/SHA validation, and build v0.3. Read latest workflow and merge status before assuming this branch is already on `main`.
+MVP 0.3 is merged into `main` and deployed on GitHub Pages. The site includes 14 first-job/novice gender animation groups (120 frames), lazy loading with size/SHA validation, and source/licensing notes. Next work: distinct hit/death/skill animations, visual effects, audio and skill-tree mechanics.
