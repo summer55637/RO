@@ -178,7 +178,7 @@
   }
 
   function emptyAccount() {
-    return { version: 1, updatedAt: Date.now(), slots: [null, null, null], gold: 0, warehouse: {}, speed: 1 };
+    return { version: 1, updatedAt: Date.now(), slots: [null, null, null], gold: 0, warehouse: {}, equipmentInventory: [], speed: 1 };
   }
 
   function normalizeNameKey(value) {
@@ -209,6 +209,133 @@
 
   function getMonster(monsterId) {
     return (WORLD.monsters && WORLD.monsters[monsterId]) || WORLD.monsters.poring || null;
+  }
+
+  function getItemDefinition(itemId) {
+    const catalog = WORLD.items || {};
+    const all = (catalog.equipment || []).concat(catalog.cards || []);
+    return all.find(function (item) { return item.id === itemId; }) || null;
+  }
+
+  function getItemCatalog() {
+    const catalog = WORLD.items || {};
+    return { equipment: (catalog.equipment || []).slice(), cards: (catalog.cards || []).slice() };
+  }
+
+  function ensureAccountEquipmentShape(account) {
+    if (!account || typeof account !== 'object') return;
+    if (!Array.isArray(account.equipmentInventory)) account.equipmentInventory = [];
+  }
+
+  function ensureEquipmentShape(character) {
+    if (!character || typeof character !== 'object') return;
+    const slots = ['weapon', 'armor', 'shoes', 'accessory'];
+    if (!character.equipment || typeof character.equipment !== 'object' || Array.isArray(character.equipment)) character.equipment = {};
+    slots.forEach(function (slot) {
+      const equipped = character.equipment[slot];
+      if (!equipped || typeof equipped !== 'object' || Array.isArray(equipped)) {
+        character.equipment[slot] = null;
+      } else {
+        if (!Array.isArray(equipped.cards)) equipped.cards = [];
+        if (!equipped.instanceId) equipped.instanceId = 'equipment-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+      }
+    });
+  }
+
+  function createEquipmentInstance(itemId) {
+    return {
+      instanceId: 'equipment-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10),
+      itemId: itemId,
+      cards: [],
+      acquiredAt: Date.now()
+    };
+  }
+
+  function addEquipmentDrop(account, itemId) {
+    const item = getItemDefinition(itemId);
+    if (!item || item.type !== 'equipment') return false;
+    ensureAccountEquipmentShape(account);
+    account.equipmentInventory.push(createEquipmentInstance(itemId));
+    return true;
+  }
+
+  function getEquipmentBonuses(character) {
+    ensureEquipmentShape(character);
+    const bonuses = { attackBonus: 0, defenseBonus: 0, criticalBonus: 0, dodgeBonus: 0, zenyBonus: 0 };
+    function addEffects(item) {
+      const effects = item && item.effects ? item.effects : {};
+      Object.keys(bonuses).forEach(function (key) {
+        bonuses[key] += Number(effects[key]) || 0;
+      });
+    }
+    ['weapon', 'armor', 'shoes', 'accessory'].forEach(function (slot) {
+      const instance = character.equipment[slot];
+      if (!instance) return;
+      const item = getItemDefinition(instance.itemId);
+      if (item && item.type === 'equipment') addEffects(item);
+      (instance.cards || []).forEach(function (cardId) {
+        const card = getItemDefinition(cardId);
+        if (card && card.type === 'card') addEffects(card);
+      });
+    });
+    return bonuses;
+  }
+
+  function equipItem(character, account, instanceId) {
+    if (!character || !account) return { ok: false, reason: '角色或帳號資料尚未載入。' };
+    ensureEquipmentShape(character);
+    ensureAccountEquipmentShape(account);
+    const index = account.equipmentInventory.findIndex(function (entry) { return entry && entry.instanceId === instanceId; });
+    if (index < 0) return { ok: false, reason: '找不到這件裝備，請重新查看背包。' };
+    const instance = account.equipmentInventory[index];
+    const item = getItemDefinition(instance.itemId);
+    if (!item || item.type !== 'equipment' || !['weapon', 'armor', 'shoes', 'accessory'].includes(item.slot)) {
+      return { ok: false, reason: '裝備資料無效，沒有變更存檔。' };
+    }
+    if (Number(character.baseLevel) < (Number(item.requiredLevel) || 1)) {
+      return { ok: false, reason: '需要 Base Lv. ' + item.requiredLevel + ' 才能裝備。' };
+    }
+    if (Array.isArray(item.allowedJobs) && !item.allowedJobs.includes(character.jobId)) {
+      return { ok: false, reason: '目前職業無法裝備這件物品。' };
+    }
+    const old = character.equipment[item.slot];
+    const oldDefinition = old && getItemDefinition(old.itemId);
+    if (old) account.equipmentInventory.push(old);
+    character.equipment[item.slot] = instance;
+    account.equipmentInventory.splice(index, 1);
+    return { ok: true, itemName: item.name, slot: item.slot, swappedName: oldDefinition ? oldDefinition.name : '' };
+  }
+
+  function unequipItem(character, account, slot) {
+    if (!character || !account) return { ok: false, reason: '角色或帳號資料尚未載入。' };
+    ensureEquipmentShape(character);
+    ensureAccountEquipmentShape(account);
+    if (!['weapon', 'armor', 'shoes', 'accessory'].includes(slot)) return { ok: false, reason: '未知的裝備欄位。' };
+    const instance = character.equipment[slot];
+    if (!instance) return { ok: false, reason: '這個裝備欄位目前是空的。' };
+    const definition = getItemDefinition(instance.itemId);
+    account.equipmentInventory.push(instance);
+    character.equipment[slot] = null;
+    return { ok: true, itemName: definition ? definition.name : '裝備' };
+  }
+
+  function socketCard(character, account, slot, cardId) {
+    if (!character || !account) return { ok: false, reason: '角色或帳號資料尚未載入。' };
+    ensureEquipmentShape(character);
+    if (!account.warehouse || typeof account.warehouse !== 'object' || Array.isArray(account.warehouse)) account.warehouse = {};
+    const instance = character.equipment[slot];
+    if (!instance) return { ok: false, reason: '請先在該欄位裝備物品。' };
+    const gear = getItemDefinition(instance.itemId);
+    const card = getItemDefinition(cardId);
+    if (!gear || gear.type !== 'equipment' || !card || card.type !== 'card') return { ok: false, reason: '裝備或卡片資料無效。' };
+    if (!Array.isArray(instance.cards)) instance.cards = [];
+    if (instance.cards.length >= Math.max(0, Number(gear.cardSlots) || 0)) return { ok: false, reason: '這件裝備沒有空卡槽。' };
+    const count = Math.max(0, Number(account.warehouse[card.name]) || 0);
+    if (count < 1) return { ok: false, reason: '共用倉庫沒有這張卡片。' };
+    account.warehouse[card.name] = count - 1;
+    if (account.warehouse[card.name] <= 0) delete account.warehouse[card.name];
+    instance.cards.push(cardId);
+    return { ok: true, cardName: card.name, itemName: gear.name };
   }
 
   function chooseMonster(mapId, rng) {
@@ -259,6 +386,7 @@
         kills: 0
       },
       personalItems: {},
+      equipment: { weapon: null, armor: null, shoes: null, accessory: null },
       bestiary: {},
       logs: [],
       jobNotice: false,
@@ -342,6 +470,7 @@
     if (!character.skills || typeof character.skills !== 'object' || Array.isArray(character.skills)) character.skills = {};
     if (!character.stats) character.stats = { str: 1, agi: 1, vit: 1, int: 1, dex: 1, luk: 1 };
     if (!character.personalItems) character.personalItems = {};
+    ensureEquipmentShape(character);
     // Forward-compatible per-character monster discoveries; never touch shared warehouse data.
     if (!character.bestiary || typeof character.bestiary !== 'object' || Array.isArray(character.bestiary)) character.bestiary = {};
 
@@ -376,6 +505,7 @@
 
     const job = getFirstJob(character.jobId);
     const skillBonuses = getSkillBonuses(character);
+    const equipmentBonuses = getEquipmentBonuses(character);
     character.battle.combatTicks += 1;
     if (character.battle.skillCooldown > 0) character.battle.skillCooldown -= 1;
     if (skillBonuses.spRecovery > 0 && character.battle.combatTicks % 5 === 0) {
@@ -388,7 +518,7 @@
     const str = Math.max(1, Number(character.stats.str) || 1);
     const dex = Math.max(1, Number(character.stats.dex) || 1);
     const luk = Math.max(1, Number(character.stats.luk) || 1);
-    let damage = Math.max(1, 4 + character.baseLevel + str + Math.floor(dex / 10) + (job ? job.damageBonus : 0) + skillBonuses.damageBonus - Math.floor(random() * 3));
+    let damage = Math.max(1, 4 + character.baseLevel + str + Math.floor(dex / 10) + (job ? job.damageBonus : 0) + skillBonuses.damageBonus + equipmentBonuses.attackBonus - Math.floor(random() * 3));
     if (activeSkill && character.battle.skillCooldown <= 0) {
       const spCost = Math.max(0, (Number(activeEffect.spCostBase) || 0) + (Number(activeEffect.spCostPerLevel) || 0) * activeSkillLevel);
       const discount = skillBonuses.skillCostDiscount;
@@ -413,7 +543,7 @@
         }
       }
     }
-    const criticalChance = Math.min(0.5, luk * 0.005 + (job ? job.criticalBonus : 0) + skillBonuses.criticalBonus);
+    const criticalChance = Math.min(0.5, luk * 0.005 + (job ? job.criticalBonus : 0) + skillBonuses.criticalBonus + equipmentBonuses.criticalBonus);
     result.critical = random() < criticalChance;
     if (result.critical) damage = Math.ceil(damage * 1.5);
     if (skillBonuses.doubleAttackChance > 0 && random() < skillBonuses.doubleAttackChance) {
@@ -445,7 +575,9 @@
 
       (monster.drops || []).forEach(function (drop) {
         if (random() < drop.chance) {
-          addWarehouseItem(account, drop.name, 1);
+          const definition = getItemDefinition(drop.id);
+          if (definition && definition.type === 'equipment') addEquipmentDrop(account, drop.id);
+          else addWarehouseItem(account, drop.name, 1);
           result.drops.push(drop.name);
         }
       });
@@ -500,7 +632,8 @@
       result.dodged = random() < dodgeChance;
       if (!result.dodged) {
         const rawDamage = monster.attackMin + Math.floor(random() * (monster.attackMax - monster.attackMin + 1));
-        const mobDamage = Math.max(1, Math.ceil(rawDamage * (1 - skillBonuses.damageReduction)));
+        const reducedByDefense = Math.max(1, rawDamage - equipmentBonuses.defenseBonus);
+        const mobDamage = Math.max(1, Math.ceil(reducedByDefense * (1 - skillBonuses.damageReduction)));
         character.hp = Math.max(0, character.hp - mobDamage);
         result.monsterDamage = mobDamage;
       }
@@ -547,6 +680,13 @@
     STAT_CAP: STAT_CAP,
     STAT_KEYS: STAT_KEYS,
     emptyAccount: emptyAccount,
+    getItemDefinition: getItemDefinition,
+    getItemCatalog: getItemCatalog,
+    ensureEquipmentShape: ensureEquipmentShape,
+    getEquipmentBonuses: getEquipmentBonuses,
+    equipItem: equipItem,
+    unequipItem: unequipItem,
+    socketCard: socketCard,
     normalizeNameKey: normalizeNameKey,
     validateCharacterName: validateCharacterName,
     makeCharacter: makeCharacter,
