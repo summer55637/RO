@@ -675,8 +675,10 @@
       account.updatedAt = Date.now();
       const serialized = JSON.stringify(account);
       localStorage.setItem(SAVE_KEY, serialized);
-      if (localStorage.getItem(SAVE_KEY) !== serialized) {
-        throw new Error('寫入後回讀比對失敗。');
+      const savedRaw = localStorage.getItem(SAVE_KEY);
+      if (savedRaw !== serialized) {
+        markSaveConflict(savedRaw);
+        return false;
       }
       lastPersistedRaw = serialized;
       $('#save-status').textContent = '已儲存 · ' + new Date().toLocaleTimeString();
