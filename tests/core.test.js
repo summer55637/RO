@@ -10,7 +10,7 @@ function testAutomaticUpdateStrategy() {
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v8/);
+  assert.match(serviceWorker, /ro-h5-shell-v9/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -356,12 +356,141 @@ function testSoundEffectWiring() {
   assert.match(html, /aria-pressed="true"/);
 }
 
+
+function testSkillTreeProgression() {
+  const expectedJobs = ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'];
+  assert.deepEqual(Object.keys(core.SKILL_TREES).sort(), expectedJobs.slice().sort());
+  expectedJobs.forEach(function (jobId) {
+    const tree = core.getSkillTree(jobId);
+    assert.ok(tree && tree.skills.length >= 2, 'missing skill tree for ' + jobId);
+    const ids = tree.skills.map(function (skill) { return skill.id; });
+    assert.equal(new Set(ids).size, ids.length, 'duplicate skill id in ' + jobId);
+    tree.skills.forEach(function (skill) {
+      assert.ok(skill.maxLevel > 0);
+      assert.ok(skill.requiredJobLevel >= 1);
+      if (skill.prerequisite) assert.ok(ids.includes(skill.prerequisite), 'prerequisite must be in same job tree');
+    });
+  });
+
+  const novice = core.makeCharacter('SkillNovice', 'male', 'novice');
+  assert.equal(novice.skillPoints, 0);
+  assert.equal(core.allocateSkill(novice, 'basic_training').ok, false);
+  novice.skillPoints = 5;
+  assert.equal(core.allocateSkill(novice, 'basic_training').level, 1);
+  assert.equal(core.allocateSkill(novice, 'basic_training').level, 2);
+  assert.equal(core.allocateSkill(novice, 'basic_training').level, 3);
+  novice.jobLevel = 5;
+  const firstAid = core.allocateSkill(novice, 'first_aid');
+  assert.equal(firstAid.ok, true);
+  assert.equal(novice.skillPoints, 1);
+  assert.equal(core.allocateSkill(novice, 'sword_mastery').ok, false, 'a skill from a different job is rejected');
+
+  const swordsman = makePromotedFighter('swordsman');
+  swordsman.skillPoints = 8;
+  assert.equal(core.allocateSkill(swordsman, 'bash').ok, false, 'job level requirement must be enforced');
+  swordsman.jobLevel = 5;
+  assert.equal(core.allocateSkill(swordsman, 'bash').ok, false, 'prerequisite rank must be enforced');
+  core.allocateSkill(swordsman, 'sword_mastery');
+  core.allocateSkill(swordsman, 'sword_mastery');
+  core.allocateSkill(swordsman, 'sword_mastery');
+  assert.equal(core.getSkillLevel(swordsman, 'sword_mastery'), 3);
+  assert.equal(core.allocateSkill(swordsman, 'bash').ok, true);
+  assert.equal(core.getSkillLevel(swordsman, 'bash'), 1);
+}
+
+function testSkillCombatEffects() {
+  const baseline = makePromotedFighter('swordsman');
+  const boosted = makePromotedFighter('swordsman');
+  boosted.jobLevel = 5;
+  boosted.skillPoints = 8;
+  for (let i = 0; i < 3; i += 1) core.allocateSkill(boosted, 'sword_mastery');
+  core.allocateSkill(boosted, 'bash');
+  core.allocateSkill(boosted, 'bash');
+  baseline.battle.monsterHp = baseline.battle.monsterMaxHp = 1000;
+  boosted.battle.monsterHp = boosted.battle.monsterMaxHp = 1000;
+  const account = core.emptyAccount();
+  const plainHit = core.stepCombat(baseline, core.emptyAccount(), function () { return 0.99; });
+  const skillHit = core.stepCombat(boosted, account, function () { return 0.99; });
+  assert.equal(skillHit.skillName, '狂擊');
+  assert.ok(skillHit.playerDamage > plainHit.playerDamage, 'Bash should increase damage');
+  assert.equal(boosted.sp, 15, 'Bash rank 2 should consume 5 SP');
+  assert.equal(boosted.battle.skillCooldown, 5);
+
+  const healer = makePromotedFighter('acolyte');
+  healer.jobLevel = 5;
+  healer.skillPoints = 8;
+  for (let i = 0; i < 3; i += 1) core.allocateSkill(healer, 'divine_protection');
+  core.allocateSkill(healer, 'heal');
+  healer.hp = 20;
+  healer.battle.monsterHp = healer.battle.monsterMaxHp = 1000;
+  const healResult = core.stepCombat(healer, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(healResult.skillName, '治癒術');
+  assert.equal(healResult.skillHealingGained, 9);
+  assert.equal(healer.hp, 29);
+  assert.equal(healer.sp, 15);
+
+  const merchant = makePromotedFighter('merchant');
+  merchant.jobLevel = 5;
+  merchant.skillPoints = 8;
+  for (let i = 0; i < 3; i += 1) core.allocateSkill(merchant, 'overcharge');
+  core.allocateSkill(merchant, 'mammonite');
+  merchant.battle.monsterHp = merchant.battle.monsterMaxHp = 1000;
+  const emptyWallet = core.emptyAccount();
+  const uncast = core.stepCombat(merchant, emptyWallet, function () { return 0.99; });
+  assert.equal(uncast.skillName, '', 'Mammonite must not cast without Zeny');
+  assert.equal(merchant.sp, 20);
+  emptyWallet.gold = 100;
+  const cast = core.stepCombat(merchant, emptyWallet, function () { return 0.99; });
+  assert.equal(cast.skillName, '金錢攻擊');
+  assert.equal(emptyWallet.gold, 90, 'rank 1 Mammonite should cost 10 Zeny');
+  assert.equal(merchant.sp, 18);
+}
+
+function testSkillPointsAndLegacySaveCompatibility() {
+  const character = makePromotedFighter('swordsman');
+  character.jobExp = core.jobExpToNext(character.jobLevel) - core.getMonster('poring').jobExp;
+  character.battle.monsterHp = character.battle.monsterMaxHp = 1;
+  const result = core.stepCombat(character, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(result.killed, true);
+  assert.equal(character.jobLevel, 2);
+  assert.equal(character.skillPoints, 1, 'each Job level gained should award a skill point');
+
+  const legacy = makePromotedFighter('mage');
+  delete legacy.skills;
+  delete legacy.skillPoints;
+  delete legacy.battle.skillCooldown;
+  delete legacy.battle.combatTicks;
+  assert.equal(core.getSkillLevel(legacy, 'fire_bolt'), 0);
+  legacy.battle.monsterHp = legacy.battle.monsterMaxHp = 1000;
+  core.stepCombat(legacy, core.emptyAccount(), function () { return 0.99; });
+  assert.equal(legacy.skillPoints, 0);
+  assert.deepEqual(legacy.skills, {});
+  assert.equal(legacy.battle.skillCooldown, 0);
+  assert.equal(legacy.battle.combatTicks, 1);
+}
+
+function testSkillTreeUiWiring() {
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.match(appSource, /function renderSkillTree\(content\)/);
+  assert.match(appSource, /function allocateSkillPoint\(skillId\)/);
+  assert.match(appSource, /data-skill-id/);
+  assert.match(appSource, /activeDetail === 'skills'/);
+  assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
+  assert.match(html, /data-detail="skills">技能樹/);
+  assert.match(html, /MVP 0\.6/);
+}
+
 testAutomaticUpdateStrategy();
 testAssetManifestCoverage();
 testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences();
 testCriticalEffectManifest();
 testSoundEffectManifest();
 testSoundEffectWiring();
+testSkillTreeProgression();
+testSkillCombatEffects();
+testSkillPointsAndLegacySaveCompatibility();
+testSkillTreeUiWiring();
 testExpandedWorldContent();
 testFirstJobPromotion();
 testFirstJobCombatPassives();
@@ -372,4 +501,4 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (15 suites).');
+console.log('RO H5 core tests passed (19 suites).');
