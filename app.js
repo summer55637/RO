@@ -923,16 +923,41 @@
   async function ensureSavedBattleVisuals(target) {
     if (!target || !target.battle || !target.battle.map) return;
     const map = window.ROCore.getMap(target.battle.map);
+    let optionalAnimationAssets = [];
     if (map) {
       const requiredIds = new Set([map.backgroundAssetId]);
+      const optionalAnimationIds = new Set();
       map.monsters.forEach(function (entry) {
         const monster = window.ROCore.getMonster(entry.id);
         if (monster && monster.assetId) requiredIds.add(monster.assetId);
+        if (monster && monster.animationAssetId) optionalAnimationIds.add(monster.animationAssetId);
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       try { await ensureAssets(neededAssets, false); } catch (_) { /* Keep existing local image fallbacks usable. */ }
+      optionalAnimationAssets = ASSETS.filter(function (asset) { return optionalAnimationIds.has(asset.id); });
     }
     await ensurePlayerSprite(target);
+
+    // Restoring an existing battle should load the same optional idle animations as entering a map.
+    // Never block loading a saved character on optional animation downloads.
+    const targetSlot = activeSlot;
+    const targetCharacterId = target.id;
+    if (map && optionalAnimationAssets.length) {
+      Promise.all(optionalAnimationAssets.map(function (asset) {
+        return ensureAssets([asset], false).then(function () {
+          return null;
+        }).catch(function (error) {
+          return { asset: asset, error: error };
+        });
+      })).then(function (results) {
+        if (!character || character.id !== targetCharacterId || activeSlot !== targetSlot ||
+            !character.battle || character.battle.map !== map.id) return;
+        results.filter(Boolean).forEach(function (failure) {
+          appendCharacterLog(failure.asset.name + '載入失敗，會先使用同一物種的已驗證靜態圖。', 'warning');
+        });
+        renderGame();
+      });
+    }
   }
 
   function handleCreate(event) {
