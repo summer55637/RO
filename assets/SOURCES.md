@@ -1,5 +1,21 @@
 # 素材來源與完整性
 
+## MVP 2.2 怪物動畫素材研究指紋（2026-10-17）
+
+- [Divine Pride Mob 1051 spritesheet](https://static.divine-pride.net/images/spritesheets/npc/1051.png)：HTTP 200、PNG、188×350 pixels、21,003 bytes；Git blob SHA-1 `03f1760eb96eb810e8c04ee28f0e2b86bc049c59`。這是整理後的靜態精靈圖集，只記錄作為研究參考，不把其格子順序當成待機／攻擊／受擊的可靠動畫順序。
+- [PyRO-Tools 範例資料](https://github.com/MyGodIsHe/pyro-tools/tree/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data)固定於提交 `1a28450df59bc69e56e70e431f9b61351bafc8f6`，包含以下配對二進位檔。它們屬研究／轉檔的候選輸入，本次沒有把 `.act`／`.spr` 直接送進遊戲 runtime。
+
+| 怪物 | 檔案 | bytes | Git blob SHA-1 |
+|---|---|---:|---|
+| 瘋兔（Mob 1063） | [lunatic.act](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/lunatic.act) | 129,468 | `fb90ed9e0d2f71392b2f25cddb4784a09a221cca` |
+| 瘋兔（Mob 1063） | [lunatic.spr](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/lunatic.spr) | 36,287 | `1cdcc31c9135ede2140e0d951b59efcc1560eda2` |
+| 狼（Mob 1013） | [wolf.act](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/wolf.act) | 36,564 | `93c05e86366a7d9cfab19f59d1ff8f60dd1b617d` |
+| 狼（Mob 1013） | [wolf.spr](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/wolf.spr) | 104,662 | `61b60050dce8094bbebf04d86cc87ef1e8d61706` |
+
+- ACT 提供動作、畫格、圖層與間隔資料，SPR 提供索引色／RGBA sprites；必須解析成配對資料並核對每個 action 的 frame references，不能只從圖集視覺排列推斷動畫。研究參考：[ACT format](https://github.com/rdw-archive/RagnarokFileFormats/blob/master/ACT.MD)、[SPR format](https://github.com/rdw-archive/RagnarokFileFormats/blob/master/SPR.MD)。
+
+
+
 ## MVP 1.5 怪物圖片 ID 稽核
 
 - 根因：上游 images/README.md 與 tools/download_monster_images.js 把專案自訂的顯示序號當成實際 RO Mob ID 下載；例如 1001 被標成瘋兔，但 Mob DB 中 1001 是蠍子，瘋兔正確 ID 是 1063。程式目前改以正確 Mob ID 連到對應圖片。

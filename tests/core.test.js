@@ -65,6 +65,9 @@ function testMonsterArtworkIdentityMapping() {
   assert.equal(gitBlobSha, thiefBugAsset.gitSha, 'local Thief Bug bytes must match the declared Git blob SHA-1');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   assert.match(appSource, /function getMonsterArtworkSource\(monster\)/);
+  assert.match(appSource, /function getMissingMonsterArtworkSource\(\)/, 'missing art has an explicit placeholder');
+  assert.match(appSource, /return getMissingMonsterArtworkSource\(\)/, 'missing art must not borrow another monster image');
+  assert.doesNotMatch(appSource, /return assetUrls\.poring \|\| '\.\/assets\/poring\.png'/, 'battle art must not silently substitute Poring');
   assert.match(appSource, /data:image\/svg\+xml;charset=utf-8/);
   assert.match(appSource, /getMonsterArtworkSource\(currentMonster\)/);
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -82,7 +85,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v28/);
+  assert.match(serviceWorker, /ro-h5-shell-v29/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -150,7 +153,7 @@ function testMonsterEncounterMapHints() {
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
   assert.match(html, /MVP 2\.1/);
-  assert.match(sw, /ro-h5-shell-v28/);
+  assert.match(sw, /ro-h5-shell-v29/);
 }
 
 function testVerifiedBestiaryArtworkEvidence() {
@@ -194,7 +197,7 @@ function testVerifiedBestiaryArtworkEvidence() {
   assert.match(appSource, /bestiary-portrait-placeholder/);
   assert.match(css, /\.bestiary-portrait img/);
   assert.match(html, /MVP 2\.1/);
-  assert.match(sw, /ro-h5-shell-v28/);
+  assert.match(sw, /ro-h5-shell-v29/);
 }
 
 function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
@@ -212,7 +215,7 @@ function testBestiaryRestoresOnlyVerifiedCachedArtwork() {
   assert.match(appSource, /restoreCachedBestiaryPortraits\(discoveredIds\.map/);
   assert.match(appSource, /activeDetail !== 'bestiary' \|\| !list\.isConnected/, 'late cache reads must not redraw a replaced view');
   assert.match(html, /MVP 2\.1/);
-  assert.match(sw, /ro-h5-shell-v28/);
+  assert.match(sw, /ro-h5-shell-v29/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -1084,7 +1087,7 @@ function testConsumableUseAndUiWiring() {
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
   assert.match(html, /MVP 2\.1/);
-  assert.match(sw, /ro-h5-shell-v28/);
+  assert.match(sw, /ro-h5-shell-v29/);
 }
 
 testMonsterArtworkIdentityMapping();

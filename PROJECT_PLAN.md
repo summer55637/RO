@@ -1,8 +1,8 @@
 # RO 純單機 H5 放置 RPG — 專案規畫總表
 
-- **文件版本：** V1.27
+- **文件版本：** V1.28
 - **整理日期：** 2026-10-17
-- **目前階段：** MVP 2.1 盜蟲 Mob 1051 已驗證圖像接入
+- **目前階段：** MVP 2.2 防止怪物圖像錯誤代用
 - **實作狀態：** 使用者已於 2026-10-17 授權開始實作
 - **GitHub 倉庫：** `summer55637/RO`（預設分支 `main`）
 - **現況盤點：** 目標倉庫初始僅含本規畫文件；nba9001-sys/ro-idle 是既有原型與素材／資料參考倉庫。
@@ -634,3 +634,12 @@
 - 新增回歸測試檢查 PNG signature、尺寸、原始 bytes、Git blob SHA、來源 URL、Mob ID 及所有地圖怪物的 manifest 對應；Service Worker shell cache 從 v27 升至 v28。
 - Divine Pride 的[盜蟲精靈表](https://static.divine-pride.net/images/spritesheets/npc/1051.png)已確認可供後續研究，但目前只接入靜態 PNG。SPR／ACT 的動作索引、各動作畫格、幀時長與對應關係仍要逐項解析和實際核對，不能把精靈表直接當成已完成動畫。
 - 此版本不更動角色存檔、戰鬥數值、掉落、角色進度或帳號共用資產；沒有重設任何玩家資料。
+
+
+## 42. 怪物素材缺失防錯與 SPR／ACT 研究盤點（MVP 2.2，2026-10-17）
+
+- 戰鬥畫面以前在怪物圖像 URL 缺失時退回波利圖片，可能把尚未載入或設定錯誤的怪物顯示成另一物種。MVP 2.2 改成顯示清楚的「圖像未載入」佔位；盜蟲仍只在 Mob 1051 PNG 缺失時用專屬向量備援。既有正常的已驗證圖片顯示方式不變。
+- 新增回歸檢查，要求戰鬥圖像 helper 對缺少／未知 assetId fail closed，且不能回退至波利／其他怪物圖像。Service Worker shell cache 從 v28 升至 v29。
+- 已盤點 [PyRO-Tools](https://github.com/MyGodIsHe/pyro-tools) 的固定提交 `1a28450df59bc69e56e70e431f9b61351bafc8f6`；該範例倉庫提供配對的 `lunatic.act/.spr`、`wolf.act/.spr` 二進位樣本。來源及 Git blob SHA 記錄於 `assets/SOURCES.md`。PyRO-Tools 的 parser 偏舊版 Python，尚未直接加入瀏覽器 runtime；真正動畫仍須先做格式版本解析、動作分組、方向／圖層校驗和實際畫格核對。
+- 同時記錄 Divine Pride Mob 1051 spritesheet 的來源尺寸與雜湊作為素材研究指紋；它是靜態組合圖，並非可直接播放的 ACT 時序。
+- 本版不更動角色存檔、角色欄位、戰鬥數值、掉落或地圖解鎖進度。
