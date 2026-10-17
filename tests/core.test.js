@@ -53,7 +53,7 @@ function testMonsterArtworkIdentityMapping() {
   assert.doesNotMatch(html, /瘋兔圖像<\/strong><small>1001\.png/, 'installer must not label Scorpion Mob 1001 as Lunatic');
   assert.doesNotMatch(html, /綠棉蟲圖像<\/strong><small>1003\.png/, 'installer must not label Test Egg Mob 1003 as Fabre');
   const sources = fs.readFileSync(path.join(__dirname, '..', 'assets', 'SOURCES.md'), 'utf8');
-  assert.match(sources, /MVP 1\.5 怪物圖片 ID 稽核/);
+  assert.match(sources, /MVP 1\.6 怪物圖片 ID 稽核/);
   assert.match(sources, /975c87dfc27ab267b2ec0dddff77421b2e6ee87b/);
 }
 
@@ -273,7 +273,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.5/);
+  assert.match(html, /MVP 1\.6/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -419,7 +419,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.5/);
+  assert.match(html, /MVP 1\.6/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -909,7 +909,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.5/);
+  assert.match(html, /MVP 1\.6/);
 }
 
 
@@ -956,7 +956,7 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 1\.5/);
+  assert.match(html, /MVP 1\.6/);
   assert.match(sw, /ro-h5-shell-v22/);
 }
 
