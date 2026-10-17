@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-require('../world-data.js');
+const world = require('../world-data.js');
 const core = require('../core.js');
 
 function testNameRules() {
@@ -65,10 +65,26 @@ function testMapAndMonsterProgression() {
   assert.equal(character.battle.monsterMaxHp, core.getMonster('thief_bug').maxHp);
 }
 
+
+function testAssetManifestCoverage() {
+  assert.equal(world.assets.filter(function (asset) { return asset.requiredOnStart; }).length, 4);
+  assert.equal(world.assets.filter(function (asset) { return !asset.requiredOnStart; }).length, 2);
+  const assetIds = new Set(world.assets.map(function (asset) { return asset.id; }));
+  world.maps.forEach(function (map) {
+    assert.ok(assetIds.has(map.backgroundAssetId), 'missing map background asset: ' + map.id);
+    map.monsters.forEach(function (entry) {
+      const monster = world.monsters[entry.id];
+      assert.ok(monster, 'missing monster data: ' + entry.id);
+      assert.ok(assetIds.has(monster.assetId), 'missing monster image asset: ' + entry.id);
+    });
+  });
+}
+
+testAssetManifestCoverage();
 testNameRules();
 testOfflineTimeCap();
 testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 
-console.log('RO H5 core tests passed (5 suites).');
+console.log('RO H5 core tests passed (6 suites).');
