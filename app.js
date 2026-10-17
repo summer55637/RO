@@ -338,8 +338,7 @@
       return true;
     } catch (error) {
       $('#save-status').textContent = '儲存失敗';
-      $('#fatal-message').textContent = '本機儲存失敗：' + (error.message || '空間不足或瀏覽器封鎖存取。') + '。遊戲已停止寫入。';
-      setScreen('screen-error');
+      fatal('本機儲存失敗：' + (error.message || '空間不足或瀏覽器封鎖存取。') + '。遊戲已停止寫入。');
       return false;
     }
   }
@@ -1001,6 +1000,8 @@
     if (autosaveTimer) clearInterval(autosaveTimer);
     heartbeatTimer = null;
     autosaveTimer = null;
+    if (isLockOwner()) releaseLock();
+    else hasControl = false;
     $('#fatal-message').textContent = message;
     setScreen('screen-error');
   }
