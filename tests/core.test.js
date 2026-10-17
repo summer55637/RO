@@ -222,7 +222,7 @@ function testAssetManifestCoverage() {
     frameIds.forEach(function (id, index) {
       assert.ok(assetIds.has(id), 'missing animation frame asset: ' + id);
       const asset = world.assets.find(function (candidate) { return candidate.id === id; });
-      assert.equal(asset.assetKind, 'character-frame' === asset.assetKind ? 'character-frame' : 'character');
+      assert.ok(asset.assetKind === 'character-frame' || asset.assetKind === 'character');
       assert.equal(asset.approvalStatus, 'owner-authorized');
       if (index > 0) assert.equal(asset.spriteGroup, group);
       totalFrames += 1;
