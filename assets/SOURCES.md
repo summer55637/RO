@@ -1,5 +1,10 @@
 # 素材來源與完整性
 
+## MVP 1.0 道具資料與欄位參考
+
+- 欄位概念參考 [rAthena 的 `db/item_db.yml`](https://github.com/rathena/rathena/blob/master/db/item_db.yml) 及 [道具資料格式說明](https://github.com/rathena/rathena/blob/master/doc/item_db.txt)，包括道具類型、攻擊／防禦、裝備位置、卡槽和職業需求欄位。這些是社群伺服器的資料結構參考，不是台灣官方現行道具平衡的權威來源。
+- 本階段的四種裝備、三種卡片、裝備效果及新增怪物掉落率是在本專案內編寫的原型資料；沒有從上游複製任何二進位素材或完整道具資料庫，也沒有宣稱數值等同台灣官方 PC RO。
+
 ## MVP 0.9 怪物圖鑑資料說明
 
 本階段未新增圖片、音訊或其他二進位檔案。圖鑑讀取本專案 `world-data.js` 已有的怪物名稱、原型 HP、掉落資料及六張地圖遭遇表；既有圖片與素材的固定來源、bytes、Git blob SHA 仍依下方批次紀錄驗證。怪物掉落機率、數值與地圖權重屬本專案原型參數，不視為台灣官方 PC RO 現行資料。
