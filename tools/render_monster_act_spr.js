@@ -147,6 +147,44 @@ const MONSTERS = [
     outputSha: '34ae789ab040f4e4b28bc5cedcdaf058fb2459ff'
   },
   {
+    key: 'poring-walk',
+    name: '波利',
+    animationType: 'walk',
+    canvasWidth: 128,
+    mobId: 1002,
+    actPath: 'tools/samples/poring.act',
+    sprPath: 'tools/samples/poring.spr',
+    actSha: '26717393629e410910ff080d204e930d945328cd',
+    sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb2459ff',
+    actionIndex: 8,
+    frames: 10,
+    frameMs: 40,
+    scale: 2.8,
+    centerY: 102,
+    outputPath: 'assets/poring_walk.svg',
+    outputBytes: 50257,
+    outputSha: '4d84a80fa54aed07db0eb4ceb8ffb1592adad1c9'
+  },
+  {
+    key: 'wolf-walk',
+    name: '狼',
+    animationType: 'walk',
+    canvasWidth: 128,
+    mobId: 1013,
+    actPath: 'tools/samples/wolf.act',
+    sprPath: 'tools/samples/wolf.spr',
+    actSha: '93c05e86366a7d9cfab19f59d1ff8f60dd1b617d',
+    sprSha: '61b60050dce8094bbebf04d86cc87ef1e8d61706',
+    actionIndex: 8,
+    frames: 8,
+    frameMs: 80,
+    scale: 1.35,
+    centerY: 76,
+    outputPath: 'assets/wolf_walk.svg',
+    outputBytes: 140374,
+    outputSha: '0180f648a1d44961d2561a1d90006b1e6e45be03'
+  },
+  {
     key: 'green-plant',
     name: '綠色植物',
     animationType: 'idle',
@@ -366,7 +404,8 @@ function renderSvg(config, actBytes, sprBytes) {
   const groups = frameLayers.map((content, index) =>
     '<g id="frame-' + index + '" class="f' + index + '">' + content + '</g>').join('');
   const animationLabel = config.animationType === 'attack' ? '攻擊逐格動畫' :
-    config.animationType === 'hurt' ? '受擊逐格動畫' : '待機逐格動畫';
+    config.animationType === 'hurt' ? '受擊逐格動畫' :
+    config.animationType === 'walk' ? '移動逐格動畫' : '待機逐格動畫';
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + canvasWidth + ' 128" role="img" aria-label="' +
     config.name + ' Mob ' + config.mobId + ' ' + animationLabel + '" data-mob-id="' + config.mobId +
     '" data-act-action-index="' + config.actionIndex + '" data-frame-count="' + frames.length +
