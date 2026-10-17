@@ -867,7 +867,7 @@ function testCraftingMaterialsAndTransactions() {
   assert.equal(account.warehouse['胡蘿蔔補給'], 2);
   assert.equal(account.warehouse['既有獸毛'], 7, 'unrelated warehouse items are preserved');
   const beforeShortage = JSON.stringify(account);
-  assert.equal(core.craftConsumable(account, 'honey_potion', 3).ok, false);
+  assert.equal(core.craftConsumable(account, 'honey_potion', 2).ok, false);
   assert.equal(JSON.stringify(account), beforeShortage, 'failed crafting must not partially consume materials');
   assert.equal(core.craftConsumable(account, 'unknown_recipe', 1).ok, false);
   assert.equal(core.craftConsumable(account, 'honey_potion', 100).ok, false);
