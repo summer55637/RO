@@ -36,3 +36,9 @@
 完整資源管理（斷點續傳、雙版本切換、回退、依相依關係清理）、完整官方 RO 戰鬥公式、正式職業／轉生樹、技能、裝備與卡片、完整外觀動作集、音樂與音效、地圖擴充、瀏覽器跨分頁壓力測試，以及部署設定。
 
 目前戰鬥數值、能力值效果與能力點規則是原型基線，不應視為台灣官方 RO 正式數值。能力點參考自 iRO Wiki 的經典規則（https://irowiki.org/classic/Stats、https://irowiki.org/wiki/Stats）；台灣 PC RO 版本差異尚待核對。
+
+## 免費遊戲網址（GitHub Pages）
+
+預定公開網址：`https://summer55637.github.io/RO/`
+
+此網址須在 GitHub 倉庫 Settings → Pages 將 Source 設為 GitHub Actions，並完成一次成功部署後才會啟用。此遊戲是靜態網頁，角色存檔留在玩家自己的瀏覽器，不會上傳到遊戲伺服器。
