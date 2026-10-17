@@ -2513,7 +2513,7 @@
     $('#btn-music').addEventListener('click', toggleMusic);
     $('#btn-save').addEventListener('click', function () { if (persistCurrent()) showToast('已保存到本機'); });
     $$('.speed-button').forEach(function (button) { button.addEventListener('click', function () { changeSpeed(button.dataset.speed); }); });
-    $('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });
+    $$('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });
     $('#details-content').addEventListener('click', function (event) {
       const statButton = event.target.closest('[data-stat-key]');
       if (statButton && !statButton.disabled) {
