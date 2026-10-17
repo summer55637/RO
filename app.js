@@ -533,13 +533,13 @@
       } else {
         const avatar = document.createElement('div');
         avatar.className = 'slot-avatar';
-        avatar.innerHTML = playerSvg(item.gender);
+        avatar.innerHTML = playerSpriteMarkup(item);
         const name = document.createElement('h2');
         name.className = 'slot-name';
         name.textContent = item.name;
         const meta = document.createElement('p');
         meta.className = 'slot-meta';
-        meta.textContent = '初心者 · Base ' + item.baseLevel + ' / Job ' + item.jobLevel;
+        meta.textContent = (item.jobName || '初心者') + ' · Base ' + item.baseLevel + ' / Job ' + item.jobLevel;
         const buttons = document.createElement('div');
         buttons.className = 'slot-buttons';
         buttons.append(
@@ -612,6 +612,59 @@
       '</svg>';
   }
 
+  const PLAYER_SPRITE_JOBS = Object.freeze({
+    novice: '初心者',
+    swordsman: '劍士',
+    mage: '魔法師',
+    archer: '弓箭手',
+    acolyte: '服事',
+    merchant: '商人',
+    thief: '盜賊'
+  });
+
+  function playerSpriteAssetId(target) {
+    if (!target || !Object.prototype.hasOwnProperty.call(PLAYER_SPRITE_JOBS, target.jobId)) return '';
+    const gender = target.gender === 'female' ? 'female' : 'male';
+    return 'player_' + target.jobId + '_' + gender;
+  }
+
+  function playerSpriteMarkup(target) {
+    const assetId = playerSpriteAssetId(target);
+    const url = assetId ? assetUrls[assetId] : '';
+    if (!url) return playerSvg(target && target.gender);
+    const label = PLAYER_SPRITE_JOBS[target.jobId] + (target.gender === 'female' ? '（女性）' : '（男性）');
+    return '<img class="ro-character-frame" src="' + url + '" alt="' + label + '">';
+  }
+
+  async function ensurePlayerSprite(target) {
+    const assetId = playerSpriteAssetId(target);
+    if (!assetId || assetUrls[assetId]) return Boolean(assetId && assetUrls[assetId]);
+    const asset = ASSETS.find(function (entry) { return entry.id === assetId; });
+    if (!asset) return false;
+    try {
+      await ensureAssets([asset], false);
+      return Boolean(assetUrls[assetId]);
+    } catch (_) {
+      // Character art is optional: use the built-in SVG fallback if it cannot be downloaded.
+      return false;
+    }
+  }
+
+  async function ensureSavedBattleVisuals(target) {
+    if (!target || !target.battle || !target.battle.map) return;
+    const map = window.ROCore.getMap(target.battle.map);
+    if (map) {
+      const requiredIds = new Set([map.backgroundAssetId]);
+      map.monsters.forEach(function (entry) {
+        const monster = window.ROCore.getMonster(entry.id);
+        if (monster && monster.assetId) requiredIds.add(monster.assetId);
+      });
+      const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
+      try { await ensureAssets(neededAssets, false); } catch (_) { /* Keep existing local image fallbacks usable. */ }
+    }
+    await ensurePlayerSprite(target);
+  }
+
   function handleCreate(event) {
     event.preventDefault();
     if (!isLockOwner()) return loseControl();
@@ -645,7 +698,7 @@
     character.logs = character.logs.slice(-24);
   }
 
-  function openSlot(index) {
+  async function openSlot(index) {
     if (!isLockOwner()) return loseControl();
     account = readAccount();
     const item = account.slots[index];
@@ -663,11 +716,15 @@
     account.slots[index] = character;
     if (!writeAccount()) return;
     if (character.battle && character.battle.map) {
+      await ensureSavedBattleVisuals(character);
+      if (!isLockOwner()) return loseControl();
       setScreen('screen-battle');
       activeDetail = 'status';
       renderGame();
       startBattleLoop();
     } else {
+      await ensurePlayerSprite(character);
+      if (!isLockOwner()) return loseControl();
       renderCamp();
       setScreen('screen-camp');
     }
@@ -692,7 +749,7 @@
 
   function renderCamp() {
     if (!character) return;
-    $('#camp-avatar').innerHTML = playerSvg(character.gender);
+    $('#camp-avatar').innerHTML = playerSpriteMarkup(character);
     $('#camp-name').textContent = character.name;
     $('#camp-job').textContent = character.jobName + ' · Job Lv. ' + character.jobLevel;
     $('#camp-level').textContent = String(character.baseLevel);
@@ -775,6 +832,7 @@
       });
       const neededAssets = ASSETS.filter(function (asset) { return requiredIds.has(asset.id); });
       await ensureAssets(neededAssets, false);
+      await ensurePlayerSprite(character);
       if (!isLockOwner()) return loseControl();
       if (!window.ROCore.startMap(character, map.id)) throw new Error('目前等級尚未符合地圖需求。');
       character.lastSavedAt = Date.now();
@@ -889,11 +947,12 @@
     $('#hud-job').textContent = character.jobName + ' · Job Lv. ' + character.jobLevel;
     const currentMap = window.ROCore.getMap(character.battle.map);
     $('#battle-map-name').textContent = currentMap ? currentMap.name : '安全營地';
-    $('#battle-avatar').innerHTML = playerSvg(character.gender);
+    $('#battle-avatar').innerHTML = playerSpriteMarkup(character);
     const hero = $('#hero-sprite');
-    if (hero.dataset.gender !== character.gender) {
-      hero.innerHTML = '<div class="hero-character">' + playerSvg(character.gender) + '</div>';
-      hero.dataset.gender = character.gender;
+    const visualKey = (character.jobId || 'novice') + '-' + (character.gender === 'female' ? 'female' : 'male');
+    if (hero.dataset.visualKey !== visualKey) {
+      hero.innerHTML = '<div class="hero-character">' + playerSpriteMarkup(character) + '</div>';
+      hero.dataset.visualKey = visualKey;
     }
     const currentMonster = window.ROCore.getMonster(character.battle.currentMonsterId);
     $('#scene-background').src = assetUrls[(currentMap && currentMap.backgroundAssetId) || 'field'] || './assets/field.jpg';
@@ -1101,7 +1160,7 @@
     renderGame();
   }
 
-  function changeCharacterJob(jobId) {
+  async function changeCharacterJob(jobId) {
     if (!character || activeSlot === null) return;
     if (!isLockOwner()) return loseControl();
 
@@ -1147,6 +1206,9 @@
     if (!persistCurrent()) return;
     renderGame();
     showToast('轉職成功：' + character.jobName);
+    const promotedCharacterId = character.id;
+    await ensurePlayerSprite(character);
+    if (character && character.id === promotedCharacterId && isLockOwner()) renderGame();
   }
 
   function setDetail(name) {
