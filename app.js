@@ -1344,59 +1344,140 @@
     const monsterIds = Object.keys(monsterData).sort(function (left, right) {
       return String(monsterData[left].name || left).localeCompare(String(monsterData[right].name || right), 'zh-Hant');
     });
-    const discoveredIds = monsterIds.filter(function (id) {
-      return Math.max(0, Number((character.bestiary || {})[id]) || 0) > 0;
-    });
+    const bestiary = character.bestiary || {};
+    const countFor = function (id) { return Math.max(0, Math.floor(Number(bestiary[id]) || 0)); };
+    const discoveredIds = monsterIds.filter(function (id) { return countFor(id) > 0; });
     addDetailHeading(content, '怪物圖鑑');
     addDetailRow(content, '已發現怪物', discoveredIds.length + ' / ' + monsterIds.length);
     const hint = document.createElement('p');
     hint.className = 'field-help';
-    hint.textContent = '擊倒怪物即可登錄圖鑑。每個角色分別記錄；既有角色會自動開始累積，不影響經驗、Zeny 或倉庫。';
+    hint.textContent = '擊倒怪物即可登錄圖鑑。每個角色分別記錄；既有角色會自動開始累積，不影響經驗、Zeny 或倉庫。可搜尋已發現怪物，或依擊倒數排序。';
     content.appendChild(hint);
+    const controls = document.createElement('div');
+    controls.className = 'bestiary-controls';
+    const searchLabel = document.createElement('label');
+    searchLabel.className = 'bestiary-control bestiary-search-control';
+    const searchCaption = document.createElement('span');
+    searchCaption.textContent = '搜尋已發現怪物';
+    const search = document.createElement('input');
+    search.type = 'search';
+    search.id = 'bestiary-search';
+    search.className = 'text-input bestiary-search';
+    search.placeholder = '輸入怪物名稱';
+    search.setAttribute('aria-label', '搜尋已發現怪物');
+    searchLabel.append(searchCaption, search);
+    const filterLabel = document.createElement('label');
+    filterLabel.className = 'bestiary-control';
+    const filterCaption = document.createElement('span');
+    filterCaption.textContent = '圖鑑狀態';
+    const filter = document.createElement('select');
+    filter.id = 'bestiary-filter';
+    filter.className = 'text-input bestiary-select';
+    [['all', '全部怪物'], ['discovered', '已發現'], ['undiscovered', '尚未遭遇']].forEach(function (entry) {
+      const option = document.createElement('option');
+      option.value = entry[0];
+      option.textContent = entry[1];
+      filter.appendChild(option);
+    });
+    filterLabel.append(filterCaption, filter);
+    const sortLabel = document.createElement('label');
+    sortLabel.className = 'bestiary-control';
+    const sortCaption = document.createElement('span');
+    sortCaption.textContent = '排序方式';
+    const sort = document.createElement('select');
+    sort.id = 'bestiary-sort';
+    sort.className = 'text-input bestiary-select';
+    [['name', '名稱順序'], ['kills', '擊倒數（高至低）']].forEach(function (entry) {
+      const option = document.createElement('option');
+      option.value = entry[0];
+      option.textContent = entry[1];
+      sort.appendChild(option);
+    });
+    sortLabel.append(sortCaption, sort);
+    controls.append(searchLabel, filterLabel, sortLabel);
+    content.appendChild(controls);
+    const resultSummary = document.createElement('p');
+    resultSummary.className = 'field-help bestiary-results';
+    resultSummary.setAttribute('aria-live', 'polite');
+    content.appendChild(resultSummary);
     const list = document.createElement('div');
     list.className = 'bestiary-list';
-    monsterIds.forEach(function (id) {
-      const monster = monsterData[id];
-      const count = Math.max(0, Math.floor(Number((character.bestiary || {})[id]) || 0));
-      const discovered = count > 0;
-      const card = document.createElement('article');
-      card.className = 'bestiary-entry' + (discovered ? '' : ' undiscovered');
-      const head = document.createElement('div');
-      head.className = 'bestiary-entry-head';
-      const emblem = document.createElement('span');
-      emblem.className = 'bestiary-emblem';
-      emblem.textContent = discovered ? '✦' : '?';
-      const copy = document.createElement('div');
-      copy.className = 'bestiary-copy';
-      const title = document.createElement('strong');
-      title.textContent = discovered ? (monster.name || id) : '??? 未遭遇';
-      const meta = document.createElement('small');
-      meta.textContent = discovered ? '擊倒 ' + formatNumber(count) + ' 隻 · HP ' + formatNumber(monster.maxHp) : '擊倒此怪物後解鎖資料';
-      copy.append(title, meta);
-      head.append(emblem, copy);
-      card.appendChild(head);
-      if (discovered) {
-        const habitats = (window.ROWorld.maps || []).filter(function (map) {
-          return (map.monsters || []).some(function (entry) { return entry.id === id; });
-        }).map(function (map) { return map.name; });
-        const habitatLine = document.createElement('p');
-        habitatLine.className = 'bestiary-entry-meta';
-        habitatLine.textContent = '出沒地點：' + (habitats.length ? habitats.join('、') : '資料整理中');
-        card.appendChild(habitatLine);
-        const drops = Array.isArray(monster.drops) ? monster.drops : [];
-        const dropLine = document.createElement('p');
-        dropLine.className = 'bestiary-entry-drops';
-        dropLine.textContent = drops.length ? '可能掉落：' + drops.map(function (drop) {
-          const chance = Number.isFinite(Number(drop.chance)) ? '（' + Math.round(Number(drop.chance) * 100) + '%）' : '';
-          return drop.name + chance;
-        }).join('、') : '可能掉落：尚無已登錄資料';
-        card.appendChild(dropLine);
-      }
-      list.appendChild(card);
-    });
     content.appendChild(list);
+    function renderEntries() {
+      const query = search.value.trim().toLocaleLowerCase();
+      const discoveryFilter = filter.value;
+      const sortMode = sort.value;
+      const filteredIds = monsterIds.filter(function (id) {
+        const discovered = countFor(id) > 0;
+        if (discoveryFilter === 'discovered' && !discovered) return false;
+        if (discoveryFilter === 'undiscovered' && discovered) return false;
+        // Never search undiscovered names; those names are intentionally hidden until the first kill.
+        if (query && (!discovered || !String(monsterData[id].name || id).toLocaleLowerCase().includes(query))) return false;
+        return true;
+      });
+      filteredIds.sort(function (left, right) {
+        if (sortMode === 'kills') {
+          const byCount = countFor(right) - countFor(left);
+          if (byCount) return byCount;
+        }
+        const leftName = countFor(left) > 0 ? String(monsterData[left].name || left) : '??? 未遭遇';
+        const rightName = countFor(right) > 0 ? String(monsterData[right].name || right) : '??? 未遭遇';
+        return leftName.localeCompare(rightName, 'zh-Hant');
+      });
+      list.replaceChildren();
+      resultSummary.textContent = '顯示 ' + filteredIds.length + ' / ' + monsterIds.length + ' 種 · 已發現 ' + discoveredIds.length + ' 種';
+      if (!filteredIds.length) {
+        const empty = document.createElement('p');
+        empty.className = 'field-help bestiary-empty';
+        empty.textContent = query ? '找不到符合的已發現怪物；尚未遭遇的怪物名稱會保持隱藏。' : '目前沒有符合此篩選條件的怪物。';
+        list.appendChild(empty);
+        return;
+      }
+      filteredIds.forEach(function (id) {
+        const monster = monsterData[id];
+        const count = countFor(id);
+        const discovered = count > 0;
+        const card = document.createElement('article');
+        card.className = 'bestiary-entry' + (discovered ? '' : ' undiscovered');
+        const head = document.createElement('div');
+        head.className = 'bestiary-entry-head';
+        const emblem = document.createElement('span');
+        emblem.className = 'bestiary-emblem';
+        emblem.textContent = discovered ? '✦' : '?';
+        const copy = document.createElement('div');
+        copy.className = 'bestiary-copy';
+        const title = document.createElement('strong');
+        title.textContent = discovered ? (monster.name || id) : '??? 未遭遇';
+        const meta = document.createElement('small');
+        meta.textContent = discovered ? '擊倒 ' + formatNumber(count) + ' 隻 · HP ' + formatNumber(monster.maxHp) : '擊倒此怪物後解鎖資料';
+        copy.append(title, meta);
+        head.append(emblem, copy);
+        card.appendChild(head);
+        if (discovered) {
+          const habitats = (window.ROWorld.maps || []).filter(function (map) {
+            return (map.monsters || []).some(function (entry) { return entry.id === id; });
+          }).map(function (map) { return map.name; });
+          const habitatLine = document.createElement('p');
+          habitatLine.className = 'bestiary-entry-meta';
+          habitatLine.textContent = '出沒地點：' + (habitats.length ? habitats.join('、') : '資料整理中');
+          card.appendChild(habitatLine);
+          const drops = Array.isArray(monster.drops) ? monster.drops : [];
+          const dropLine = document.createElement('p');
+          dropLine.className = 'bestiary-entry-drops';
+          dropLine.textContent = drops.length ? '可能掉落：' + drops.map(function (drop) {
+            const chance = Number.isFinite(Number(drop.chance)) ? '（' + Math.round(Number(drop.chance) * 100) + '%）' : '';
+            return drop.name + chance;
+          }).join('、') : '可能掉落：尚無已登錄資料';
+          card.appendChild(dropLine);
+        }
+        list.appendChild(card);
+      });
+    }
+    search.addEventListener('input', renderEntries);
+    filter.addEventListener('change', renderEntries);
+    sort.addEventListener('change', renderEntries);
+    renderEntries();
   }
-
   function handleCraftConsumable(recipeId) {
     if (!character || !account) return;
     const result = window.ROCore.craftConsumable(account, recipeId, 1);

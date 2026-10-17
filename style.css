@@ -159,3 +159,12 @@
 .warehouse-item{gap:8px}
 .warehouse-item span{min-width:0;overflow-wrap:anywhere}
 @media(max-width:520px){.crafting-item{align-items:flex-start;gap:7px;padding:8px}.crafting-action{padding:6px}.warehouse-use{padding:6px 7px}}
+
+
+/* MVP 1.6: search, discovery filtering and defeat-count ranking for the monster bestiary. */
+.bestiary-controls{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(105px,.8fr) minmax(120px,.9fr);gap:8px;margin:12px 0 6px}
+.bestiary-control{display:grid;gap:5px;min-width:0;color:var(--muted);font-size:10px;line-height:1.4}
+.bestiary-search,.bestiary-select{box-sizing:border-box;width:100%;min-width:0;min-height:36px;padding:7px 9px;font-size:12px}
+.bestiary-results{margin:6px 0}
+.bestiary-empty{grid-column:1/-1;padding:14px;border:1px dashed rgba(255,255,255,.12);border-radius:8px;text-align:center}
+@media(max-width:520px){.bestiary-controls{grid-template-columns:1fr 1fr}.bestiary-search-control{grid-column:1/-1}}

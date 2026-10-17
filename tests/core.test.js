@@ -62,7 +62,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v21/);
+  assert.match(serviceWorker, /ro-h5-shell-v22/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -131,6 +131,11 @@ function testBestiaryUiWiring() {
   assert.match(appSource, /function renderBestiary\(content\)/);
   assert.match(appSource, /activeDetail === 'bestiary'/);
   assert.match(appSource, /character\.bestiary/);
+  assert.match(appSource, /id = 'bestiary-search'/, 'bestiary includes a search input');
+  assert.match(appSource, /id = 'bestiary-filter'/, 'bestiary includes a discovery filter');
+  assert.match(appSource, /id = 'bestiary-sort'/, 'bestiary includes sorting controls');
+  assert.match(appSource, /!discovered \|\| !String\(monsterData\[id\]\.name \|\| id\)\.toLocaleLowerCase\(\)\.includes\(query\)/, 'search must not reveal undiscovered monster names');
+  assert.match(appSource, /sortMode === 'kills'/, 'bestiary can sort by defeat count');
   assert.match(html, /data-detail="bestiary">怪物圖鑑/);
   assert.match(css, /\.bestiary-entry/);
 }
@@ -268,7 +273,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.5/);
+  assert.match(html, /MVP 1\.6/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -414,7 +419,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.5/);
+  assert.match(html, /MVP 1\.6/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -904,7 +909,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.5/);
+  assert.match(html, /MVP 1\.6/);
 }
 
 
@@ -951,8 +956,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 1\.5/);
-  assert.match(sw, /ro-h5-shell-v21/);
+  assert.match(html, /MVP 1\.6/);
+  assert.match(sw, /ro-h5-shell-v22/);
 }
 
 testMonsterArtworkIdentityMapping();
