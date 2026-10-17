@@ -11,10 +11,13 @@ const crypto = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const SOURCE_COMMIT = '1a28450df59bc69e56e70e431f9b61351bafc8f6';
+const RAGASSETS_COMMIT = '4de4fa747431979d35c747d7edd549a872efd9e1';
 const MONSTERS = [
   {
     key: 'lunatic',
     name: '瘋兔',
+    animationType: 'idle',
+    canvasWidth: 128,
     mobId: 1063,
     actPath: 'tools/samples/lunatic.act',
     sprPath: 'tools/samples/lunatic.spr',
@@ -32,6 +35,8 @@ const MONSTERS = [
   {
     key: 'wolf',
     name: '狼',
+    animationType: 'idle',
+    canvasWidth: 128,
     mobId: 1013,
     actPath: 'tools/samples/wolf.act',
     sprPath: 'tools/samples/wolf.spr',
@@ -45,6 +50,44 @@ const MONSTERS = [
     outputPath: 'assets/wolf_idle.svg',
     outputBytes: 265283,
     outputSha: 'bb11db5c6f0417f2565380717ec0d0f51a8b51aa'
+  },
+  {
+    key: 'poring-idle',
+    name: '波利',
+    mobId: 1002,
+    animationType: 'idle',
+    canvasWidth: 128,
+    actPath: 'tools/samples/poring.act',
+    sprPath: 'tools/samples/poring.spr',
+    actSha: '26717393629e410910ff080d204e930d945328cd',
+    sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb639ad7',
+    actionIndex: 0,
+    frames: 4,
+    frameMs: 160,
+    scale: 2.8,
+    centerY: 102,
+    outputPath: 'assets/poring_idle.svg',
+    outputBytes: 21378,
+    outputSha: 'e7f0b0d56ca3e8997e98ebcdc8e10ccdaaae0ca8'
+  },
+  {
+    key: 'poring-attack',
+    name: '波利',
+    mobId: 1002,
+    animationType: 'attack',
+    canvasWidth: 176,
+    actPath: 'tools/samples/poring.act',
+    sprPath: 'tools/samples/poring.spr',
+    actSha: '26717393629e410910ff080d204e930d945328cd',
+    sprSha: '406b3e91bca7137e8f7a8abcd46468f3fb639ad7',
+    actionIndex: 16,
+    frames: 28,
+    frameMs: 40,
+    scale: 2.3,
+    centerY: 118,
+    outputPath: 'assets/poring_attack.svg',
+    outputBytes: 136944,
+    outputSha: 'd550fe9a3edc83b241d882038657e6e6e1e3c916'
   }
 ];
 
@@ -170,6 +213,7 @@ function renderSvg(config, actBytes, sprBytes) {
   if (gitBlobSha(sprBytes) !== config.sprSha) throw new Error(config.key + ' SPR source Git blob SHA-1 mismatch.');
   const act = parseAct(actBytes);
   const spr = parseSpr(sprBytes);
+  const canvasWidth = config.canvasWidth || 128;
   const frames = act.actions[config.actionIndex];
   if (!frames || frames.length !== config.frames) {
     throw new Error(config.key + ' ACT action ' + config.actionIndex + ' frame count mismatch.');
@@ -190,7 +234,7 @@ function renderSvg(config, actBytes, sprBytes) {
           Math.abs(layer.scaleY - 1) > 0.001) {
         throw new Error(config.key + ' idle action uses unsupported layer transforms.');
       }
-      const left = (128 - sprite.width * config.scale) / 2 + layer.x * config.scale;
+      const left = (canvasWidth - sprite.width * config.scale) / 2 + layer.x * config.scale;
       const top = config.centerY - (sprite.height * config.scale) / 2 + layer.y * config.scale;
       const pathsByColor = new Map();
       for (let y = 0; y < sprite.height; y += 1) {
@@ -242,8 +286,9 @@ function renderSvg(config, actBytes, sprBytes) {
   }).join('');
   const groups = frameLayers.map((content, index) =>
     '<g id="frame-' + index + '" class="f' + index + '">' + content + '</g>').join('');
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="' +
-    config.name + ' Mob ' + config.mobId + ' 待機逐格動畫" data-mob-id="' + config.mobId +
+  const animationLabel = config.animationType === 'attack' ? '攻擊逐格動畫' : '待機逐格動畫';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + canvasWidth + ' 128" role="img" aria-label="' +
+    config.name + ' Mob ' + config.mobId + ' ' + animationLabel + '" data-mob-id="' + config.mobId +
     '" data-act-action-index="' + config.actionIndex + '" data-frame-count="' + frames.length +
     '" data-frame-duration-ms="' + frameMs + '"><title>' + config.name + ' · Mob ' + config.mobId +
     ' · ACT action ' + config.actionIndex + ' (' + frames.length + ' frames)</title><style>' + style +

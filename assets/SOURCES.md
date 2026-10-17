@@ -313,3 +313,12 @@
 | [wolf.spr](https://github.com/MyGodIsHe/pyro-tools/blob/1a28450df59bc69e56e70e431f9b61351bafc8f6/examples/data/wolf.spr) | `tools/samples/wolf.spr` | 104,662 | `61b60050dce8094bbebf04d86cc87ef1e8d61706` |
 
 使用固定的瘋兔 action 2（12 格、80ms）與狼 action 0（15 格、120ms）；輸出分別必須維持 `assets/lunatic_idle.svg`（58,141 bytes，`04461b2829cec9e95cdef5d11ce6140fa29ed5ed`）與 `assets/wolf_idle.svg`（265,283 bytes，`bb11db5c6f0417f2565380717ec0d0f51a8b51aa`）。`npm test` 會啟動工具的 `--check` 模式，確認產物與固定輸出完全相同；若未來有意調整縮放、位置、調色或逐格處理，需更新對應 hash 與文件，並經目視檢查。
+
+
+## MVP 2.4 波利待機／攻擊動畫來源指紋（2026-10-17）
+
+- 來源倉庫：[adsonpleal/ragassets](https://github.com/adsonpleal/ragassets)，固定提交 [`4de4fa747431979d35c747d7edd549a872efd9e1`](https://github.com/adsonpleal/ragassets/tree/4de4fa747431979d35c747d7edd549a872efd9e1)。
+- 原始 ACT：[poring.act](https://github.com/adsonpleal/ragassets/blob/4de4fa747431979d35c747d7edd549a872efd9e1/gateway/internal/render/engine/testdata/fixtures/data/sprite/%EB%AA%AC%EC%8A%A4%ED%84%B0/poring.act)，146,172 bytes，Git blob SHA-1 `26717393629e410910ff080d204e930d945328cd`；已固定於 `tools/samples/poring.act`。
+- 原始 SPR：[poring.spr](https://github.com/adsonpleal/ragassets/blob/4de4fa747431979d35c747d7edd549a872efd9e1/gateway/internal/render/engine/testdata/fixtures/data/sprite/%EB%AA%AC%EC%8A%A4%ED%84%B0/poring.spr)，42,859 bytes，Git blob SHA-1 `406b3e91bca7137e8f7a8abcd46468f3fb639ad7`；已固定於 `tools/samples/poring.spr`。
+- 對應素材確認為 Poring Mob 1002。Action 0 在來源示例中用作 idle，action 16 用作 attack（來源示例 [ragassets README](https://github.com/adsonpleal/ragassets/tree/4de4fa747431979d35c747d7edd549a872efd9e1)）；本專案使用配對二進位逐格解析，不在遊戲 runtime 呼叫該公開 demo 服務。
+- `assets/poring_idle.svg`：21,378 UTF-8 bytes，Git blob SHA-1 `e7f0b0d56ca3e8997e98ebcdc8e10ccdaaae0ca8`，4 格／160ms；`assets/poring_attack.svg`：136,944 UTF-8 bytes，Git blob SHA-1 `d550fe9a3edc83b241d882038657e6e6e1e3c916`，28 格／40ms。轉檔工具與核心測試會驗證原始檔、action index、格數、時序、輸出大小和 SHA-1。
