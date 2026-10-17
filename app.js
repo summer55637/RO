@@ -15,14 +15,39 @@
   const CRITICAL_EFFECT_FRAMES = window.ROWorld.criticalEffectFrames || [];
   const CRITICAL_EFFECT_FRAME_INTERVAL = Math.max(40, Number(window.ROWorld.criticalEffectFrameIntervalMs) || 70);
   const SOUND_EFFECTS = window.ROWorld.soundEffects || {};
+  const MAP_MUSIC = window.ROWorld.mapMusic || {};
+  const SKILL_SOUND_BY_NAME = Object.freeze({
+    '狂擊': 'skill_sword',
+    '火箭術': 'skill_fire',
+    '靈魂打擊': 'skill_soul',
+    '二連矢': 'skill_arrow',
+    '治癒術': 'skill_heal',
+    '金錢攻擊': 'skill_merchant',
+    '施毒': 'skill_poison'
+  });
+  const SKILL_EFFECT_KIND = Object.freeze({
+    '狂擊': 'slash',
+    '二刀連擊': 'slash',
+    '火箭術': 'magic',
+    '靈魂打擊': 'magic',
+    '二連矢': 'arrow',
+    '治癒術': 'heal',
+    '金錢攻擊': 'heavy',
+    '施毒': 'poison'
+  });
   const SOUND_ENABLED_KEY = 'ro-h5-sound-effects-v1';
-  const SOUND_VOLUME = { hit: 0.16, critical: 0.23, levelup: 0.28 };
-  const SOUND_COOLDOWN_MS = { hit: 180, critical: 320, levelup: 600 };
+  const MUSIC_ENABLED_KEY = 'ro-h5-map-music-v1';
+  const SOUND_VOLUME = { hit: 0.16, critical: 0.23, levelup: 0.28, skill_sword: 0.2, skill_fire: 0.2, skill_soul: 0.19, skill_arrow: 0.18, skill_heal: 0.2, skill_merchant: 0.18, skill_poison: 0.18 };
+  const SOUND_COOLDOWN_MS = { hit: 180, critical: 320, levelup: 600, skill_sword: 500, skill_fire: 500, skill_soul: 500, skill_arrow: 500, skill_heal: 700, skill_merchant: 500, skill_poison: 600 };
   let playerAnimationTimer = null;
   let criticalEffectLoadPromise = null;
   let criticalEffectTimer = null;
   let criticalEffectRunId = 0;
   let soundEnabled = true;
+  let musicEnabled = true;
+  let musicPlayer = null;
+  let currentMusicAssetId = '';
+  const musicLoadPromises = Object.create(null);
   const soundPlayers = Object.create(null);
   const soundLoadPromises = Object.create(null);
   const lastSoundAt = Object.create(null);
@@ -75,10 +100,13 @@
   function loadSoundPreference() {
     try {
       soundEnabled = localStorage.getItem(SOUND_ENABLED_KEY) !== 'off';
+      musicEnabled = localStorage.getItem(MUSIC_ENABLED_KEY) !== 'off';
     } catch (_) {
       soundEnabled = true;
+      musicEnabled = true;
     }
     syncSoundToggle();
+    syncMusicToggle();
   }
 
   function toggleSound() {
@@ -90,6 +118,33 @@
     }
     syncSoundToggle();
     showToast(soundEnabled ? '戰鬥音效已開啟' : '戰鬥音效已關閉');
+  }
+
+  function syncMusicToggle() {
+    const button = $('#btn-music');
+    if (!button) return;
+    button.textContent = musicEnabled ? '音樂：開' : '音樂：關';
+    button.setAttribute('aria-pressed', String(musicEnabled));
+    button.title = musicEnabled ? '關閉地圖背景音樂' : '開啟地圖背景音樂';
+  }
+
+  function toggleMusic() {
+    musicEnabled = !musicEnabled;
+    try {
+      localStorage.setItem(MUSIC_ENABLED_KEY, musicEnabled ? 'on' : 'off');
+    } catch (_) {
+      // Music preference is separate from character saves and is optional.
+    }
+    syncMusicToggle();
+    if (musicEnabled) {
+      const map = character && character.battle && character.battle.map
+        ? window.ROCore.getMap(character.battle.map)
+        : null;
+      if (map) playMapMusic(map);
+    } else if (musicPlayer) {
+      musicPlayer.pause();
+    }
+    showToast(musicEnabled ? '地圖背景音樂已開啟' : '地圖背景音樂已關閉');
   }
 
   function playSoundEffect(type) {
@@ -135,6 +190,82 @@
       .then(playReady)
       .catch(function () { return null; })
       .finally(function () { soundLoadPromises[type] = null; });
+  }
+
+  function stopMapMusic() {
+    currentMusicAssetId = '';
+    if (musicPlayer) {
+      musicPlayer.pause();
+      try { musicPlayer.currentTime = 0; } catch (_) {}
+    }
+  }
+
+  function playMapMusic(map) {
+    if (!musicEnabled || !map) {
+      if (musicPlayer) musicPlayer.pause();
+      return;
+    }
+    const assetId = MAP_MUSIC[map.id] || MAP_MUSIC.default;
+    const asset = ASSETS.find(function (entry) { return entry.id === assetId; });
+    if (!asset) return;
+
+    if (currentMusicAssetId !== assetId) {
+      currentMusicAssetId = assetId;
+      if (musicPlayer) {
+        musicPlayer.pause();
+        try { musicPlayer.currentTime = 0; } catch (_) {}
+      }
+    }
+
+    function playReady() {
+      if (!musicEnabled || currentMusicAssetId !== assetId) return;
+      const source = assetUrls[assetId];
+      if (!source) return;
+      if (!musicPlayer) {
+        musicPlayer = new window.Audio();
+        musicPlayer.loop = true;
+        musicPlayer.preload = 'none';
+        musicPlayer.volume = 0.13;
+      }
+      if (musicPlayer.src !== source) musicPlayer.src = source;
+      const playback = musicPlayer.play();
+      if (playback && typeof playback.catch === 'function') playback.catch(function () {});
+    }
+
+    if (assetUrls[assetId]) {
+      playReady();
+      return;
+    }
+    if (musicLoadPromises[assetId]) return;
+    musicLoadPromises[assetId] = ensureAssets([asset], false)
+      .then(playReady)
+      .catch(function () { return null; })
+      .finally(function () { musicLoadPromises[assetId] = null; });
+  }
+
+  function showSceneEffect(label, kind, animateMonster) {
+    const effect = $('#scene-effect');
+    if (!effect) return;
+    const kinds = ['slash', 'magic', 'heal', 'arrow', 'heavy', 'poison'];
+    effect.textContent = label;
+    kinds.forEach(function (name) { effect.classList.remove('skill-fx-' + name); });
+    if (kind && kinds.indexOf(kind) !== -1) effect.classList.add('skill-fx-' + kind);
+    effect.classList.remove('show');
+    void effect.offsetWidth;
+    effect.classList.add('show');
+
+    if (animateMonster && kind && kinds.indexOf(kind) !== -1 && kind !== 'heal') {
+      const monster = $('#monster-actor');
+      if (!monster) return;
+      kinds.forEach(function (name) { monster.classList.remove('skill-hit-' + name); });
+      monster.classList.remove('hit');
+      void monster.offsetWidth;
+      const hitClass = 'skill-hit-' + kind;
+      monster.classList.add(hitClass);
+      window.setTimeout(function () {
+        if (monster.isConnected) monster.classList.remove(hitClass);
+      }, 320);
+    }
   }
 
   function setScreen(id) {
@@ -1057,6 +1188,7 @@
       setScreen('screen-battle');
       activeDetail = 'status';
       renderGame();
+      playMapMusic(map);
       startBattleLoop();
     } catch (error) {
       $('#map-load-message').textContent = (error && error.message ? error.message : '地圖素材準備失敗。') + ' 可檢查網路後再次進入。';
@@ -1069,6 +1201,7 @@
     if (!character || !isLockOwner()) return;
     if (!window.confirm('返回安全營地？已獲得的經驗、Zeny 與掉落會保留；目前未完成的怪物戰鬥將重置。')) return;
     stopBattleLoop();
+    stopMapMusic();
     character.battle.map = null;
     character.battle.paused = true;
     character.battle.monsterHp = character.battle.monsterMaxHp || 18;
@@ -1084,6 +1217,7 @@
     if (!isLockOwner()) return loseControl();
     if (!window.confirm('返回角色選擇？目前角色會先保存。')) return;
     stopBattleLoop();
+    stopMapMusic();
     persistCurrent();
     character = null;
     activeSlot = null;
@@ -1112,7 +1246,7 @@
   }
 
   function handleCombatResult(result) {
-    if (!result || (!result.playerDamage && !result.killed)) return;
+    if (!result || (!result.playerDamage && !result.killed && !result.skillHealingGained)) return;
     const hero = $('#hero-sprite');
     const monster = $('#monster-actor');
     const heroInner = hero ? hero.querySelector('.hero-character') : null;
@@ -1131,12 +1265,12 @@
     if (result.playerDamage) {
       appendCharacterLog('對' + result.monsterName + '造成 ' + result.playerDamage + ' 傷害。' + (result.critical ? ' 爆擊！' : '') + (result.skillName ? '（技能：' + result.skillName + '）' : ''));
       if (result.critical) playCriticalEffect();
-      playSoundEffect(result.critical ? 'critical' : 'hit');
-      const effect = $('#scene-effect');
-      effect.textContent = (result.skillName ? result.skillName + ' ' : '') + (result.critical ? '爆擊 ' : '-') + result.playerDamage;
-      effect.classList.remove('show');
-      void effect.offsetWidth;
-      effect.classList.add('show');
+      if (!result.skillHealingGained) {
+        playSoundEffect(result.critical ? 'critical' : (SKILL_SOUND_BY_NAME[result.skillName] || 'hit'));
+      }
+      const effectLabel = (result.skillName ? result.skillName + ' ' : '') + (result.critical ? '爆擊 ' : '-') + result.playerDamage;
+      const effectKind = SKILL_EFFECT_KIND[result.skillName] || '';
+      showSceneEffect(effectLabel, effectKind, Boolean(effectKind && result.skillName !== '治癒術'));
     }
     if (result.dodged) appendCharacterLog('閃避了' + result.monsterName + '的攻擊。');
     if (result.monsterDamage) appendCharacterLog('受到' + result.monsterName + ' ' + result.monsterDamage + ' 點傷害。', result.playerDown ? 'warning' : '');
@@ -1156,7 +1290,11 @@
         appendCharacterLog(capMessage, 'warning');
       }
     }
-    if (result.skillHealingGained) appendCharacterLog('治癒術恢復 ' + result.skillHealingGained + ' HP。', 'important');
+    if (result.skillHealingGained) {
+      appendCharacterLog('治癒術恢復 ' + result.skillHealingGained + ' HP。', 'important');
+      playSoundEffect('skill_heal');
+      showSceneEffect('治癒術 +' + result.skillHealingGained + ' HP', 'heal', false);
+    }
     if (result.recoveryGained) appendCharacterLog('快速回復恢復 ' + result.recoveryGained + ' HP。');
     if (result.playerDown) appendCharacterLog('角色倒地後返回戰線，原型版不扣除經驗。', 'warning');
   }
@@ -1759,6 +1897,7 @@
     $('#btn-battle-camp').addEventListener('click', returnToCamp);
     $('#btn-pause').addEventListener('click', togglePause);
     $('#btn-sound').addEventListener('click', toggleSound);
+    $('#btn-music').addEventListener('click', toggleMusic);
     $('#btn-save').addEventListener('click', function () { if (persistCurrent()) showToast('已保存到本機'); });
     $$('.speed-button').forEach(function (button) { button.addEventListener('click', function () { changeSpeed(button.dataset.speed); }); });
     $('.detail-tab').forEach(function (button) { button.addEventListener('click', function () { setDetail(button.dataset.detail); }); });

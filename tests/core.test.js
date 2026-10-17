@@ -10,7 +10,7 @@ function testAutomaticUpdateStrategy() {
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v9/);
+  assert.match(serviceWorker, /ro-h5-shell-v10/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -320,14 +320,32 @@ function testSpriteFramesUsePinnedSourceAndHaveNoMissingReferences() {
 
 
 function testSoundEffectManifest() {
-  const expected = { hit: 'sfx_hit_sword', critical: 'sfx_critical', levelup: 'sfx_levelup' };
+  const expected = {
+    hit: 'sfx_hit_sword',
+    critical: 'sfx_critical',
+    levelup: 'sfx_levelup',
+    skill_sword: 'sfx_skill_sword',
+    skill_fire: 'sfx_skill_fire',
+    skill_soul: 'sfx_skill_soul',
+    skill_arrow: 'sfx_skill_arrow',
+    skill_heal: 'sfx_skill_heal',
+    skill_merchant: 'sfx_skill_merchant',
+    skill_poison: 'sfx_skill_poison'
+  };
   assert.deepEqual(world.soundEffects, expected);
   const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
   const pinned = '2348031f3797dbea1981f399288748378a283940';
   const definitions = {
     sfx_hit_sword: { bytes: 24866, gitSha: 'fcb1f2cd80591ed5e92f730a417377c401ae65be', sourcePath: 'WAV/物理攻擊命中/_hit_sword.wav' },
     sfx_critical: { bytes: 8886, gitSha: 'dcc3946a430651b08334c2edade11d61672672ee', sourcePath: 'WAV/爆擊/Critical.ogg' },
-    sfx_levelup: { bytes: 24294, gitSha: '4c501809789d1a03aedfd8c6c9728809c8a32dac', sourcePath: 'WAV/event/levelup.ogg' }
+    sfx_levelup: { bytes: 24294, gitSha: '4c501809789d1a03aedfd8c6c9728809c8a32dac', sourcePath: 'WAV/event/levelup.ogg' },
+    sfx_skill_sword: { bytes: 12488, gitSha: 'fd1564fa6e975d02811c51a26e37d61fde106417', sourcePath: 'WAV/物理攻擊揮空/_attack_sword.wav' },
+    sfx_skill_fire: { bytes: 34412, gitSha: '253727c39fff8deb9ccd53df195bc47bffebddb6', sourcePath: 'WAV/魔法傷害/火箭術.wav' },
+    sfx_skill_soul: { bytes: 20724, gitSha: 'c93e0743fbb003c055f69e9eb690789b8ee7c938', sourcePath: 'WAV/魔法傷害/其餘雷系.wav' },
+    sfx_skill_arrow: { bytes: 13360, gitSha: '349f3b1a145092e9a2119d71a69063c1c1e74025', sourcePath: 'WAV/物理攻擊命中/_hit_arrow.wav' },
+    sfx_skill_heal: { bytes: 59636, gitSha: '7447aeb13b0e6c45443f6ca01ede4e2357c20623', sourcePath: 'WAV/魔法傷害/治癒術.wav' },
+    sfx_skill_merchant: { bytes: 16114, gitSha: 'e7f38e344756e8b8e84cce27000b666d65353051', sourcePath: 'WAV/物理攻擊命中/_hit_axe.wav' },
+    sfx_skill_poison: { bytes: 40564, gitSha: 'a6e6614cb5688ffa70f78c9c9b6f94c8ebaffb91', sourcePath: 'WAV/異常狀態/中毒.wav' }
   };
   Object.entries(definitions).forEach(function (entry) {
     const asset = assetMap.get(entry[0]);
@@ -342,21 +360,46 @@ function testSoundEffectManifest() {
     assert.match(asset.gitSha, /^[a-f0-9]{40}$/);
   });
   assert.equal(world.soundSource, 'nba9001-sys/ro-idle@' + pinned);
+
+  const expectedMusic = { default: 'bgm_default', novice_ground: 'bgm_novice_ground', prt_fild01: 'bgm_prt_fild01' };
+  assert.deepEqual(world.mapMusic, expectedMusic);
+  const musicDefinitions = {
+    bgm_default: { bytes: 747520, gitSha: 'cad866cf9b0b98cf4892a887dd12985057cc6e13', sourcePath: 'music/maps/0000.mp3' },
+    bgm_novice_ground: { bytes: 1476608, gitSha: '95997a8034476a21ba168d91d8322332dbcadf66', sourcePath: 'music/maps/5001.mp3' },
+    bgm_prt_fild01: { bytes: 2257024, gitSha: '71daf34328cdc69d64d8c39172e4b2d584a8830a', sourcePath: 'music/maps/5004.mp3' }
+  };
+  Object.entries(musicDefinitions).forEach(function (entry) {
+    const asset = assetMap.get(entry[0]);
+    assert.ok(asset, 'missing background music asset: ' + entry[0]);
+    assert.equal(asset.requiredOnStart, false, 'background music must be lazy-loaded');
+    assert.equal(asset.assetKind, 'background-music');
+    assert.equal(asset.sourceRepository, 'nba9001-sys/ro-idle');
+    assert.equal(asset.sourcePath, entry[1].sourcePath);
+    assert.ok(asset.path.includes('/' + pinned + '/'));
+    assert.equal(asset.bytes, entry[1].bytes);
+    assert.equal(asset.gitSha, entry[1].gitSha);
+  });
 }
 
 function testSoundEffectWiring() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   assert.match(appSource, /function playSoundEffect\(type\)/);
   assert.match(appSource, /ro-h5-sound-effects-v1/);
-  assert.match(appSource, /playSoundEffect\(result\.critical \? 'critical' : 'hit'\)/);
+  assert.match(appSource, /MUSIC_ENABLED_KEY/);
+  assert.match(appSource, /SKILL_SOUND_BY_NAME\[result\.skillName\]/);
+  assert.match(appSource, /playSoundEffect\('skill_heal'\)/);
   assert.match(appSource, /playSoundEffect\('levelup'\)/);
   assert.match(appSource, /ensureAssets\(\[asset\], false\)/);
+  assert.match(appSource, /playMapMusic\(map\)/);
+  assert.match(appSource, /showSceneEffect\(effectLabel, effectKind/);
   assert.match(html, /id="btn-sound"/);
+  assert.match(html, /id="btn-music"/);
   assert.match(html, /aria-pressed="true"/);
+  assert.match(css, /skill-fx-magic/);
+  assert.match(css, /skill-hit-poison/);
 }
-
-
 function testSkillTreeProgression() {
   const expectedJobs = ['novice', 'swordsman', 'mage', 'archer', 'acolyte', 'merchant', 'thief'];
   assert.deepEqual(Object.keys(core.SKILL_TREES).sort(), expectedJobs.slice().sort());
@@ -478,7 +521,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 0\.6/);
+  assert.match(html, /MVP 0\.7/);
 }
 
 testAutomaticUpdateStrategy();
