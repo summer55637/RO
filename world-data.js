@@ -6,7 +6,7 @@
   'use strict';
 
   return {
-    manifestVersion: '2.5.0',
+    manifestVersion: '2.6.0',
     assetApprovalStatus: 'owner-authorized',
     assetApprovalNote: '專案擁有者已明確確認已取得 RO 遊戲公司涵蓋 RO 全部素材與資料的使用授權；後續對話應直接依此專案紀錄開發，不重複要求使用者再次確認。',
     assets: [
@@ -343,7 +343,7 @@
     playerAnimationFrameIntervalMs: 140,
     monsters: {
       poring: { id: 'poring', name: '波利', assetId: 'poring', animationAssetId: 'poring_idle_anim', animationActionIndex: 0, animationFrameCount: 4, animationFrameDurationMs: 160, attackAnimationAssetId: 'poring_attack_anim', attackAnimationActionIndex: 16, attackAnimationFrameCount: 28, attackAnimationFrameDurationMs: 40, sourceMobId: 1002, maxHp: 18, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 5, drops: [{ id: 'jellopy', name: '果凍質塊', chance: 0.35 }, { id: 'fluff', name: '獸毛', chance: 0.08 }, { id: 'poring_card', name: '波利卡片', chance: 0.015, type: 'card' }, { id: 'novice_dagger', name: '初心者短刀', chance: 0.025, type: 'equipment' }] },
-      green_plant: { id: 'green_plant', name: '綠色植物', assetId: 'green_plant', animationAssetId: 'green_plant_idle_anim', animationActionIndex: 0, animationFrameCount: 12, animationFrameDurationMs: 160, sourceMobId: 1080, maxHp: 12, attackMin: 1, attackMax: 1, baseExp: 2, jobExp: 1, zenyMin: 0, zenyMax: 1, drops: [{ id: 'green_herb', name: '綠色藥草', chance: 0.2 }] },
+      green_plant: { id: 'green_plant', name: '綠色植物', assetId: 'green_plant', animationAssetId: 'green_plant_idle_anim', animationActionIndex: 0, animationFrameCount: 12, animationFrameDurationMs: 160, sourceMobId: 1080, canRetaliate: false, maxHp: 12, attackMin: 1, attackMax: 1, baseExp: 2, jobExp: 1, zenyMin: 0, zenyMax: 1, drops: [{ id: 'green_herb', name: '綠色藥草', chance: 0.2 }] },
       lunatic: { id: 'lunatic', name: '瘋兔', assetId: 'lunatic', animationAssetId: 'lunatic_idle_anim', sourceMobId: 1063, animationActionIndex: 2, animationFrameCount: 12, animationFrameDurationMs: 80, maxHp: 24, attackMin: 2, attackMax: 3, baseExp: 5, jobExp: 3, zenyMin: 1, zenyMax: 6, drops: [{ id: 'clover', name: '三葉幸運草', chance: 0.2 }, { id: 'carrot', name: '胡蘿蔔', chance: 0.25 }, { id: 'lunatic_card', name: '瘋兔卡片', chance: 0.015, type: 'card' }, { id: 'travel_sandals', name: '旅人涼鞋', chance: 0.025, type: 'equipment' }] },
       fabre: { id: 'fabre', name: '綠棉蟲', assetId: 'fabre', sourceMobId: 1007, maxHp: 20, attackMin: 1, attackMax: 2, baseExp: 4, jobExp: 2, zenyMin: 1, zenyMax: 4, drops: [{ id: 'fluff', name: '獸毛', chance: 0.3 }, { id: 'chrysalis', name: '昆蟲外殼', chance: 0.12 }, { id: 'fabre_card', name: '綠棉蟲卡片', chance: 0.015, type: 'card' }, { id: 'cotton_adventurer_armor', name: '棉布冒險服', chance: 0.025, type: 'equipment' }] },
       pupa: { id: 'pupa', name: '蛹', assetId: 'pupa', sourceMobId: 1008, maxHp: 30, attackMin: 1, attackMax: 2, baseExp: 5, jobExp: 3, zenyMin: 2, zenyMax: 4, drops: [{ id: 'chrysalis', name: '昆蟲外殼', chance: 0.25 }, { id: 'pupa_card', name: '蛹卡片', chance: 0.012, type: 'card' }, { id: 'padded_armor', name: '厚布護甲', chance: 0.02, type: 'equipment' }] },

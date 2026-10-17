@@ -350,3 +350,11 @@
 - 新手訓練場新增綠色植物遭遇權重 10，以及 HP、傷害、EXP、Zeny 與綠色藥草掉落機率等遊戲原型值；這些不是台灣官方 PC RO 的正式數值或刷新率。
 - 兩個新藝術資產都是非啟動必需項目，依地圖按需載入並驗證；失敗時只回退同物種靜態圖或既有未載入佔位，不會借用 Fabre Mob 1007 的圖像。
 - 不改變 `ro-h5-account-v1` 等存檔 key、不清除或重設既有存檔／角色／等級／技能／裝備／卡片／倉庫／Zeny／戰鬥進度，也不重新引入帳號分頁鎖。
+
+
+## MVP 2.6 綠色植物 Mob 1080 被動行為參考（2026-10-18）
+
+- [固定版 rAthena mob_db.yml](https://github.com/rathena/rathena/blob/975c87dfc27ab267b2ec0dddff77421b2e6ee87b/db/pre-re/mob_db.yml)：Mob 1080 條目為 `GREEN_PLANT / Green Plant`，具有植物型的 `IgnoreMagic`、`IgnoreMelee`、`IgnoreMisc`、`IgnoreRanged` 模式。該資料是社群資料庫，只用於參考物種 ID／類型特徵，不作為台灣官方現行版本所有設定的證明。
+- [Fatesend Green Plant #1080](https://fatesend.org/database/monsters/green-plant-1080/)（查閱日期 2026-10-18）：頁面將其行為描述為 passive、immobile、can't attack，與植物型不反擊的實作方向一致。此網站的 pre-renewal 數值以其伺服器設定為基礎，不能直接等同台灣官方正式數值。
+- 專案以 `world.monsters.green_plant.canRetaliate = false` 表示戰鬥原型中不反擊；不新增全域規則，也不修改其他怪物。植物的原型 HP／掉落／EXP／Zeny／遭遇權重與官方參考 AI 行為分開記錄。
+- 回歸測試涵蓋玩家可正常對植物造成傷害、植物不會削減玩家 HP、反擊時鐘維持歸零，以及 Mob 1080／Fabre Mob 1007 ID 保持分離。未更動任何玩家存檔欄位或鍵值。
