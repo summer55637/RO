@@ -62,7 +62,7 @@ function testAutomaticUpdateStrategy() {
   const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  assert.match(serviceWorker, /ro-h5-shell-v25/);
+  assert.match(serviceWorker, /ro-h5-shell-v26/);
   assert.match(serviceWorker, /cache: 'reload'/, 'install should bypass stale HTTP cache');
   assert.match(serviceWorker, /event\.request\.mode === 'navigate' \|\| SHELL_PATHS\.has\(url\.pathname\)/);
   assert.match(serviceWorker, /fetch\(event\.request, \{ cache: 'no-cache' \}\)/, 'app shell must revalidate on visits');
@@ -129,8 +129,45 @@ function testMonsterEncounterMapHints() {
   const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
   assert.match(appSource, /getMonsterEncounterMaps\(id, character\.baseLevel\)/);
   assert.match(appSource, /出沒／預估遇敵率（原型設定）/);
-  assert.match(html, /MVP 1\.8/);
-  assert.match(sw, /ro-h5-shell-v25/);
+  assert.match(html, /MVP 1\.9/);
+  assert.match(sw, /ro-h5-shell-v26/);
+}
+
+function testVerifiedBestiaryArtworkEvidence() {
+  const assetMap = new Map(world.assets.map(function (asset) { return [asset.id, asset]; }));
+  const monsterEntries = Object.entries(world.monsters);
+  assert.equal(monsterEntries.length, 15, 'all currently catalogued monsters should be audited');
+
+  monsterEntries.forEach(function (entry) {
+    const monsterId = entry[0], monster = entry[1];
+    assert.ok(Number.isInteger(monster.sourceMobId) && monster.sourceMobId > 0, monsterId + ' needs a canonical Mob ID');
+    if (monster.assetFallback === 'vector') {
+      assert.equal(monsterId, 'thief_bug');
+      assert.equal(monster.sourceMobId, 1051);
+      assert.equal(assetMap.has(monster.assetId), false, 'unverified Thief Bug PNG must not be added as if verified');
+      return;
+    }
+    const asset = assetMap.get(monster.assetId);
+    assert.ok(asset, monsterId + ' must reference a dedicated asset manifest entry');
+    assert.equal(asset.sourceMobId, monster.sourceMobId, monsterId + ' asset and monster Mob IDs must match');
+    assert.equal(asset.sourcePath, 'images/monsters/' + monster.sourceMobId + '.png', monsterId + ' source filename must match Mob ID');
+    assert.ok(Number(asset.bytes) > 0, monsterId + ' asset must record a positive source size');
+    assert.match(asset.gitSha || '', /^[0-9a-f]{40}$/, monsterId + ' asset must pin a Git blob SHA-1');
+  });
+
+  const appSource = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+  assert.match(appSource, /function getVerifiedMonsterArtworkSource\(monster\)/);
+  assert.match(appSource, /assetId && assetUrls\[assetId\]/, 'bestiary must use only already validated, cached asset URLs');
+  assert.match(appSource, /monster\.id === 'thief_bug' && monster\.assetFallback === 'vector'/);
+  assert.match(appSource, /Never let a missing portrait silently fall back to the Poring image/);
+  assert.ok(appSource.includes("Mob ID ' + (monster.sourceMobId || '未核對')"), 'discovered monsters show their Mob ID');
+  assert.match(appSource, /bestiary-portrait-placeholder/);
+  assert.match(css, /\.bestiary-portrait img/);
+  assert.match(html, /MVP 1\.9/);
+  assert.match(sw, /ro-h5-shell-v26/);
 }
 
 function testMonsterBestiaryProgression() {
@@ -304,7 +341,7 @@ function testEquipmentRefinementCombatAndUi() {
   assert.match(appSource, /window\.ROCore\.refineItem\(character, account, slot\)/);
   assert.match(appSource, /getRefineCost\(targetLevel\)/);
   assert.match(appSource, /安全精煉上限/);
-  assert.match(html, /MVP 1\.8/);
+  assert.match(html, /MVP 1\.9/);
 }
 function testCardExtractionTransactions() {
   const character = core.makeCharacter('CardExtractTester', 'male', 'novice');
@@ -450,7 +487,7 @@ function testEquipmentUiWiring() {
   assert.match(appSource, /account\.equipmentInventory\.push\(equipped\)/, 'deleting a character must return equipped items to account inventory');
   assert.match(appSource, /parsed\.equipmentInventory = \[\]/, 'legacy account saves should safely gain gear inventory');
   assert.match(html, /data-detail="equipment">裝備／卡片/);
-  assert.match(html, /MVP 1\.8/);
+  assert.match(html, /MVP 1\.9/);
   assert.match(css, /\.equipment-slot/);
 }
 
@@ -955,7 +992,7 @@ function testSkillTreeUiWiring() {
   assert.match(appSource, /activeDetail === 'skills'/);
   assert.match(appSource, /window\.ROCore\.allocateSkill\(character, skillId\)/);
   assert.match(html, /data-detail="skills">技能樹/);
-  assert.match(html, /MVP 1\.8/);
+  assert.match(html, /MVP 1\.9/);
 }
 
 
@@ -1002,8 +1039,8 @@ function testConsumableUseAndUiWiring() {
   assert.match(appSource, /data-use-consumable/);
   assert.ok(appSource.includes('window.ROCore.craftConsumable(account, recipeId, 1)'));
   assert.ok(appSource.includes('window.ROCore.useConsumable(character, account, itemId)'));
-  assert.match(html, /MVP 1\.8/);
-  assert.match(sw, /ro-h5-shell-v25/);
+  assert.match(html, /MVP 1\.9/);
+  assert.match(sw, /ro-h5-shell-v26/);
 }
 
 testMonsterArtworkIdentityMapping();
@@ -1027,6 +1064,7 @@ testBattleAndRewards();
 testPause();
 testMapAndMonsterProgression();
 testMonsterEncounterMapHints();
+testVerifiedBestiaryArtworkEvidence();
 testMonsterBestiaryProgression();
 testBestiaryUiWiring();
 testEquipmentCardMechanics();
@@ -1042,4 +1080,4 @@ testEquipmentDodgeAndZenyBonuses();
 testCraftingMaterialsAndTransactions();
 testConsumableUseAndUiWiring();
 
-console.log('RO H5 core tests passed (35 suites).');
+console.log('RO H5 core tests passed (36 suites).');
