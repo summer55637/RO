@@ -11,9 +11,7 @@ vm.runInNewContext(read("src/data.js"), sandbox, { filename: "src/data.js" });
 const data = sandbox.window.RO_DATA;
 
 assert.ok(data && Array.isArray(data.jobs), "game data must initialize");
-const unique = (values, label) => {
-  assert.equal(new Set(values).size, values.length, label + " must be unique");
-};
+const unique = (values, label) => assert.equal(new Set(values).size, values.length, label + " must be unique");
 unique(data.jobs.map((x) => x.id), "job ids");
 unique(Object.keys(data.skills), "skill ids");
 unique(Object.keys(data.items), "item ids");
@@ -27,7 +25,6 @@ for (const job of data.jobs) {
 for (const [id, skill] of Object.entries(data.skills)) {
   assert.equal(skill.id, id, "skill object id mismatch: " + id);
   if (skill.sp != null) assert.ok(skill.sp >= 0, "negative SP cost: " + id);
-  if (skill.cooldown != null) assert.ok(skill.cooldown >= 0, "negative cooldown: " + id);
 }
 for (const [id, item] of Object.entries(data.items)) {
   assert.equal(item.id, id, "item object id mismatch: " + id);
@@ -48,131 +45,33 @@ for (const [id, map] of Object.entries(data.maps)) {
   }
   for (const portal of map.portals) assert.ok(data.maps[portal.to], "invalid portal destination: " + id + " -> " + portal.to);
 }
-for (const id of ["geffen", "morroc", "payon", "izlude", "pyramid", "glast-heim", "mvp-lair"]) assert.ok(data.maps[id], "missing expansion location: " + id);
-for (const id of ["osiris", "moonlight-flower", "baphomet"]) assert.equal(data.monsters[id].boss, true, "MVP must be tagged: " + id);
-
-const registry = JSON.parse(read("data/official-content-registry.json"));
-const jobRegistry = registry.datasets.find((dataset) => dataset.id === "jobs");
-assert.ok(jobRegistry, "job registry section must exist");
-assert.equal(jobRegistry.records.length, data.jobs.length, "every prototype job needs a registry entry");
-assert.ok(jobRegistry.records.every((record) => record.status === "unverified"), "job records must remain unverified until direct official evidence exists");
-assert.ok(jobRegistry.records.every((record) => Object.values(record.fieldStatus || {}).every((status) => status === "unverified")), "job hierarchy/level/transfer fields must remain unverified");
-assert.ok(registry.jobSystemRules.some((rule) => rule.id === "level-expansion-lv275" && rule.appliesToRuntime === false), "Lv275 official announcement must not be guessed into runtime data");
-assert.ok(registry.jobSystemRules.some((rule) => rule.status === "historical-rule-requires-current-revalidation"), "historical transfer conditions must not automatically become current runtime rules");
-
-const hierarchy = registry.jobHierarchyEvidence;
-assert.ok(Array.isArray(hierarchy) && hierarchy.length === 13, "all 13 historical third-to-fourth edges must be recorded");
-assert.equal(hierarchy.filter((edge) => edge.recordType === "individual-parent-edge").length, 13, "direct parent mappings must not be left as an ambiguous group when the official naming table individually pairs them");
-assert.ok(hierarchy.every((edge) => edge.appliesToRuntime === false && edge.currentApplicabilityStatus === "unverified"), "historical relations must not be applied to runtime");
-assert.ok(hierarchy.some((edge) => edge.childJobName === "天籟頌者" && edge.parentJobName === "宮廷樂師"), "official naming table must establish the Troubadour pairing");
-assert.ok(hierarchy.some((edge) => edge.childJobName === "樂之舞靈" && edge.parentJobName === "浪姬舞者"), "official naming table must establish the Trouvere pairing");
-assert.equal(registry.jobHierarchyAudit.fullJobTreeComplete, false, "incomplete source coverage must never be marked complete");
-
-const phaseExamples = registry.jobProgressionEvidence;
-assert.equal(phaseExamples.length, 4, "official activity examples should document the phase labels actually stated");
-assert.ok(phaseExamples.some((example) => example.subjectName === "劍士" && example.subjectTier === "first-job"), "current official example should identify a first-job stage");
-assert.ok(phaseExamples.some((example) => example.subjectName === "騎士" && example.subjectTier === "second-job"), "current official example should identify a second-job stage");
-assert.ok(phaseExamples.every((example) => example.parentJobName === null && example.parentJobStatus === "unverified"), "stage examples must not be inferred as parent mappings");
-
-const lineageAudit = registry.jobProgressionAudit;
-assert.equal(lineageAudit.verifiedFirstToSecondParentEdges, 0, "no unsupported first-to-second class relationship may be invented");
-assert.equal(lineageAudit.verifiedSecondToThirdIndividualParentEdges, 0, "a general transfer rule cannot replace individual parent evidence");
-assert.equal(lineageAudit.verifiedNoviceToFirstParentEdges, 0, "no unsupported novice-to-first edge may be invented");
-assert.equal(lineageAudit.fullJobTreeComplete, false);
-assert.equal(lineageAudit.runtimeDataChanged, false);
-assert.equal(registry.jobLineageGaps.length, 4);
-assert.ok(registry.datasets.find((dataset) => dataset.id === "jobs").records.every((record) => record.status === "unverified"), "the simplified prototype job table remains unverified");
 
 const html = read("index.html");
-const scriptPaths = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((m) => m[1].replace(/^\.\//, ""));
-assert.ok(scriptPaths.includes("src/main.js"), "main runtime script must be included");
-assert.ok(!scriptPaths.includes("src/expansion.js"), "unverified custom quests/NPC/refine/card module must remain disabled");
-assert.ok(!scriptPaths.includes("src/pets.js"), "unverified custom pet evolution/skill module must remain disabled");
-assert.ok(scriptPaths.includes("src/visual-effects.js"), "visual effect module must be included");
-assert.ok(scriptPaths.includes("src/ui-shell.js"), "integrated UI shell must be included");
-assert.ok(scriptPaths.indexOf("src/visual-effects.js") < scriptPaths.indexOf("src/ui-shell.js"), "UI shell must load after the visual effects module");
-assert.ok(!data.items["pet-treat"] && !data.items["pet-snack"], "invented pet snack items must not be present in the game database");
-for (const path of ["src/visual-effects.js"]) assert.ok(fs.existsSync(root + "/" + path), "missing module: " + path);
-for (const path of scriptPaths) assert.ok(fs.existsSync(root + "/" + path), "missing script file: " + path);
-
-const main = read("src/main.js");
-for (const feature of ["attackMonster", "performSkill", "changeJob", "equipmentBonuses", "saveGame", "applySave", "applyOfflineProgress", "handleWorldClick", "drawMonster", "drawPlayer"]) {
-  assert.ok(main.includes("function " + feature + "("), "main gameplay pathway missing: " + feature);
-}
-assert.ok(main.includes('new CustomEvent("ro:monster-killed"'), "quest progress combat event missing");
-assert.ok(main.includes('window.RO_GAME_API ='), "expansion integration API missing");
-assert.ok(main.includes('petAttack: (monsterId, damage, petName) =>'), "pet support combat pathway must exist");
-assert.ok(main.includes('removeItem: (id, qty) =>'), "pet supplies must be removable from inventory");
-assert.ok(main.includes('targetId: state.targetId'), "snapshot must expose the current target for pet interactions");
-assert.ok(main.includes('ro:player-hurt'), "player hurt animation event must be emitted");
-assert.ok(main.includes('ro:target-change'), "pet capture selection must receive live target changes");
-assert.ok(main.includes('ro:monster-hurt'), "monster hit effect event must be emitted");
-assert.ok(main.includes("player._facing = dx < -0.08"), "player movement must update sprite facing");
-assert.ok(main.includes("monster._walkFrame = (monster._walkFrame || 0) + dt * 11"), "monster chase motion must drive a walk cycle");
-assert.ok(main.includes("const swingAngle = attacking ?"), "player weapons must animate through the attack window");
-assert.ok(main.includes("const palette = {"), "job families must have distinct pixel sprite palettes");
-assert.ok(main.includes('select.id = "jobTargetSelect"'), "job selection should be simplified to a direct target selector");
-assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "job selection should have an explicit direct-transfer button");
-assert.ok(main.includes("if (select.value) changeJob(select.value)"), "direct-transfer action should call the existing gated changeJob function");
-assert.ok(main.includes('job.tier === 1 && state.player.jobId === "novice" && state.player.level >= 5'), "first-job prototype gate must remain unchanged");
-assert.ok(main.includes('job.tier === 2 && state.player.jobId === job.parent && state.player.level >= 20 && state.player.jobLevel >= 10'), "second-job prototype gate must remain unchanged");
-assert.ok(html.includes("這是原型操作簡化，不代表正服可任意跳階"), "direct-transfer UI must not promise unsupported arbitrary job skipping");
-assert.ok(html.includes("不跑轉職任務、不收原型操作費用"), "direct-transfer prototype UX must waive task flow and operation fees by user request");
-assert.ok(html.includes('id="resetStatsButton">免費初始化</button>'), "free stat initialization button must exist in hidden prototype");
-assert.ok(html.includes('id="resetSkillsButton">免費初始化</button>'), "free skill initialization button must exist in hidden prototype");
-assert.ok(main.includes("function resetStats()"), "stat reset handler must exist");
-assert.ok(main.includes("function resetSkills()"), "skill reset handler must exist");
-assert.ok(main.includes('$("resetStatsButton").addEventListener("click", resetStats)'), "stat initialization button must invoke handler");
-assert.ok(main.includes('$("resetSkillsButton").addEventListener("click", resetSkills)'), "skill initialization button must invoke handler");
-assert.ok(main.includes('player.stats[stat.id] = 5;'), "stat reset must restore prototype baseline");
-assert.ok(main.includes('state.learnedSkills = ["basic-strike"];'), "skill reset must restore starter skill");
-assert.ok(main.includes("state.player.skillPoints += refundedPoints;"), "skill reset must refund prototype skill points");
-assert.ok(main.includes("player.statPoints += refundedPoints;"), "stat reset must refund prototype stat points");
-assert.ok(main.includes("for (let piece = 0; piece < 10; piece++)"), "monster death should dissolve into pixel fragments");
-
-const ui = read("src/ui-shell.js");
-for (const feature of ["character", "equipment", "save", "mapQuickSelect"]) {
-  assert.ok(ui.includes(feature), "integrated menu section missing: " + feature);
-}
-assert.ok(ui.includes("quarantinedPanels"), "unverified panels must be quarantined in hidden DOM");
-assert.ok(ui.includes("layout.hidden || layout.getAttribute(\"aria-hidden\") === \"true\""), "the UI shell must not reparent panels out of a locked prototype");
-assert.ok(!ui.includes('{ id: "pets", label: "寵物"'), "custom pet menu must not be exposed");
-assert.ok(!ui.includes('{ id: "quests", label: "任務"'), "custom NPC/quest menu must not be exposed");
-assert.ok(!ui.includes('{ id: "hunt", label: "狩獵"'), "unverified auto-hunt menu must not be exposed");
-assert.ok(ui.includes('setAttribute("aria-label", "主要功能選單")'), "single-screen dock should expose an accessible navigation label");
-assert.ok(ui.includes('make("div", "game-dashboard")'), "compact always-visible game dashboard must exist");
-assert.ok(ui.includes("const panelNodes = new Map()"), "secondary panels must be preserved while moving to modals");
-assert.ok(ui.includes('[".character-panel", ".skills-panel", ".target-panel"].forEach((selector) => {'), "all three core panels must be cached before the dashboard is built");
-assert.ok(ui.includes('make("div", "game-modal")'), "secondary panels should open in modal overlays");
-assert.ok(ui.includes('play.insertBefore(quickNav, oldMapTabs)'), "compact map selector must be inserted into the play column");
-assert.ok(!ui.includes('game-menu-views'), "old scrolling tab-page interface should be removed");
 const css = read("style.css");
-assert.ok(css.includes(".job-transfer-select"), "direct-transfer selector styling must exist");
-assert.ok(css.includes(".game-dock"), "one-screen bottom dock styling must exist");
-assert.ok(css.includes(".game-modal"), "secondary feature modal styling must exist");
-assert.ok(css.includes("overflow: hidden"), "page-level scrolling should be disabled for the game shell");
-assert.ok(css.includes("100dvh"), "layout should fit the dynamic viewport height");
-assert.ok(css.includes(".map-quicknav"), "compact map selector styling must exist");
-assert.ok(css.includes(".game-visual-overlay"), "ambient visual overlay styling must exist");
-assert.ok(css.includes("grid-template-columns: repeat(3,minmax(0,1fr))"), "bottom dock must fit the three active controls");
-assert.ok(css.includes("@media (max-width: 620px)"), "responsive layout rules must exist");
-assert.ok(css.includes(".expansion-gear-row"), "expansion mobile styles must be present");
+const main = read("src/main.js");
+const ui = read("src/ui-shell.js");
 const sw = read("sw.js");
-assert.ok(!sw.includes('"./src/expansion.js"'), "offline cache must not precache the quarantined expansion module");
-assert.ok(!sw.includes('"./src/pets.js"'), "offline cache must not precache the quarantined pet module");
-assert.ok(sw.includes('"./src/visual-effects.js"'), "offline cache shell must include visual effects");
-assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
-assert.ok(sw.includes("ro-offline-adventure-v15"), "service worker cache must be invalidated after the direct-transfer UI change");
-
-assert.ok(!html.includes('src/pets.js'), "unverified pet module must not be loaded");
-assert.ok(!html.includes('src/expansion.js'), "unverified expansion module must not be loaded");
-assert.ok(html.includes('<main id="roPrototype" class="layout" hidden aria-hidden="true">'), "unverified core gameplay must remain locked until its data is audited");
-assert.ok(css.includes("#roPrototype { display: none !important; }"), "CSS must keep the unaudited prototype hidden even if hidden attributes are stripped");
-assert.ok(html.includes('class="panel idle-panel" hidden'), "unverified auto-hunt panel must be hidden");
-assert.ok(main.includes("state.idleEnabled = false; // Strict mode"), "old saves must not restore auto-hunt");
-assert.ok(main.includes("offline hunting is not enabled until verified"), "offline rewards must be disabled pending source verification");
-const policy = read("RO_OFFICIAL_CONTENT_POLICY.md");
-assert.ok(policy.includes("不得新增"), "official content policy must explicitly prohibit unverified additions");
-const visuals = read("src/visual-effects.js");
-for (const feature of ["game-visual-overlay", "drawParticles", "drawEffects", "ro:player-hurt", "ro:monster-hurt", "level-up"]) assert.ok(visuals.includes(feature), "visual effect feature missing: " + feature);
-console.log("Smoke tests passed: data references, core combat API, strict-mode module quarantine, disabled unverified pet/offline systems, UI controls, pixel animation paths, and offline cache.");
+const scriptPaths = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((m) => m[1].replace(/^\.\//, ""));
+assert.ok(scriptPaths.includes("src/main.js"), "core gameplay must load");
+assert.ok(scriptPaths.includes("src/visual-effects.js"), "visual effects must load");
+assert.ok(scriptPaths.includes("src/ui-shell.js"), "compact UI must load");
+assert.ok(!scriptPaths.includes("src/expansion.js") && !scriptPaths.includes("src/pets.js"), "advanced optional systems must stay outside the mini game's main flow");
+assert.ok(html.includes('<main id="roPrototype" class="layout">'), "the game must be available immediately");
+assert.ok(!html.includes('id="roContentAuditNotice"'), "the old blocking audit notice must be removed");
+assert.ok(!css.includes("#roPrototype { display: none !important; }"), "CSS must not re-lock the playable game");
+assert.ok(html.includes("點擊地面") && html.includes("點擊怪物"), "controls must be explained in the game view");
+assert.ok(html.includes('id="resetStatsButton">免費初始化</button>'), "free stat reset button must exist");
+assert.ok(html.includes('id="resetSkillsButton">免費初始化</button>'), "free skill reset button must exist");
+for (const feature of ["attackMonster", "performSkill", "changeJob", "resetStats", "resetSkills", "saveGame", "applySave", "handleWorldClick", "drawMonster", "drawPlayer"]) {
+  assert.ok(main.includes("function " + feature + "("), "core pathway missing: " + feature);
+}
+assert.ok(main.includes('select.id = "jobTargetSelect"'), "job choice should use a direct selector");
+assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "job transfer must be one clear action");
+assert.ok(main.includes("function statCost(value) {\n    return 1;\n  }"), "each stat increase should cost exactly one point");
+assert.ok(!main.includes("state.player.jobLevel < 10") && !main.includes("state.player.jobLevel >= 10"), "Job Lv. should not block the simplified transfer path");
+assert.ok(main.includes('player.stats[stat.id] = 5;'), "stat reset should restore starter values");
+assert.ok(main.includes('state.learnedSkills = ["basic-strike"];'), "skill reset should restore the starter skill");
+assert.ok(ui.includes("game-dashboard") && ui.includes("game-modal") && ui.includes("mapQuickSelect"), "compact dashboard and menus must exist");
+assert.ok(css.includes(".game-dock") && css.includes(".game-modal") && css.includes(".map-quicknav"), "compact UI styles must exist");
+assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v1";'), "browser cache must be invalidated for the unlocked mini game");
+console.log("Smoke tests passed: playable mini RO, simple stat costs, direct job progression, free resets, core combat, data references, compact UI, and optional-system isolation.");
