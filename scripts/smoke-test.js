@@ -111,10 +111,11 @@ assert.ok(!sw.includes('"./src/expansion.js"'), "offline cache must not precache
 assert.ok(!sw.includes('"./src/pets.js"'), "offline cache must not precache the quarantined pet module");
 assert.ok(sw.includes('"./src/visual-effects.js"'), "offline cache shell must include visual effects");
 assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
-assert.ok(sw.includes("ro-offline-adventure-v10"), "service worker cache must be invalidated after quarantining unverified modules");
+assert.ok(sw.includes("ro-offline-adventure-v11"), "service worker cache must be invalidated after locking unverified core content");
 
 assert.ok(!html.includes('src/pets.js'), "unverified pet module must not be loaded");
 assert.ok(!html.includes('src/expansion.js'), "unverified expansion module must not be loaded");
+assert.ok(html.includes('<main id="roPrototype" class="layout" hidden aria-hidden="true">'), "unverified core gameplay must remain locked until its data is audited");
 assert.ok(html.includes('class="panel idle-panel" hidden'), "unverified auto-hunt panel must be hidden");
 assert.ok(main.includes("state.idleEnabled = false; // Strict mode"), "old saves must not restore auto-hunt");
 assert.ok(main.includes("offline hunting is not enabled until verified"), "offline rewards must be disabled pending source verification");

@@ -27,6 +27,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .brand-copy h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: .02em; }
 .brand-copy p { font-size: 12px; color: var(--muted); margin: 0; }
 .topbar-status { margin-left: auto; font-size: 12px; color: #a6b7c0; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+#roPrototype[hidden] { display: none !important; }
 #roContentAuditNotice { margin: 0 0 16px; padding: 12px 15px; border: 1px solid rgba(239,202,123,.3); border-radius: 10px; background: rgba(63,53,34,.28); color: #e6d8b7; font-size: 12px; line-height: 1.6; }
 #roContentAuditNotice strong { display: block; margin-bottom: 4px; color: #f2d38e; font-size: 13px; }
 #roContentAuditNotice p { margin: 0; }
