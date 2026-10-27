@@ -20,10 +20,13 @@ unique(Object.keys(data.maps), "map ids");
 
 for (const job of data.jobs) {
   assert.ok(Array.isArray(job.skills), "job skills must be an array: " + job.id);
+  assert.ok(typeof job.role === "string" && job.role.length > 0, "each job needs a clear short role: " + job.id);
   for (const id of job.skills) assert.ok(data.skills[id], "missing skill " + id + " for " + job.id);
 }
 for (const [id, skill] of Object.entries(data.skills)) {
   assert.equal(skill.id, id, "skill object id mismatch: " + id);
+  assert.ok(["damage", "magic", "aoe", "heal", "buff", "passive"].includes(skill.kind), "skill must have a clear category: " + id);
+  assert.ok(typeof skill.description === "string" && skill.description.length > 0, "skill description must exist: " + id);
   if (skill.sp != null) assert.ok(skill.sp >= 0, "negative SP cost: " + id);
 }
 for (const [id, item] of Object.entries(data.items)) {
@@ -76,6 +79,14 @@ for (const feature of ["attackMonster", "performSkill", "changeJob", "resetStats
   assert.ok(main.includes("function " + feature + "("), "core pathway missing: " + feature);
 }
 assert.ok(main.includes('select.id = "jobTargetSelect"'), "job choice should use a direct selector");
+assert.ok(main.includes('option.textContent = job.name + "（" + (job.tier === 1 ? "一轉" : "二轉") + "） · " + (job.role || "冒險者");'), "job options should display their simple play style");
+assert.ok(main.includes('const skillKindLabel = (kind) => ({'), "skills should map to simple categories");
+assert.ok(main.includes('category.className = "skill-kind";'), "skill cards should show a visible type label");
+assert.ok(main.includes('? (skill.kind === "passive" ? "被動生效" : "點擊施放")'), "learned skills should clearly say they can be used");
+assert.ok(main.includes(': "點擊學習";'), "unlearned skills should clearly say they can be learned");
+assert.ok(main.includes('textContent = "職業定位：" + (job.role || "新手冒險者");'), "the status panel should show job style instead of confusing Job EXP");
+assert.ok(css.includes(".skill-kind {"), "skill type labels should be styled");
+assert.ok(html.includes("職業名稱會標示玩法定位"), "job selection instructions should explain role tags");
 assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "job transfer must be one clear action");
 assert.ok(main.includes("function statCost(value) {\n    return 1;\n  }"), "each stat increase should cost exactly one point");
 assert.ok(!main.includes("state.player.jobLevel < 10") && !main.includes("state.player.jobLevel >= 10"), "Job Lv. should not block the simplified transfer path");
