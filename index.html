@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d2932">
+  <meta name="description" content="免費、可離線遊玩的 RO 風格單機冒險原型。">
+  <title>RO：米德加爾特小冒險</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">RO</div>
+      <div class="brand-copy">
+        <h1>米德加爾特小冒險</h1>
+        <p>單機原型 · 不需帳號 · 首次載入後可離線</p>
+      </div>
+      <div class="topbar-status"><span class="status-dot"></span><span id="connectionStatus">正在啟動</span></div>
+    </header>
+
+    <main class="layout">
+      <section class="play-column" aria-label="遊戲畫面">
+        <div class="field-heading">
+          <div><span class="eyebrow">FIELD 01</span><h2>普隆德拉郊外</h2></div>
+          <span class="location-pill"><span aria-hidden="true">☀</span> 和煦晴天</span>
+        </div>
+        <div class="game-frame">
+          <canvas id="game" width="960" height="600" aria-label="遊戲地圖。使用方向鍵或 WASD 移動，點擊地面移動，點擊怪物攻擊。"></canvas>
+          <div class="canvas-hint"><span class="hint-key">點擊地面</span> 移動 <span class="hint-separator">·</span> <span class="hint-key">點擊波利</span> 攻擊</div>
+        </div>
+        <div class="mobile-controls" aria-label="觸控移動控制">
+          <div class="dpad">
+            <button type="button" data-dir="up" aria-label="向上">▲</button>
+            <button type="button" data-dir="left" aria-label="向左">◀</button>
+            <button type="button" data-dir="down" aria-label="向下">▼</button>
+            <button type="button" data-dir="right" aria-label="向右">▶</button>
+          </div>
+          <button type="button" class="mobile-action" id="mobilePotion">使用藥水<br><small>H</small></button>
+        </div>
+        <div class="field-footer">
+          <div class="legend-item"><span class="legend-dot green"></span> 草地安全區</div>
+          <div class="legend-item"><span class="legend-dot pink"></span> 波利出沒</div>
+          <div class="field-tip">提示：靠近怪物後會自動攻擊目標</div>
+        </div>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel character-panel">
+          <div class="panel-title"><h2>冒險者資訊</h2><span class="panel-icon">✦</span></div>
+          <div class="character-row">
+            <div class="avatar" aria-hidden="true"><span class="avatar-hair"></span><span class="avatar-face"></span><span class="avatar-body"></span></div>
+            <div class="character-name"><strong>新手冒險者</strong><span id="levelLabel">Lv. 1 Novice</span></div>
+            <div class="zeny"><small>Zeny</small><strong id="goldLabel">0</strong></div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-line"><span>HP</span><strong id="hpText">100 / 100</strong></div>
+            <div class="bar"><div class="bar-fill hp-fill" id="hpFill" style="width:100%"></div></div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-line"><span>EXP</span><strong id="expText">0 / 30</strong></div>
+            <div class="bar"><div class="bar-fill exp-fill" id="expFill" style="width:0%"></div></div>
+          </div>
+          <div class="stat-grid">
+            <div><span>攻擊力</span><strong id="attackLabel">8–12</strong></div>
+            <div><span>藥水</span><strong id="potionLabel">5 瓶</strong></div>
+          </div>
+          <button type="button" class="primary-button full-button" id="potionButton">✚ 使用紅色藥水 <kbd>H</kbd></button>
+        </section>
+
+        <section class="panel target-panel">
+          <div class="panel-title"><h2>目標資訊</h2><span class="panel-subtitle">TARGET</span></div>
+          <div class="target-row">
+            <div class="target-icon" aria-hidden="true">●</div>
+            <div class="target-copy"><strong id="targetName">尚未選取目標</strong><span id="targetLevel">點擊地圖中的波利</span></div>
+          </div>
+          <div class="stat-line target-hp-line"><span>目標 HP</span><strong id="targetHpText">—</strong></div>
+          <div class="bar target-bar"><div class="bar-fill monster-fill" id="targetHpFill" style="width:0%"></div></div>
+        </section>
+
+        <section class="panel inventory-panel">
+          <div class="panel-title"><h2>快捷欄</h2><span class="panel-subtitle">INVENTORY</span></div>
+          <div class="hotbar">
+            <button type="button" class="hotbar-slot potion-slot" id="hotbarPotion" aria-label="使用紅色藥水"><span class="slot-item">✚</span><span class="slot-count" id="hotbarPotionCount">5</span><span class="slot-key">H</span></button>
+            <div class="hotbar-slot empty-slot"><span>＋</span><small>空位</small></div>
+            <div class="hotbar-slot empty-slot"><span>＋</span><small>空位</small></div>
+            <div class="hotbar-slot empty-slot"><span>＋</span><small>空位</small></div>
+          </div>
+          <p class="small-note">紅色藥水可恢復 35 HP。打倒波利有機會取得額外藥水。</p>
+        </section>
+
+        <section class="panel log-panel">
+          <div class="panel-title"><h2>冒險紀錄</h2><button type="button" class="text-button" id="clearLog">清除</button></div>
+          <div class="log-list" id="gameLog" aria-live="polite">
+            <p class="log-entry"><span class="log-bullet">›</span> 歡迎來到米德加爾特！</p>
+            <p class="log-entry muted"><span class="log-bullet">›</span> 點擊一隻波利開始冒險。</p>
+          </div>
+        </section>
+
+        <section class="panel save-panel">
+          <div class="panel-title"><h2>遊戲存檔</h2><span class="save-indicator" id="saveIndicator">尚未儲存</span></div>
+          <div class="save-actions">
+            <button type="button" class="secondary-button" id="saveButton">儲存進度</button>
+            <button type="button" class="secondary-button" id="exportButton">匯出存檔</button>
+            <button type="button" class="secondary-button" id="importButton">匯入存檔</button>
+            <input type="file" id="importFile" accept="application/json,.json" hidden>
+          </div>
+          <button type="button" class="text-button reset-button" id="newGameButton">重新開始新遊戲</button>
+          <p class="small-note">進度存在這個瀏覽器中。定期自動儲存，也可匯出 JSON 備份。</p>
+        </section>
+      </aside>
+    </main>
+    <footer class="footer"><span>RO · OFFLINE FIELD TEST</span><span>原創繪製原型 · 無需伺服器</span></footer>
+  </div>
+  <script src="./src/main.js" defer></script>
+</body>
+</html>

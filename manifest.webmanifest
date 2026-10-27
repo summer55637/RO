@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "RO：米德加爾特小冒險",
+  "short_name": "RO 小冒險",
+  "description": "免費、可離線遊玩的 RO 風格單機冒險原型。",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#121a21",
+  "theme_color": "#1d2932",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
