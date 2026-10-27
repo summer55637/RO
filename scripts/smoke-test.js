@@ -130,11 +130,12 @@ assert.ok(visual.includes('addEffect("critical"') && visual.includes('addEffect(
 assert.ok(visual.includes('triggerShake("player")') && visual.includes('combat-player-flash'), "player hits should have a clear but brief reaction");
 assert.ok(css.includes("@keyframes combat-shake") && css.includes("prefers-reduced-motion"), "impact motion must be styled and respect reduced-motion preferences");
 assert.ok(main.includes('function compareItem(item)') && main.includes('const spDelta = (item.spBonus || 0)'), "equipment comparison must include attack, stats, HP and SP changes");
-assert.ok(main.includes('button.textContent = item.slot ? "購買並裝備" : "購買"'), "shop buttons should state whether an item equips immediately");
-assert.ok(main.includes('if (item.slot) {\n      equipItem(itemId, true);\n      logMessage("購買並裝備了"'), "buying gear should equip it and return old gear to inventory");
+assert.ok(main.includes('button.textContent = "購買";'), "shop purchase should be separate from equipping");
+assert.ok(main.includes('function buyItem(itemId)') && main.includes('state.player.gold -= price;\n    addInventory(itemId, 1);\n    logMessage("購買了" + item.name'), "purchased gear must enter the inventory before the player equips it");
+assert.ok(!main.includes('equipItem(itemId, true)') && !main.includes('購買並裝備了'), "buying gear must not automatically equip it");
 assert.ok(main.includes('"補給品" : "裝備升級"') && main.includes('"還差 " + fmt(price - state.player.gold) + " Zeny"'), "shop should group supplies and gear and explain unaffordable items");
 assert.ok(ui.includes('panels: [".equipment-panel", "#shopPanel"]') && !ui.includes('const quarantinedPanels = [".idle-panel", ".map-book-panel", "#shopPanel"'), "shop must be accessible inside the equipment modal, not hidden away");
 assert.ok(html.includes('id="shopPanel"') && html.includes("買裝備會直接穿上"), "equipment and shop guidance must be visible");
 assert.ok(css.includes(".shop-section-title") && css.includes(".shop-row .mini-button:disabled"), "shop categories and unavailable purchase states must be visually distinct");
 assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v8";'), "equipment and shop UI changes must refresh offline cache");
-console.log("Smoke tests passed: intuitive equipment comparison and shopping, auto-equip, purchase feedback, combat, reduced motion, simple progression, data references, and compact UI.");
+console.log("Smoke tests passed: intuitive equipment comparison and RO-style separate purchase/equip steps, purchase feedback, combat, reduced motion, simple progression, data references, and compact UI.");
