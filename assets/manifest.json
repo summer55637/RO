@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "note": "Optional local licensed assets. Missing images/audio are replaced by built-in canvas art and silent sound effects.",
+  "images": {
+    "player": "assets/sprites/player.png",
+    "maps": {
+      "field": "assets/maps/prontera-south.png",
+      "town": "assets/maps/prontera.png",
+      "forest": "assets/maps/misty-forest.png",
+      "cave": "assets/maps/ancient-cave.png"
+    },
+    "monsters": {
+      "poring": "assets/sprites/monsters/poring.png",
+      "drops": "assets/sprites/monsters/drops.png",
+      "fabre": "assets/sprites/monsters/fabre.png",
+      "lunatic": "assets/sprites/monsters/lunatic.png",
+      "willow": "assets/sprites/monsters/willow.png",
+      "wolf": "assets/sprites/monsters/wolf.png",
+      "skeleton": "assets/sprites/monsters/skeleton.png",
+      "familiar": "assets/sprites/monsters/familiar.png"
+    },
+    "items": {}
+  },
+  "audio": {
+    "attack": "assets/sounds/attack.ogg",
+    "skill": "assets/sounds/skill.ogg",
+    "levelup": "assets/sounds/level-up.ogg",
+    "drop": "assets/sounds/item-drop.ogg"
+  }
+}
