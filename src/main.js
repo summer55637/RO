@@ -817,6 +817,9 @@
     $("speedLabel").textContent = interval < 0.5 ? "快速" : interval < 0.75 ? "偏快" : "普通";
     $("critLabel").textContent = Math.floor(critChance()) + "%";
     $("potionLabel").textContent = p.potions + " 瓶";
+    const potionButton = $("potionButton");
+    potionButton.textContent = p.potions > 0 ? "✚ 使用紅色藥水（" + p.potions + "）" : "紅色藥水已用完";
+    potionButton.disabled = p.potions <= 0;
     unlockStatUI();
 
     const target = targetMonster();
