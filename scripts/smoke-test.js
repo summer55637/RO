@@ -123,5 +123,5 @@ assert.ok(ui.includes('window.addEventListener("ro:level-up", renderHuntGuide)')
 assert.ok(ui.includes("api.switchMap(activeHuntRecommendation.mapId);\n        api.trackMonster(activeHuntRecommendation.monsterIds[0])"), "tracking a recommended monster should first open its recommended map");
 assert.ok(css.includes(".game-dock") && css.includes(".game-modal") && css.includes(".map-quicknav"), "compact UI styles must exist");
 assert.ok(css.includes(".hunt-guide {") && css.includes(".hunt-guide-actions"), "level-based hunting recommendation should be easy to distinguish");
-assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v5";'), "browser cache must be refreshed for the hunting guide and level recommendations");
+assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v6";'), "browser cache must be refreshed for the hunting guide and level recommendations");
 console.log("Smoke tests passed: playable mini RO, simple stat costs, direct job progression, free resets, core combat, data references, compact UI, and optional-system isolation.");
