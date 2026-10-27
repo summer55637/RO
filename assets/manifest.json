@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Optional local licensed assets. Missing files are replaced by built-in canvas art and silent sound effects.",
+  "note": "Optional local assets only. New towns, dungeons and Bosses use built-in canvas fallback until you add permitted image files; no official RO artwork is bundled or presumed integrated.",
   "available": [],
   "images": {
     "player": "assets/sprites/player.png",

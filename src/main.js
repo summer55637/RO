@@ -46,7 +46,7 @@
         spawnX: spawn.x, spawnY: spawn.y, radius: 17, level: info.level,
         hp: info.hp, maxHp: info.hp, attack: info.attack, defense: info.defense,
         exp: info.exp, gold: info.gold.slice(), cooldown: rand(0.2, 0.9),
-        respawnAt: 0, poisonUntil: 0
+        respawnAt: 0, poisonUntil: 0, radius: info.boss ? 35 : 17
       };
     });
   }
@@ -75,8 +75,14 @@
     lastOfflineSummary: null,
     images: {},
     audio: {},
+    effects: [],
     isReady: false
   };
+
+  function spawnEffect(x, y, type, color, text) {
+    state.effects.push({ x, y, type, color: color || "#f8e9b3", text: text || "", start: performance.now(), until: performance.now() + 620 });
+    if (state.effects.length > 90) state.effects.splice(0, state.effects.length - 90);
+  }
 
   const staticDecor = [
     { x: 72, y: 60, type: "tree" }, { x: 182, y: 86, type: "tree" },
@@ -133,6 +139,13 @@
         result.stats[key] = (result.stats[key] || 0) + item.stats[key];
       });
     });
+    const extra = window.RO_EXPANSION && typeof window.RO_EXPANSION.bonuses === "function" ? window.RO_EXPANSION.bonuses() : null;
+    if (extra) {
+      result.attack += extra.attack || 0;
+      result.hpBonus += extra.hpBonus || 0;
+      result.spBonus += extra.spBonus || 0;
+      Object.keys(extra.stats || {}).forEach((key) => { result.stats[key] = (result.stats[key] || 0) + extra.stats[key]; });
+    }
     return result;
   }
 
@@ -166,7 +179,8 @@
   }
 
   function critChance() {
-    return clamp(2 + totalStat("luk") * 0.6, 2, 45);
+    const extra = window.RO_EXPANSION && typeof window.RO_EXPANSION.bonuses === "function" ? window.RO_EXPANSION.bonuses() : null;
+    return clamp(2 + totalStat("luk") * 0.6 + (extra ? (extra.critBonus || 0) : 0), 2, 55);
   }
 
   function monsterAt(id) {
@@ -317,6 +331,8 @@
     while (p.level < 99 && p.exp >= baseExpNeeded()) {
       p.exp -= baseExpNeeded();
       p.level += 1;
+      spawnEffect(p.x, p.y - 22, "level", "#fff0a9", "LEVEL UP!");
+      window.dispatchEvent(new CustomEvent("ro:level-up", { detail: { level: p.level } }));
       p.statPoints += 3;
       p.skillPoints += 1;
       p.maxHp += 10;
@@ -387,6 +403,7 @@
     const hpBefore = maxHp();
     const spBefore = maxSp();
     state.player.jobId = job.id;
+    window.dispatchEvent(new CustomEvent("ro:job-change", { detail: { jobId: job.id, name: job.name } }));
     state.player.jobLevel = 1;
     state.player.jobExp = 0;
     state.player.hp = clamp(state.player.hp + maxHp() - hpBefore, 1, maxHp());
@@ -802,7 +819,7 @@
   }
 
   function bestTarget() {
-    const living = state.monsters.filter((monster) => monster.hp > 0);
+    const living = state.monsters.filter((monster) => monster.hp > 0 && !(window.RO_EXPANSION && typeof window.RO_EXPANSION.shouldAvoidMonster === "function" && window.RO_EXPANSION.shouldAvoidMonster(monster, state.player)));
     if (!living.length) return null;
     const priority = state.idleSettings.priority;
     living.sort((a, b) => {
@@ -817,6 +834,8 @@
     if (!DATA.maps[mapId]) return;
     const map = DATA.maps[mapId];
     state.mapId = mapId;
+    if (window.RO_EXPANSION && typeof window.RO_EXPANSION.onMapChange === "function") window.RO_EXPANSION.onMapChange(mapId);
+    window.dispatchEvent(new CustomEvent("ro:map-change", { detail: { mapId: mapId, name: map.name, type: map.type } }));
     state.player.x = options && Number.isFinite(options.x) ? options.x : map.spawn.x;
     state.player.y = options && Number.isFinite(options.y) ? options.y : map.spawn.y;
     state.monsters = makeMonsters(mapId);
@@ -1042,6 +1061,9 @@
       state.pendingSkillId = null;
       return false;
     }
+    state.player._castUntil = performance.now() + 520;
+    spawnEffect(state.player.x, state.player.y - 22, "cast", "#aee7ff", skill.name);
+    window.dispatchEvent(new CustomEvent("ro:skill", { detail: { skillId: id, name: skill.name } }));
     state.player.sp -= skill.sp || 0;
     if (skill.zeny) state.player.gold -= skill.zeny;
     state.cooldowns[id] = skill.cooldown || 1;
@@ -1097,7 +1119,14 @@
       logMessage("你閃過了" + monster.name + "的攻擊。", "muted");
       return;
     }
+    if (monster.boss && Math.random() < 0.34) {
+      damage = Math.floor(damage * 1.7);
+      logMessage(monster.name + "施放「" + (monster.specialAttack || "MVP 強擊") + "」！", "muted");
+      spawnEffect(state.player.x, state.player.y, "burst", "#ff8b8b", "BOSS SKILL");
+    }
     state.player.hp = Math.max(0, state.player.hp - damage);
+    state.player._hurtUntil = performance.now() + 280;
+    spawnEffect(state.player.x, state.player.y - 15, "text", "#ffaaa6", "-" + damage);
     logMessage(monster.name + "攻擊你，損失 " + damage + " HP。", "muted");
     if (state.player.hp <= 0) {
       state.player.hp = Math.ceil(maxHp() * 0.6);
@@ -1114,6 +1143,8 @@
   function applyDamage(monster, damage, source) {
     if (!monster || monster.hp <= 0) return;
     monster.hp = Math.max(0, monster.hp - damage);
+    monster._hurtUntil = performance.now() + 260;
+    spawnEffect(monster.x, monster.y - (monster.boss ? 42 : 22), "text", "#fff0bd", String(damage));
     if (monster.hp > 0) {
       if (source && Math.random() < 0.28) logMessage(source + "造成 " + damage + " 傷害。", "muted");
       return;
@@ -1141,6 +1172,8 @@
   function killMonster(monster, quiet) {
     if (!monster || monster.hp !== 0 || monster._rewarded) return;
     monster._rewarded = true;
+    monster._deathAt = performance.now();
+    spawnEffect(monster.x, monster.y - (monster.boss ? 36 : 18), "death", monster.color || "#f6d5e0", "");
     const goldBase = Math.floor(rand(monster.gold[0], monster.gold[1] + 1));
     const isMerchant = currentJob().family === "merchant" || hasLearned("discount");
     const goldEarned = Math.floor(goldBase * (isMerchant ? 1.15 : 1));
@@ -1148,6 +1181,10 @@
     expReward(monster.exp, quiet === true);
     jobExpReward(Math.max(1, Math.floor(monster.exp * 0.65)), quiet === true);
     const drops = rollDrops(monster, quiet === true);
+    window.dispatchEvent(new CustomEvent("ro:monster-killed", { detail: {
+      monster: { id: monster.id, type: monster.type, name: monster.name, level: monster.level, exp: monster.exp, boss: monster.boss === true },
+      gold: goldEarned, exp: monster.exp, drops: drops
+    } }));
     if (state.idleEnabled) {
       state.idleStats.kills += 1;
       state.idleStats.exp += monster.exp;
@@ -1169,6 +1206,9 @@
   function attackMonster(monster) {
     if (!monster || monster.hp <= 0 || state.attackCooldown > 0) return;
     state.attackCooldown = attackInterval();
+    state.player._attackUntil = performance.now() + 240;
+    spawnEffect(monster.x, monster.y - (monster.boss ? 34 : 14), "slash", "#ffe6a3", "");
+    window.dispatchEvent(new CustomEvent("ro:attack", { detail: { target: monster.type } }));
     const accuracy = clamp(82 + totalStat("dex") * 1.4 + state.player.level - monster.level * 2.1 + (state.buffs.focus ? 10 : 0), 40, 99);
     if (Math.random() * 100 > accuracy) {
       if (Math.random() < 0.45) logMessage("攻擊落空。", "muted");
@@ -1183,6 +1223,11 @@
   }
 
   function update(dt) {
+    if (window.RO_EXPANSION && typeof window.RO_EXPANSION.tick === "function") {
+      const action = window.RO_EXPANSION.tick({ player: state.player, mapId: state.mapId, mapType: currentMap().type, maxHp: maxHp(), dt: dt, idleEnabled: state.idleEnabled });
+      if (action && action.switchTo && DATA.maps[action.switchTo] && action.switchTo !== state.mapId) switchMap(action.switchTo);
+      if (action && action.heal) usePotion(true);
+    }
     state.attackCooldown = Math.max(0, state.attackCooldown - dt);
     Object.keys(state.cooldowns).forEach((id) => { state.cooldowns[id] = Math.max(0, state.cooldowns[id] - dt); });
     Object.keys(state.buffs).forEach((id) => {
@@ -1212,7 +1257,12 @@
         if (skill) performSkill(skill, target);
         else attackMonster(target);
       } else {
-        attackMonster(target);
+        const autoSkillId = state.idleEnabled && window.RO_EXPANSION && typeof window.RO_EXPANSION.getAutoSkillId === "function"
+          ? window.RO_EXPANSION.getAutoSkillId({ player: state.player, learnedSkills: state.learnedSkills, cooldowns: state.cooldowns, target: target, mapId: state.mapId })
+          : null;
+        const autoSkill = autoSkillId ? skillInfo(autoSkillId) : null;
+        if (autoSkill && state.player.sp >= (autoSkill.sp || 0) && (state.cooldowns[autoSkillId] || 0) <= 0) performSkill(autoSkill, target);
+        else attackMonster(target);
       }
     } else if (state.moveTarget) {
       const gap = distance(state.player, state.moveTarget);
@@ -1456,21 +1506,37 @@
   }
 
   function drawMonster(monster) {
-    if (monster.hp <= 0) return;
     const info = monsterInfo(monster.type);
+    if (monster.hp <= 0) {
+      if (monster._deathAt && performance.now() - monster._deathAt < 520) {
+        const progress = (performance.now() - monster._deathAt) / 520;
+        ctx.save(); ctx.globalAlpha = 1 - progress;
+        ctx.fillStyle = info.color || "#e6b5cd";
+        ctx.beginPath(); ctx.ellipse(monster.x, monster.y, 18 + progress * 27, 13 + progress * 22, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      return;
+    }
     const image = state.images["monster:" + monster.type];
     const selected = state.targetId === monster.id;
+    const boss = info.boss === true;
+    const hurt = monster._hurtUntil && performance.now() < monster._hurtUntil;
     const bounce = Math.sin(performance.now() / 190 + monster.x) * 2;
     const y = monster.y + bounce;
     ctx.fillStyle = "rgba(26,51,39,.28)";
     ctx.beginPath(); ctx.ellipse(monster.x, monster.y + 12, 19, 8, 0, 0, Math.PI * 2); ctx.fill();
+    if (boss) {
+      ctx.strokeStyle = "rgba(255,173,98,.58)";
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.ellipse(monster.x, y + 1, 37 + Math.sin(performance.now() / 180) * 2, 32, 0, 0, Math.PI * 2); ctx.stroke();
+    }
     if (selected) {
       ctx.strokeStyle = "rgba(255,227,150,.95)";
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(monster.x, monster.y + 1, 26, 24, 0, 0, Math.PI * 2); ctx.stroke();
     }
     if (image) {
-      ctx.drawImage(image, monster.x - 23, y - 26, 46, 48);
+      ctx.drawImage(image, monster.x - (boss ? 35 : 23), y - (boss ? 38 : 26), boss ? 70 : 46, boss ? 76 : 48);
     } else {
       ctx.fillStyle = info.color;
       if (monster.type === "lunatic" || monster.type === "wolf") {
@@ -1489,19 +1555,39 @@
         ctx.fillStyle = "#743a55"; ctx.fillRect(monster.x - 2, y + 7, 4, 2);
       }
     }
+    if (hurt) {
+      ctx.save(); ctx.globalAlpha = 0.42; ctx.fillStyle = "#ff646d";
+      ctx.beginPath(); ctx.ellipse(monster.x, y, boss ? 33 : 20, boss ? 28 : 19, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
     if (selected) {
       ctx.fillStyle = "rgba(24,36,31,.75)"; ctx.fillRect(monster.x - 20, monster.y - 34, 40, 5);
       ctx.fillStyle = "#ef839c"; ctx.fillRect(monster.x - 19, monster.y - 33, 38 * (monster.hp / monster.maxHp), 3);
     }
     ctx.fillStyle = "#f6e6d9"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText(monster.name + " Lv." + monster.level, monster.x, monster.y - 25);
+    ctx.fillText((boss ? "★ " : "") + monster.name + " Lv." + monster.level, monster.x, monster.y - (boss ? 43 : 25));
   }
 
   function drawPlayer() {
     const p = state.player;
     const sprite = state.images.player;
+    const now = performance.now();
     const moving = Boolean(state.moveTarget || state.targetId !== null);
+    const attacking = p._attackUntil && now < p._attackUntil;
+    const casting = p._castUntil && now < p._castUntil;
+    const hurt = p._hurtUntil && now < p._hurtUntil;
     const bob = moving ? Math.sin(state.walkFrame * 2) * 2 : 0;
+    if (casting) {
+      ctx.strokeStyle = "rgba(145,218,255,.8)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, 24 + Math.sin(now / 55) * 3, 31, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (attacking) {
+      ctx.strokeStyle = "rgba(255,238,180,.95)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(p.x + 14, p.y - 2, 24, -1.05, 1.05); ctx.stroke();
+    }
+    if (hurt) {
+      ctx.fillStyle = "rgba(255,75,85,.42)";
+      ctx.beginPath(); ctx.ellipse(p.x, p.y, 20, 27, 0, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.fillStyle = "rgba(26,49,37,.3)";
     ctx.beginPath(); ctx.ellipse(p.x, p.y + 12, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
     if (sprite) {
@@ -1584,6 +1670,34 @@
     miniCtx.strokeRect(0.5, 0.5, 179, 111);
   }
 
+  function drawEffects() {
+    const now = performance.now();
+    state.effects = state.effects.filter((effect) => effect.until > now);
+    state.effects.forEach((effect) => {
+      const t = clamp((now - effect.start) / Math.max(1, effect.until - effect.start), 0, 1);
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      if (effect.type === "text") {
+        ctx.fillStyle = effect.color; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(effect.text, effect.x, effect.y - t * 25);
+      } else if (effect.type === "slash") {
+        ctx.strokeStyle = effect.color; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(effect.x, effect.y, 12 + t * 22, -1.2 + t * 0.5, 1.2 + t * 0.5); ctx.stroke();
+      } else if (effect.type === "cast" || effect.type === "burst" || effect.type === "death") {
+        ctx.strokeStyle = effect.color; ctx.lineWidth = effect.type === "burst" ? 5 : 3;
+        ctx.beginPath(); ctx.ellipse(effect.x, effect.y, 10 + t * 36, 8 + t * 28, 0, 0, Math.PI * 2); ctx.stroke();
+        if (effect.text && effect.type === "cast") { ctx.fillStyle = effect.color; ctx.font = "bold 11px sans-serif"; ctx.textAlign = "center"; ctx.fillText(effect.text, effect.x, effect.y - 36 - t * 8); }
+        if (effect.text && effect.type === "burst") { ctx.fillStyle = effect.color; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center"; ctx.fillText(effect.text, effect.x, effect.y - 38); }
+      } else if (effect.type === "level") {
+        ctx.fillStyle = effect.color; ctx.font = "bold 18px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(effect.text, effect.x, effect.y - t * 38);
+        ctx.strokeStyle = effect.color; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(effect.x, effect.y + 18, 14 + t * 40, 5 + t * 17, 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+
   function draw() {
     drawGround();
     drawDecor();
@@ -1591,6 +1705,7 @@
     state.monsters.slice().sort((a, b) => a.y - b.y).forEach(drawMonster);
     drawDestination();
     drawPlayer();
+    drawEffects();
     if (state.idleEnabled) {
       ctx.fillStyle = "rgba(18,36,27,.75)";
       ctx.fillRect(14, 14, 130, 26);
@@ -1844,5 +1959,36 @@
   state.isReady = true;
   renderAllPanels();
   updateUI();
+  window.RO_GAME_API = {
+    getData: () => DATA,
+    getSnapshot: () => ({ mapId: state.mapId, mapName: currentMap().name, mapType: currentMap().type, idleEnabled: state.idleEnabled,
+      player: Object.assign({}, state.player, { stats: Object.assign({}, state.player.stats), maxHp: maxHp(), maxSp: maxSp() }),
+      learnedSkills: state.learnedSkills.slice(), cooldowns: Object.assign({}, state.cooldowns),
+      monsters: state.monsters.map((m) => ({ id: m.id, type: m.type, name: m.name, hp: m.hp, maxHp: m.maxHp, level: m.level, boss: m.boss === true })) }),
+    getPlayer: () => state.player,
+    getEquipment: () => Object.assign({}, state.equipment),
+    getInventory: () => state.inventory.map((item) => Object.assign({}, item)),
+    getLearnedSkills: () => state.learnedSkills.slice(),
+    getCooldowns: () => Object.assign({}, state.cooldowns),
+    getMapId: () => state.mapId,
+    getCurrentMap: () => currentMap(),
+    switchMap: (id) => switchMap(id),
+    log: (message, kind) => logMessage(String(message).slice(0, 240), kind),
+    save: () => saveGame(false),
+    addItem: (id, qty) => { if (DATA.items[id]) { addInventory(id, Math.max(1, Math.floor(qty || 1))); updateUI(); saveGame(false); return true; } return false; },
+    reward: (reward) => {
+      const r = reward || {};
+      state.player.gold += Math.max(0, Math.floor(r.gold || 0));
+      if (r.exp) expReward(Math.max(0, Math.floor(r.exp)), false);
+      if (r.skillPoints) state.player.skillPoints += Math.max(0, Math.floor(r.skillPoints));
+      updateUI(); saveGame(false);
+    },
+    spendGold: (amount) => { const cost = Math.max(0, Math.floor(amount || 0)); if (state.player.gold < cost) return false; state.player.gold -= cost; updateUI(); saveGame(false); return true; },
+    usePotion: () => usePotion(true),
+    getSkillInfo: (id) => skillInfo(id),
+    getMonsterInfo: (id) => monsterInfo(id),
+    isTown: () => currentMap().type === "town",
+    setIdleEnabled: (value) => { state.idleEnabled = value === true; updateUI(); saveGame(false); }
+  };
   requestAnimationFrame(frame);
 })();

@@ -28,6 +28,7 @@ jobs:
         run: |
           node --check src/data.js
           node --check src/main.js
+          node --check src/expansion.js
           node -e "JSON.parse(require('node:fs').readFileSync('assets/manifest.json', 'utf8'))"
 
       - name: Validate game data references
@@ -42,11 +43,20 @@ jobs:
           for (const monster of Object.values(data.monsters)) {
             for (const drop of monster.drops) if (!data.items[drop.id]) throw new Error('Missing drop item: ' + drop.id);
           }
-          for (const map of Object.values(data.maps)) {
-            for (const spawn of map.spawns) if (!data.monsters[spawn.type]) throw new Error('Missing monster: ' + spawn.type);
-            for (const portal of map.portals) if (!data.maps[portal.to]) throw new Error('Missing portal destination: ' + portal.to);
+          const mapIds = new Set();
+          for (const [id, map] of Object.entries(data.maps)) {
+            if (mapIds.has(id)) throw new Error('Duplicate map: ' + id);
+            mapIds.add(id);
+            if (!Array.isArray(map.spawns) || !Array.isArray(map.portals)) throw new Error('Invalid map collections: ' + id);
+            for (const spawn of map.spawns) {
+              if (!data.monsters[spawn.type]) throw new Error('Missing monster: ' + spawn.type + ' in ' + id);
+              if (spawn.x < 0 || spawn.x > 960 || spawn.y < 0 || spawn.y > 600) throw new Error('Spawn outside world bounds: ' + id);
+            }
+            for (const portal of map.portals) if (!data.maps[portal.to]) throw new Error('Missing portal destination: ' + portal.to + ' from ' + id);
           }
-          console.log('Validated jobs, skills, drops, maps, and portals.');
+          for (const id of ['geffen', 'morroc', 'payon', 'izlude', 'pyramid', 'glast-heim', 'mvp-lair']) if (!data.maps[id]) throw new Error('Missing expansion map: ' + id);
+          for (const id of ['osiris', 'moonlight-flower', 'baphomet']) if (!data.monsters[id] || data.monsters[id].boss !== true) throw new Error('Missing boss configuration: ' + id);
+          console.log('Validated jobs, skills, item drops, map coordinates, all portals, expansion towns, dungeons, and MVP bosses.');
           NODE
 
       - name: Configure Pages

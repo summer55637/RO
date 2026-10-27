@@ -180,3 +180,46 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   .footer { font-size: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+
+
+/* Expansion: guild quests, refinement/cards, and advanced idle hunting */
+.expansion-panel { position: relative; overflow: hidden; }
+.expansion-panel::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, #d9b876, #7cb8c1, transparent); opacity: .8; pointer-events: none; }
+.expansion-lead { margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.expansion-block { padding: 11px 0; border-top: 1px solid var(--line); }
+.expansion-block:first-of-type { border-top: 0; padding-top: 2px; }
+.expansion-block-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 13px; font-weight: 750; color: var(--text); }
+.expansion-tag { border: 1px solid rgba(217,184,118,.28); border-radius: 999px; color: #e8cc8d; padding: 3px 7px; font-size: 10px; white-space: nowrap; }
+.expansion-npc-controls { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 7px; }
+.expansion-panel select, .expansion-panel input[type="number"] { min-width: 0; width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-raised); color: var(--text); padding: 8px; font: inherit; font-size: 12px; }
+.expansion-npc-dialogue { margin: 9px 0 0; padding: 10px 11px; border-radius: 9px; background: rgba(217,184,118,.075); color: #d9e3dd; border-left: 2px solid #d9b876; font-size: 12px; line-height: 1.65; min-height: 34px; }
+.expansion-quest { border: 1px solid var(--line); background: rgba(255,255,255,.018); border-radius: 10px; padding: 10px; margin-top: 8px; }
+.expansion-quest strong { display: block; color: var(--text); font-size: 12px; }
+.expansion-quest p { margin: 5px 0 8px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.expansion-progress-track { height: 5px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.07); margin: 7px 0 8px; }
+.expansion-progress-track span { display: block; height: 100%; background: linear-gradient(90deg,#cba766,#80c5b2); border-radius: inherit; }
+.expansion-progress-label { color: var(--muted); font-size: 10px; display: flex; justify-content: space-between; gap: 8px; }
+.expansion-action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.expansion-panel .mini-button { font-size: 11px; white-space: nowrap; }
+.expansion-panel .mini-button:disabled { opacity: .42; cursor: not-allowed; }
+.expansion-gear-row { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.expansion-gear-row:last-child { border-bottom: 0; }
+.expansion-gear-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.expansion-gear-copy strong { overflow-wrap: anywhere; font-size: 12px; }
+.expansion-gear-copy small { color: var(--muted); font-size: 10px; line-height: 1.45; }
+.expansion-stat-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.expansion-stat-pills span { color: #d7e5dc; background: rgba(124,184,161,.09); border: 1px solid rgba(124,184,161,.18); border-radius: 7px; padding: 5px 7px; font-size: 10px; }
+.expansion-setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.expansion-setting:last-child { border-bottom: 0; }
+.expansion-setting > span:first-child { min-width: 0; color: var(--text); }
+.expansion-setting select { max-width: 58%; }
+.expansion-toggle { accent-color: #d9b876; }
+.expansion-report { border-radius: 9px; background: rgba(124,184,193,.07); padding: 9px 10px; margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.expansion-report strong { color: var(--text); }
+.expansion-notice { margin: 7px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+@media (max-width: 620px) {
+  .expansion-gear-row { grid-template-columns: minmax(0,1fr); }
+  .expansion-gear-row > .expansion-action-row { justify-content: flex-start; }
+  .expansion-npc-controls { grid-template-columns: minmax(0,1fr); }
+  .expansion-panel .mini-button { min-height: 34px; }
+}
