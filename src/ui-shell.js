@@ -28,6 +28,9 @@
 
     // The core game stays visible. All long-form tools are moved into lightweight overlays.
     const panelNodes = new Map();
+    [".character-panel", ".skills-panel", ".target-panel"].forEach((selector) => {
+      panelNodes.set(selector, $(selector, side));
+    });
     actions.forEach((action) => {
       action.panels.forEach((selector) => {
         if (!panelNodes.has(selector)) panelNodes.set(selector, $(selector, side));
