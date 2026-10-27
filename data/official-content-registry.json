@@ -2517,7 +2517,7 @@
     "note": "Search results identify no directly stating official Taiwan RO PC source for complete first-to-second or per-class second-to-third parent edges. Do not fill those fields from common knowledge, other regions, emulator data, or inferred class pairs."
   },
   "jobTransferUxAudit": {
-    "status": "user-requested-prototype-behavior; playable-prototype-remains-locked",
+    "status": "ui-simplification-only; playable-prototype-remains-locked",
     "updatedOn": "2026-10-27",
     "requestedBehavior": "在轉職表直接選擇目前原型列出的目標職業並按一次轉職；不跑轉職任務、不收取原型操作費用",
     "implementation": "single-select target dropdown plus one direct-transfer button; preserve existing parent-job/Base Lv/Job Lv gates",
