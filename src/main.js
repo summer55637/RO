@@ -7,7 +7,6 @@
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
   const $ = (id) => document.getElementById(id);
-  const keys = Object.create(null);
   const obstacles = [
     { x: 92, y: 102, r: 20 }, { x: 154, y: 488, r: 18 },
     { x: 817, y: 105, r: 19 }, { x: 863, y: 474, r: 22 },
@@ -135,7 +134,6 @@
     state.targetId = null;
     state.moveTarget = null;
     state.attackCooldown = 0;
-    Object.keys(keys).forEach((key) => { keys[key] = false; });
     saveGame(false);
     updateUI();
     logMessage("新冒險開始了！郊外有幾隻波利。");
@@ -233,17 +231,7 @@
     const p = state.player;
     state.attackCooldown = Math.max(0, state.attackCooldown - dt);
     const mob = findTarget();
-    let dx = 0, dy = 0;
-    if (keys.ArrowUp || keys.w || keys.W) dy -= 1;
-    if (keys.ArrowDown || keys.s || keys.S) dy += 1;
-    if (keys.ArrowLeft || keys.a || keys.A) dx -= 1;
-    if (keys.ArrowRight || keys.d || keys.D) dx += 1;
-
-    if (dx || dy) {
-      state.moveTarget = null;
-      state.targetId = null;
-      movePlayer(dx, dy, dt);
-    } else if (mob) {
+    if (mob) {
       const d = dist(p, mob);
       const reach = 31;
       if (d > reach) {
@@ -389,7 +377,7 @@
 
   function drawPlayer() {
     const p = state.player;
-    const moving = state.moveTarget || keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight || keys.w || keys.a || keys.s || keys.d || keys.W || keys.A || keys.S || keys.D;
+    const moving = Boolean(state.moveTarget || state.targetId !== null);
     const bob = moving ? Math.sin(state.walkFrame * 2) * 2 : 0;
     ctx.fillStyle = "rgba(26,49,37,.3)";
     ctx.beginPath(); ctx.ellipse(p.x, p.y + 12, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
@@ -478,32 +466,8 @@
     updateUI();
   });
 
-  window.addEventListener("keydown", (event) => {
-    const key = event.key;
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(key) && !event.repeat) event.preventDefault();
-    if (key === "h" || key === "H") { if (!event.repeat) usePotion(); return; }
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d", "W", "A", "S", "D"].includes(key)) {
-      keys[key] = true;
-    }
-  });
-  window.addEventListener("keyup", (event) => { keys[event.key] = false; });
-  window.addEventListener("blur", () => { Object.keys(keys).forEach((key) => { keys[key] = false; }); });
-
-  document.querySelectorAll("[data-dir]").forEach((button) => {
-    const mapping = { up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight" };
-    const key = mapping[button.dataset.dir];
-    const down = (event) => { event.preventDefault(); keys[key] = true; };
-    const up = (event) => { event.preventDefault(); keys[key] = false; };
-    button.addEventListener("pointerdown", down);
-    button.addEventListener("pointerup", up);
-    button.addEventListener("pointercancel", up);
-    button.addEventListener("pointerleave", up);
-    button.addEventListener("contextmenu", (event) => event.preventDefault());
-  });
-
   $("potionButton").addEventListener("click", usePotion);
   $("hotbarPotion").addEventListener("click", usePotion);
-  $("mobilePotion").addEventListener("click", usePotion);
   $("saveButton").addEventListener("click", () => saveGame(true));
   $("clearLog").addEventListener("click", () => { $("gameLog").replaceChildren(); logMessage("紀錄已清除。", "muted"); });
   $("newGameButton").addEventListener("click", () => {

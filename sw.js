@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "ro-offline-field-v1";
+const CACHE_NAME = "ro-offline-field-v2";
 const APP_SHELL = [
   "./",
   "./index.html",

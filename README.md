@@ -9,17 +9,20 @@ Before the first successful deployment, open the repository's **Settings → Pag
 ## Current prototype features
 
 - Canvas-based pixel-art-inspired field rendered from original shapes (no external image or server dependency).
-- Keyboard/touch movement, click-to-move, and a small field with collision boundaries.
-- Poring-like training monster, click/tap to attack, monster pursuit, HP/EXP, levels, potions and drops.
+- Fully point-and-click controls: click the ground to move, or click a Poring-like monster to auto-chase and attack.
+- On-screen buttons for potions and saving; no keyboard input is required.
+- Monster pursuit, HP/EXP, levels, potions and drops.
 - Local save/load, new game, and downloadable/importable save JSON.
 - PWA manifest and service-worker cache for offline play after the first successful load.
 
 ## Controls
 
-- **WASD / arrow keys:** move
-- **Click or tap the ground:** move there
-- **Click or tap a monster:** attack
-- **H:** use a potion
+- **Click or tap the ground:** move your character to that location.
+- **Click or tap a monster:** select it; your character automatically approaches and attacks.
+- **Use a red potion:** click the potion button or the potion slot.
+- **Save/load/export:** use the on-screen buttons.
+
+No keyboard controls are required.
 
 ## Project notes
 

@@ -28,22 +28,13 @@
           <span class="location-pill"><span aria-hidden="true">☀</span> 和煦晴天</span>
         </div>
         <div class="game-frame">
-          <canvas id="game" width="960" height="600" aria-label="遊戲地圖。使用方向鍵或 WASD 移動，點擊地面移動，點擊怪物攻擊。"></canvas>
-          <div class="canvas-hint"><span class="hint-key">點擊地面</span> 移動 <span class="hint-separator">·</span> <span class="hint-key">點擊波利</span> 攻擊</div>
-        </div>
-        <div class="mobile-controls" aria-label="觸控移動控制">
-          <div class="dpad">
-            <button type="button" data-dir="up" aria-label="向上">▲</button>
-            <button type="button" data-dir="left" aria-label="向左">◀</button>
-            <button type="button" data-dir="down" aria-label="向下">▼</button>
-            <button type="button" data-dir="right" aria-label="向右">▶</button>
-          </div>
-          <button type="button" class="mobile-action" id="mobilePotion">使用藥水<br><small>H</small></button>
+          <canvas id="game" width="960" height="600" aria-label="遊戲地圖。點擊地面移動，點擊波利後角色會自動追擊並攻擊。"></canvas>
+          <div class="canvas-hint"><span class="hint-key">點擊地面</span> 移動 <span class="hint-separator">·</span> <span class="hint-key">點擊波利</span> 自動追擊／攻擊</div>
         </div>
         <div class="field-footer">
           <div class="legend-item"><span class="legend-dot green"></span> 草地安全區</div>
           <div class="legend-item"><span class="legend-dot pink"></span> 波利出沒</div>
-          <div class="field-tip">提示：靠近怪物後會自動攻擊目標</div>
+          <div class="field-tip">操作：全程點擊，選取波利後會自動追擊攻擊</div>
         </div>
       </section>
 
@@ -67,7 +58,7 @@
             <div><span>攻擊力</span><strong id="attackLabel">8–12</strong></div>
             <div><span>藥水</span><strong id="potionLabel">5 瓶</strong></div>
           </div>
-          <button type="button" class="primary-button full-button" id="potionButton">✚ 使用紅色藥水 <kbd>H</kbd></button>
+          <button type="button" class="primary-button full-button" id="potionButton">✚ 使用紅色藥水</button>
         </section>
 
         <section class="panel target-panel">
@@ -83,7 +74,7 @@
         <section class="panel inventory-panel">
           <div class="panel-title"><h2>快捷欄</h2><span class="panel-subtitle">INVENTORY</span></div>
           <div class="hotbar">
-            <button type="button" class="hotbar-slot potion-slot" id="hotbarPotion" aria-label="使用紅色藥水"><span class="slot-item">✚</span><span class="slot-count" id="hotbarPotionCount">5</span><span class="slot-key">H</span></button>
+            <button type="button" class="hotbar-slot potion-slot" id="hotbarPotion" aria-label="使用紅色藥水"><span class="slot-item">✚</span><span class="slot-count" id="hotbarPotionCount">5</span></button>
             <div class="hotbar-slot empty-slot"><span>＋</span><small>空位</small></div>
             <div class="hotbar-slot empty-slot"><span>＋</span><small>空位</small></div>
             <div class="hotbar-slot empty-slot"><span>＋</span><small>空位</small></div>
