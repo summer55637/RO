@@ -677,3 +677,11 @@ body.modal-open { overflow: hidden; }
   .game-frame.combat-shake, .game-frame.combat-shake-heavy { animation: none; }
   .game-frame.combat-player-flash { box-shadow: none; }
 }
+
+
+/* Keep equipment, inventory and shop actions in one beginner-friendly place. */
+.equipment-help { margin: 0 0 10px; line-height: 1.5; }
+.shop-section-title { margin: 10px 0 1px; padding: 0 2px 4px; color: #e5d49e; font-size: 10px; font-weight: 800; border-bottom: 1px solid rgba(229,212,158,.16); }
+.shop-row-unaffordable { opacity: .76; }
+.shop-row .mini-button { min-width: 70px; }
+.shop-row .mini-button:disabled { color: #a0adb3; background: #27343b; border-color: #3a484f; cursor: not-allowed; }
