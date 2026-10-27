@@ -60,6 +60,11 @@ assert.ok(html.includes('<main id="roPrototype" class="layout">'), "the game mus
 assert.ok(!html.includes('id="roContentAuditNotice"'), "the old blocking audit notice must be removed");
 assert.ok(!css.includes("#roPrototype { display: none !important; }"), "CSS must not re-lock the playable game");
 assert.ok(html.includes("點擊地面") && html.includes("點擊怪物"), "controls must be explained in the game view");
+assert.ok(html.includes('id="newPlayerGuide"') && html.includes('id="newPlayerGuideText"'), "a visible first-action guide must exist");
+assert.ok(ui.includes('title: "新手推薦"') && ui.includes('title: "地下城與 Boss（較難）"'), "map selection should put beginner areas first and label difficult areas");
+assert.ok(ui.includes('window.addEventListener("ro:monster-killed"') && ui.includes('window.addEventListener("ro:level-up"'), "onboarding guidance should respond to first combat and level-up");
+assert.ok(main.includes('potionButton.textContent = p.potions > 0 ? "✚ 使用紅色藥水（" + p.potions + "）"'), "the main action should show the number of red potions left");
+assert.ok(css.includes(".dashboard-character .stat-grid { display: none !important; }"), "secondary combat metrics should stay off the main status panel");
 assert.ok(html.includes('id="resetStatsButton">免費初始化</button>'), "free stat reset button must exist");
 assert.ok(html.includes('id="resetSkillsButton">免費初始化</button>'), "free skill reset button must exist");
 for (const feature of ["attackMonster", "performSkill", "changeJob", "resetStats", "resetSkills", "saveGame", "applySave", "handleWorldClick", "drawMonster", "drawPlayer"]) {
@@ -74,5 +79,5 @@ assert.ok(main.includes('player.stats[stat.id] = 5;'), "stat reset should restor
 assert.ok(main.includes('state.learnedSkills = ["basic-strike"];'), "skill reset should restore the starter skill");
 assert.ok(ui.includes("game-dashboard") && ui.includes("game-modal") && ui.includes("mapQuickSelect"), "compact dashboard and menus must exist");
 assert.ok(css.includes(".game-dock") && css.includes(".game-modal") && css.includes(".map-quicknav"), "compact UI styles must exist");
-assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v1";'), "browser cache must be invalidated for the unlocked mini game");
+assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v2";'), "browser cache must be refreshed for the new-player UI");
 console.log("Smoke tests passed: playable mini RO, simple stat costs, direct job progression, free resets, core combat, data references, compact UI, and optional-system isolation.");
