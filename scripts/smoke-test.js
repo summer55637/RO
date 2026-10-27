@@ -77,6 +77,8 @@ assert.ok(main.includes('petAttack: (monsterId, damage, petName) =>'), "pet supp
 assert.ok(main.includes('removeItem: (id, qty) =>'), "pet supplies must be removable from inventory");
 assert.ok(main.includes('targetId: state.targetId'), "snapshot must expose the current target for pet interactions");
 assert.ok(main.includes('ro:player-hurt'), "player hurt animation event must be emitted");
+assert.ok(main.includes('ro:target-change'), "pet capture selection must receive live target changes");
+assert.ok(f.includes ? true : true);
 assert.ok(main.includes('ro:monster-hurt'), "monster hit effect event must be emitted");
 
 const ui = read("src/ui-shell.js");
@@ -87,6 +89,7 @@ assert.ok(ui.includes('setAttribute("aria-label", "主要功能選單")'), "sing
 assert.ok(ui.includes('make("div", "game-dashboard")'), "compact always-visible game dashboard must exist");
 assert.ok(ui.includes("const panelNodes = new Map()"), "secondary panels must be preserved while moving to modals");
 assert.ok(ui.includes('{ id: "pets", label: "寵物"'), "pet management must be accessible from the compact dock");
+assert.ok(ui.includes('window.RO_PETS.refresh()'), "pet management modal must refresh target state when opened");
 assert.ok(ui.includes('[".character-panel", ".skills-panel", ".target-panel"].forEach((selector) => {'), "all three core panels must be cached before the dashboard is built");
 assert.ok(ui.includes('make("div", "game-modal")'), "secondary panels should open in modal overlays");
 assert.ok(ui.includes('play.insertBefore(quickNav, oldMapTabs)'), "compact map selector must be inserted into the play column");
@@ -110,7 +113,7 @@ assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include 
 assert.ok(sw.includes("ro-offline-adventure-v8"), "service worker cache version should be bumped for new modules");
 
 const pets = read("src/pets.js");
-for (const feature of ["pet-treat", "pet-snack", "captureTarget", "feedPet", "function tick(dt)", "function bonuses()", "ro:monster-killed", "localStorage"]) assert.ok(pets.includes(feature), "pet system feature missing: " + feature);
+for (const feature of ["pet-treat", "pet-snack", "captureTarget", "feedPet", "function tick(dt)", "function bonuses()", "ro:monster-killed", "ro:target-change", "localStorage"]) assert.ok(pets.includes(feature), "pet system feature missing: " + feature);
 const visuals = read("src/visual-effects.js");
 for (const feature of ["game-visual-overlay", "drawParticles", "drawPet", "drawEffects", "ro:player-hurt", "ro:monster-hurt", "ro:pet-attack", "ro:level-up"]) assert.ok(visuals.includes(feature), "visual effect feature missing: " + feature);
 console.log("Smoke tests passed: game data and map references, combat API, pet supplies/taming/feeding/bonding/assist attacks, companion visuals, combat feedback effects, script order, and offline cache assets.");
