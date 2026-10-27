@@ -10,6 +10,8 @@ Before the first successful deployment, open the repository's **Settings → Pag
 
 - Canvas-based pixel-art-inspired field rendered from original shapes (no external image or server dependency).
 - Fully point-and-click controls: click the ground to move, or click a Poring-like monster to auto-chase and attack.
+- Optional idle hunting automatically finds monsters and attacks them.
+- Offline idle rewards on return (up to 8 hours), with EXP, Zeny, and potion drops.
 - On-screen buttons for potions and saving; no keyboard input is required.
 - Monster pursuit, HP/EXP, levels, potions and drops.
 - Local save/load, new game, and downloadable/importable save JSON.
@@ -23,6 +25,10 @@ Before the first successful deployment, open the repository's **Settings → Pag
 - **Save/load/export:** use the on-screen buttons.
 
 No keyboard controls are required.
+
+## Idle hunting
+
+Click **開啟放置狩獵** to let the character automatically find and attack Poring-like monsters. The mode and cumulative idle stats are saved locally. When you return after closing the game, elapsed time is settled at an intentionally conservative rate of about one monster every 15 seconds, capped at 8 hours per visit. Offline settlement grants EXP, Zeny, and estimated potion drops. Keep idle hunting enabled before leaving to receive offline rewards.
 
 ## Project notes
 

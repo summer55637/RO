@@ -43,6 +43,11 @@
     lastUi: 0,
     lastSave: 0,
     lastTime: 0,
+    idleEnabled: false,
+    idleKills: 0,
+    idleTotalExp: 0,
+    idleTotalGold: 0,
+    lastOfflineSummary: null,
     isReady: false
   };
 
@@ -76,6 +81,13 @@
         version: 1,
         savedAt: new Date().toISOString(),
         player: state.player,
+        idleEnabled: state.idleEnabled,
+        idleStats: {
+          kills: state.idleKills,
+          exp: state.idleTotalExp,
+          gold: state.idleTotalGold,
+          lastOfflineSummary: state.lastOfflineSummary
+        },
         monsters: state.monsters.map((m) => ({ id: m.id, hp: m.hp, respawnAt: m.respawnAt }))
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
@@ -100,6 +112,20 @@
     state.player.exp = safeNum(p.exp, 0, 0, 99999999);
     state.player.potions = Math.round(safeNum(p.potions, 5, 0, 9999));
     state.player.gold = Math.round(safeNum(p.gold, 0, 0, 999999999));
+    state.idleEnabled = data.idleEnabled === true;
+    const idleStats = data.idleStats && typeof data.idleStats === "object" ? data.idleStats : {};
+    state.idleKills = Math.round(safeNum(idleStats.kills, 0, 0, 999999999));
+    state.idleTotalExp = Math.round(safeNum(idleStats.exp, 0, 0, 999999999999));
+    state.idleTotalGold = Math.round(safeNum(idleStats.gold, 0, 0, 999999999999));
+    state.lastOfflineSummary = idleStats.lastOfflineSummary && typeof idleStats.lastOfflineSummary === "object"
+      ? {
+          seconds: safeNum(idleStats.lastOfflineSummary.seconds, 0, 0, 28800),
+          kills: Math.round(safeNum(idleStats.lastOfflineSummary.kills, 0, 0, 999999999)),
+          exp: Math.round(safeNum(idleStats.lastOfflineSummary.exp, 0, 0, 999999999)),
+          gold: Math.round(safeNum(idleStats.lastOfflineSummary.gold, 0, 0, 999999999)),
+          potions: Math.round(safeNum(idleStats.lastOfflineSummary.potions, 0, 0, 999999999))
+        }
+      : null;
     if (Array.isArray(data.monsters)) {
       state.monsters.forEach((m) => {
         const saved = data.monsters.find((item) => item && item.id === m.id);
@@ -113,13 +139,64 @@
     updateUI();
   }
 
+  function applyOfflineProgress(savedAt) {
+    const savedTime = Date.parse(savedAt);
+    if (!state.idleEnabled || !Number.isFinite(savedTime)) return false;
+    const elapsedSeconds = Math.max(0, (Date.now() - savedTime) / 1000);
+    if (elapsedSeconds < 15) return false;
+
+    const seconds = Math.min(elapsedSeconds, 8 * 60 * 60);
+    const kills = Math.floor(seconds / 15);
+    if (kills <= 0) return false;
+
+    // Offline hunting is intentionally slower than active play: about one Poring every 15 seconds.
+    const earnedExp = kills * 12;
+    const earnedGold = kills * 5;
+    const earnedPotions = Math.floor(kills * 0.18);
+    const startingLevel = state.player.level;
+
+    state.idleKills += kills;
+    state.idleTotalExp += earnedExp;
+    state.idleTotalGold += earnedGold;
+    state.player.gold += earnedGold;
+    state.player.potions += earnedPotions;
+    state.monsters.forEach((m) => {
+      m.hp = m.maxHp;
+      m.respawnAt = 0;
+      m.cooldown = 0;
+    });
+
+    gainExp(earnedExp, false);
+    state.lastOfflineSummary = {
+      seconds: Math.floor(seconds),
+      kills,
+      exp: earnedExp,
+      gold: earnedGold,
+      potions: earnedPotions
+    };
+
+    const duration = seconds >= 3600
+      ? Math.floor(seconds / 3600) + " 小時"
+      : Math.max(1, Math.floor(seconds / 60)) + " 分鐘";
+    logMessage("放置結算：" + duration + "，擊倒 " + kills + " 隻波利，獲得 " + earnedExp + " EXP、" + earnedGold + " Zeny。");
+    if (state.player.level > startingLevel) {
+      logMessage("離線期間升級至 Lv. " + state.player.level + "！");
+    }
+    if (earnedPotions > 0) logMessage("放置掉落紅色藥水 ×" + earnedPotions + "。", "muted");
+    updateUI();
+    return true;
+  }
+
   function loadGame() {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return false;
-      applySave(JSON.parse(raw));
+      const data = JSON.parse(raw);
+      applySave(data);
+      applyOfflineProgress(data.savedAt);
       $("saveIndicator").textContent = "已讀取本機存檔";
       logMessage("已讀取上次的冒險進度。", "muted");
+      saveGame(false);
       return true;
     } catch (error) {
       $("saveIndicator").textContent = "使用新遊戲";
@@ -131,6 +208,11 @@
   function startNewGame() {
     state.player = { x: 466, y: 345, hp: 100, maxHp: 100, level: 1, exp: 0, potions: 5, gold: 0 };
     state.monsters = makeMonsters();
+    state.idleEnabled = false;
+    state.idleKills = 0;
+    state.idleTotalExp = 0;
+    state.idleTotalGold = 0;
+    state.lastOfflineSummary = null;
     state.targetId = null;
     state.moveTarget = null;
     state.attackCooldown = 0;
@@ -139,15 +221,20 @@
     logMessage("新冒險開始了！郊外有幾隻波利。");
   }
 
-  function gainExp(amount) {
+  function gainExp(amount, announce) {
+    const shouldAnnounce = announce !== false;
+    const startingLevel = state.player.level;
     state.player.exp += amount;
-    logMessage("獲得 " + amount + " EXP。", "muted");
+    if (shouldAnnounce) logMessage("獲得 " + amount + " EXP。", "muted");
     while (state.player.exp >= expNeeded()) {
       state.player.exp -= expNeeded();
       state.player.level += 1;
       state.player.maxHp += 10;
       state.player.hp = Math.min(state.player.maxHp, state.player.hp + 20);
-      logMessage("升級！現在是 Lv. " + state.player.level + "，HP 上限增加。");
+      if (shouldAnnounce) logMessage("升級！現在是 Lv. " + state.player.level + "，HP 上限增加。");
+    }
+    if (!shouldAnnounce && state.player.level > startingLevel) {
+      logMessage("放置期間升級至 Lv. " + state.player.level + "！");
     }
   }
 
@@ -155,6 +242,11 @@
     monster.hp = 0;
     monster.respawnAt = Date.now() + 8000;
     state.player.gold += Math.round(rand(3, 8));
+    if (state.idleEnabled) {
+      state.idleKills += 1;
+      state.idleTotalExp += monster.exp;
+      state.idleTotalGold += 5;
+    }
     gainExp(monster.exp);
     logMessage("波利被打倒了！獲得 Zeny。");
     if (Math.random() < 0.24) {
@@ -230,6 +322,12 @@
   function update(dt) {
     const p = state.player;
     state.attackCooldown = Math.max(0, state.attackCooldown - dt);
+    if (state.idleEnabled && !state.targetId && !state.moveTarget) {
+      const nextMonster = state.monsters
+        .filter((m) => m.hp > 0)
+        .sort((a, b) => dist(p, a) - dist(p, b))[0];
+      if (nextMonster) state.targetId = nextMonster.id;
+    }
     const mob = findTarget();
     if (mob) {
       const d = dist(p, mob);
@@ -434,9 +532,28 @@
       $("targetHpFill").style.width = (100 * target.hp / target.maxHp) + "%";
     } else {
       $("targetName").textContent = "尚未選取目標";
-      $("targetLevel").textContent = "點擊地圖中的波利";
+      $("targetLevel").textContent = state.idleEnabled ? "放置狩獵：尋找目標中" : "點擊地圖中的波利";
       $("targetHpText").textContent = "—";
       $("targetHpFill").style.width = "0%";
+    }
+
+    $("idleStateBadge").textContent = state.idleEnabled ? "狩獵中" : "未啟動";
+    $("idleStateBadge").classList.toggle("is-active", state.idleEnabled);
+    $("idleToggleButton").textContent = state.idleEnabled ? "Ⅱ 停止放置狩獵" : "▶ 開啟放置狩獵";
+    $("idleToggleButton").classList.toggle("is-active", state.idleEnabled);
+    $("idleKills").textContent = state.idleKills.toLocaleString();
+    $("idleExp").textContent = state.idleTotalExp.toLocaleString();
+    $("idleGold").textContent = state.idleTotalGold.toLocaleString();
+    if (state.lastOfflineSummary && state.lastOfflineSummary.kills > 0) {
+      const summary = state.lastOfflineSummary;
+      const duration = summary.seconds >= 3600
+        ? Math.floor(summary.seconds / 3600) + " 小時"
+        : Math.max(1, Math.floor(summary.seconds / 60)) + " 分鐘";
+      $("idleSummary").textContent = "上次離線 " + duration + "：擊倒 " + summary.kills + " 隻，獲得 " + summary.exp + " EXP、" + summary.gold + " Zeny、藥水 ×" + summary.potions + "。";
+    } else {
+      $("idleSummary").textContent = state.idleEnabled
+        ? "放置狩獵已啟動。離開前會自動儲存，回來時最多結算 8 小時。"
+        : "尚未啟動。開啟後即可自動狩獵；離線收益最多計算 8 小時。";
     }
   }
 
@@ -468,6 +585,18 @@
 
   $("potionButton").addEventListener("click", usePotion);
   $("hotbarPotion").addEventListener("click", usePotion);
+  $("idleToggleButton").addEventListener("click", () => {
+    state.idleEnabled = !state.idleEnabled;
+    state.moveTarget = null;
+    state.targetId = null;
+    if (state.idleEnabled) {
+      logMessage("放置狩獵已啟動！角色會自動搜尋波利。");
+    } else {
+      logMessage("放置狩獵已停止。");
+    }
+    updateUI();
+    saveGame(false);
+  });
   $("saveButton").addEventListener("click", () => saveGame(true));
   $("clearLog").addEventListener("click", () => { $("gameLog").replaceChildren(); logMessage("紀錄已清除。", "muted"); });
   $("newGameButton").addEventListener("click", () => {
@@ -479,6 +608,13 @@
       version: 1,
       savedAt: new Date().toISOString(),
       player: state.player,
+      idleEnabled: state.idleEnabled,
+      idleStats: {
+        kills: state.idleKills,
+        exp: state.idleTotalExp,
+        gold: state.idleTotalGold,
+        lastOfflineSummary: state.lastOfflineSummary
+      },
       monsters: state.monsters.map((m) => ({ id: m.id, hp: m.hp, respawnAt: m.respawnAt }))
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
