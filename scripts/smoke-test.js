@@ -69,6 +69,7 @@ assert.ok(main.includes('select.id = "jobTargetSelect"'), "job choice should use
 assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "job transfer must be one clear action");
 assert.ok(main.includes("function statCost(value) {\n    return 1;\n  }"), "each stat increase should cost exactly one point");
 assert.ok(!main.includes("state.player.jobLevel < 10") && !main.includes("state.player.jobLevel >= 10"), "Job Lv. should not block the simplified transfer path");
+assert.ok(!main.includes("p.jobLevel % 2 === 0") && !main.includes("Job 升級！"), "skill points should follow Base Level only in the mini game");
 assert.ok(main.includes('player.stats[stat.id] = 5;'), "stat reset should restore starter values");
 assert.ok(main.includes('state.learnedSkills = ["basic-strike"];'), "skill reset should restore the starter skill");
 assert.ok(ui.includes("game-dashboard") && ui.includes("game-modal") && ui.includes("mapQuickSelect"), "compact dashboard and menus must exist");
