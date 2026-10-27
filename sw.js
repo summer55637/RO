@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "ro-mini-ro-v8";
+const CACHE_NAME = "ro-mini-ro-v9";
 const APP_SHELL = [
   "./",
   "./index.html",
