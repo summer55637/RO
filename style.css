@@ -614,3 +614,33 @@ body.modal-open { overflow: hidden; }
 
 /* Mini RO keeps the first screen focused on Base Level and core actions. */
 .job-exp-label { display: none !important; }
+
+
+/* First-time-player polish: keep the combat loop clear and the guide compact. */
+.dashboard-character .stat-grid { display: none !important; }
+.canvas-hint {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  max-width: calc(100% - 24px);
+  line-height: 1.35;
+}
+.guide-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: #1b292d;
+  background: #f0d48d;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+#newPlayerGuideText { min-width: 0; }
+@media (max-width: 620px) {
+  .canvas-hint { gap: 5px; font-size: 9px; }
+  .guide-mark { padding: 2px 5px; font-size: 8px; }
+}
