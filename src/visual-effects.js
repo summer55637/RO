@@ -42,14 +42,33 @@
     const m=s.monsters.find((item)=>item.id===s.targetId&&item.hp>0);
     return m?{x:m.x,y:m.y-8}:null;
   }
-  function onAttack() { const p=targetPoint();if(p)addEffect("slash",p.x,p.y,"#fff0a6",330); }
+  let shakeTimer = 0;
+  function triggerShake(kind) {
+    if(!frame||(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))return;
+    frame.classList.remove("combat-shake","combat-shake-heavy","combat-player-flash");
+    void frame.offsetWidth;
+    frame.classList.add(kind==="heavy"?"combat-shake-heavy":"combat-shake");
+    if(kind==="player")frame.classList.add("combat-player-flash");
+    if(shakeTimer)window.clearTimeout(shakeTimer);
+    shakeTimer=window.setTimeout(()=>{
+      frame.classList.remove("combat-shake","combat-shake-heavy","combat-player-flash");
+      shakeTimer=0;
+    },280);
+  }
+  function onAttack(event) {
+    const p=targetPoint(),d=event.detail||{};
+    if(p)addEffect("slash",p.x,p.y,d.critical?"#ffdf7d":"#fff0a6",d.critical?410:330,d);
+    if(p&&d.critical){addEffect("critical",p.x,p.y-20,"#ffdf7d",680,{damage:d.damage});triggerShake("heavy");}
+  }
   window.addEventListener("ro:attack",onAttack);
   window.addEventListener("ro:monster-hurt",(event)=>{
-    const d=event.detail||{};addEffect("impact",d.x,d.y,d.damage>25?"#fff1a5":"#ffd7e4",400,d.damage);
+    const d=event.detail||{};
+    addEffect("impact",d.x,d.y,d.critical||d.damage>25?"#fff1a5":"#ffd7e4",420,d);
   });
   window.addEventListener("ro:player-hurt",()=>{
     playerHitAt=performance.now();const s=snapshot();
     if(s)addEffect("player-hit",s.player.x,s.player.y-8,"#ff7d8a",380);
+    triggerShake("player");
   });
   window.addEventListener("ro:pet-attack",(event)=>{
     const d=event.detail||{};addEffect("pet-burst",d.x,d.y-6,"#a9e8ff",520,d);
@@ -62,9 +81,15 @@
     if(s&&pet)addEffect("pet-skill",s.player.x-30,s.player.y-8,pet.color||"#ffe78a",850,{name:"進化成功！",petName:pet.name,rare:d.rare});
   });
   window.addEventListener("ro:monster-killed",(event)=>{
-    const id=event.detail&&event.detail.monster&&event.detail.monster.id;
+    const d=event.detail||{},id=d.monster&&d.monster.id;
     const s=snapshot(),m=s&&s.monsters.find((item)=>item.id===id);
-    if(m)addEffect("death",m.x,m.y,"#ffe59a",650);
+    if(m){
+      addEffect("death",m.x,m.y,"#ffe59a",650);
+      if(!s.idleEnabled){
+        addEffect("reward",m.x,m.y-25,"#ffe7a4",900,{exp:d.exp||0,gold:d.gold||0,boss:!!(d.monster&&d.monster.boss)});
+        triggerShake(d.monster&&d.monster.boss?"heavy":"light");
+      }
+    }
   });
   window.addEventListener("ro:level-up",()=>{
     const s=snapshot();if(s)addEffect("level",s.player.x,s.player.y,"#ffef9f",1000);
@@ -146,6 +171,16 @@
           else{ctx.beginPath();ctx.arc(e.x+Math.cos(a)*rr,e.y+Math.sin(a)*rr*.7,Math.max(.4,size),0,Math.PI*2);ctx.fill();}}
         if((e.type==="pet-burst"||e.type==="pet-skill")&&t<.72){ctx.fillStyle=e.type==="pet-skill"?"#fff0bf":"#d9f5ff";ctx.font="bold 12px sans-serif";ctx.textAlign="center";const label=e.detail&&(e.detail.name||e.detail.petName);ctx.fillText((e.type==="pet-skill"?"✦ ":"")+((label)||"夥伴"),e.x,e.y-27-t*16);}
         if(e.type==="level"){ctx.fillStyle="#fff1b4";ctx.font="bold 18px sans-serif";ctx.textAlign="center";ctx.fillText("LEVEL UP!",e.x,e.y-27-t*24);}
+      }else if(e.type==="critical"){
+        ctx.strokeStyle=e.color;ctx.lineWidth=3;ctx.shadowColor=e.color;ctx.shadowBlur=18;
+        ctx.beginPath();ctx.ellipse(e.x,e.y,18+t*28,10+t*17,-.18,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;
+        ctx.fillStyle="#fff0ae";ctx.strokeStyle="rgba(67,43,17,.9)";ctx.lineWidth=3;
+        ctx.font="900 17px system-ui,sans-serif";ctx.textAlign="center";ctx.strokeText("暴擊！",e.x,e.y-25-t*25);ctx.fillText("暴擊！",e.x,e.y-25-t*25);
+      }else if(e.type==="reward"){
+        const d=e.detail||{};
+        ctx.fillStyle="#fff0ae";ctx.font="bold 12px system-ui,sans-serif";ctx.textAlign="center";
+        ctx.shadowColor="#332719";ctx.shadowBlur=5;ctx.fillText("EXP +"+d.exp,e.x,e.y-31-t*30);
+        ctx.fillStyle="#b7f0c4";ctx.font="bold 11px system-ui,sans-serif";ctx.fillText("Zeny +"+d.gold,e.x,e.y-15-t*30);ctx.shadowBlur=0;
       }else if(e.type==="player-hit"){
         ctx.strokeStyle="#ff8c94";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(e.x,e.y,10+t*28,0,Math.PI*2);ctx.stroke();
         for(let k=0;k<7;k++){const a=k*Math.PI*2/7+t*3;ctx.fillStyle="#ffc0c4";ctx.fillRect(e.x+Math.cos(a)*(8+t*24),e.y+Math.sin(a)*(7+t*22),3,3);}
