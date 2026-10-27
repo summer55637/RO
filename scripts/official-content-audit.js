@@ -64,7 +64,7 @@ for (const dataset of registry.datasets) {
     }
     verifiedTotal += 1;
     assert.ok(record.sourceEvidence.length > 0, "verified record must cite direct evidence: " + dataset.id + "/" + record.id);
-    assert.ok(record.lastVerifiedOn && /^\\d{4}-\\d{2}-\\d{2}$/.test(record.lastVerifiedOn), "verified record needs checked date");
+    assert.ok(record.lastVerifiedOn && !Number.isNaN(Date.parse(record.lastVerifiedOn)) && new Date(record.lastVerifiedOn).toISOString().slice(0, 10) === record.lastVerifiedOn, "verified record needs checked date");
     for (const evidence of record.sourceEvidence) {
       assert.equal(evidence.recordId, dataset.id + "/" + record.id, "evidence must identify the exact record");
       assert.ok(Array.isArray(evidence.fields) && evidence.fields.length > 0, "evidence must identify exact fields");
@@ -82,7 +82,7 @@ for (const dataset of registry.datasets) {
 const hasHtmlLock = html.includes('<main id="roPrototype" class="layout" hidden aria-hidden="true">');
 const hasCssLock = css.includes("#roPrototype { display: none !important; }");
 assert.ok(hasHtmlLock && hasCssLock, "unverified playable prototype must remain hidden");
-assert.ok(!/<script\\s+src=["'][^"']*src\\/(?:expansion|pets)\\.js["']/.test(html), "unverified custom modules must not load");
+assert.ok(!html.includes('src="./src/expansion.js"') && !html.includes('src="./src/pets.js"'), "unverified custom modules must not load");
 assert.ok(!sw.includes('"./src/expansion.js"') && !sw.includes('"./src/pets.js"'), "unverified custom modules must not enter offline cache");
 assert.ok(main.includes("state.idleEnabled = false; // Strict mode"), "old saves must not restore custom auto-hunt");
 assert.ok(main.includes("offline hunting is not enabled until verified"), "simulated offline awards must remain disabled");
