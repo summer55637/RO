@@ -644,7 +644,9 @@
     });
     const hpDelta = (item.hpBonus || 0) - (oldItem ? oldItem.hpBonus || 0 : 0);
     if (hpDelta) parts.push("HP " + (hpDelta > 0 ? "+" : "") + hpDelta);
-    return parts.length ? "比較：" + parts.join(" / ") : "與目前裝備能力接近";
+    const spDelta = (item.spBonus || 0) - (oldItem ? oldItem.spBonus || 0 : 0);
+    if (spDelta) parts.push("SP " + (spDelta > 0 ? "+" : "") + spDelta);
+    return parts.length ? "與目前裝備相比：" + parts.join(" / ") : "與目前裝備能力接近";
   }
 
   function renderEquipment() {
@@ -768,10 +770,18 @@
   function renderShop() {
     const container = $("shopList");
     container.replaceChildren();
-    ["red-potion", "blue-potion", "green-herb", "iron-sword", "wand", "short-bow", "leather-armor", "power-ring"].forEach((id) => {
+    ["red-potion", "blue-potion", "green-herb", "iron-sword", "wand", "short-bow", "leather-armor", "power-ring"].forEach((id, index) => {
+      if (index === 0 || index === 3) {
+        const heading = document.createElement("div");
+        heading.className = "shop-section-title";
+        heading.textContent = index === 0 ? "補給品" : "裝備升級";
+        container.appendChild(heading);
+      }
       const item = itemInfo(id);
+      const price = Math.max(0, item.price || 0);
+      const affordable = state.player.gold >= price;
       const row = document.createElement("div");
-      row.className = "shop-row";
+      row.className = "shop-row" + (affordable ? "" : " shop-row-unaffordable");
       const icon = document.createElement("span");
       icon.className = "item-icon";
       icon.textContent = item.icon || "📦";
@@ -780,13 +790,17 @@
       const title = document.createElement("strong");
       title.textContent = item.name;
       const note = document.createElement("small");
-      note.textContent = addItemSummary(item) + " · " + fmt(item.price || 0) + " Zeny";
+      const details = [addItemSummary(item), fmt(price) + " Zeny"];
+      if (item.slot) details.push(compareItem(item));
+      if (!affordable) details.push("還差 " + fmt(price - state.player.gold) + " Zeny");
+      note.textContent = details.join(" · ");
       copy.append(title, note);
       const button = document.createElement("button");
       button.type = "button";
       button.className = "mini-button primary";
-      button.textContent = "購買";
-      button.disabled = state.player.gold < (item.price || 0);
+      button.textContent = item.slot ? "購買並裝備" : "購買";
+      button.disabled = !affordable;
+      if (!affordable) button.title = "還差 " + fmt(price - state.player.gold) + " Zeny";
       button.addEventListener("click", () => buyItem(id));
       row.append(icon, copy, button);
       container.appendChild(row);
@@ -1038,7 +1052,7 @@
     saveGame(false);
   }
 
-  function equipItem(itemId) {
+  function equipItem(itemId, suppressMessage) {
     const item = itemInfo(itemId);
     if (!item.slot || !removeInventory(itemId, 1)) {
       logMessage("背包中沒有可裝備的物品。", "muted");
@@ -1051,7 +1065,7 @@
     state.equipment[item.slot] = itemId;
     state.player.hp = clamp(state.player.hp + (maxHp() - hpBefore), 1, maxHp());
     state.player.sp = clamp(state.player.sp + (maxSp() - spBefore), 0, maxSp());
-    logMessage("裝備了" + item.name + "。");
+    if (!suppressMessage) logMessage("裝備了" + item.name + "。");
     renderEquipment();
     renderInventory();
     renderStats();
@@ -1085,7 +1099,12 @@
     }
     state.player.gold -= price;
     addInventory(itemId, 1);
-    logMessage("購買了" + item.name + "，花費 " + price + " Zeny。");
+    if (item.slot) {
+      equipItem(itemId, true);
+      logMessage("購買並裝備了" + item.name + "，花費 " + price + " Zeny。");
+    } else {
+      logMessage("購買了" + item.name + "，花費 " + price + " Zeny。");
+    }
     renderInventory();
     renderShop();
     updateUI();
