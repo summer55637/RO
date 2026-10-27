@@ -28,8 +28,8 @@
         </div>
         <div class="map-tabs" id="mapTabs" aria-label="選擇地圖"></div>
         <div class="game-frame">
-          <canvas id="game" width="960" height="600" aria-label="點擊地面移動、點擊怪物追擊攻擊、點擊傳送門切換地圖。"></canvas>
-          <div class="canvas-hint"><span class="hint-key">點擊地面</span> 移動 <span class="hint-separator">·</span> <span class="hint-key">點擊怪物</span> 自動追擊 <span class="hint-separator">·</span> <span class="hint-key">點擊傳送門</span> 換地圖</div>
+          <canvas id="game" width="960" height="600" aria-label="點擊怪物開始自動戰鬥；點擊地面可以移動。"></canvas>
+          <div class="canvas-hint" id="newPlayerGuide" aria-live="polite"><span class="guide-mark" aria-hidden="true">新手</span><span id="newPlayerGuideText">點一下波利，角色就會自動追擊攻擊。</span></div>
         </div>
         <div class="map-info-row">
           <div class="minimap-frame">
@@ -45,7 +45,7 @@
       </section>
       <aside class="side-column">
         <section class="panel character-panel">
-          <div class="panel-title"><h2>冒險者資訊</h2><span class="panel-icon">✦</span></div>
+          <div class="panel-title"><h2>角色狀態</h2><span class="panel-icon">✦</span></div>
           <div class="character-row">
             <div class="avatar" aria-hidden="true"><span class="avatar-hair"></span><span class="avatar-face"></span><span class="avatar-body"></span></div>
             <div class="character-name"><strong>新手冒險者</strong><span id="jobLabel">Lv. 1 初心者</span><span class="job-exp-label" id="jobExpLabel">Job Lv. 1 · 0 / 28</span></div>
@@ -72,7 +72,7 @@
         </section>
         <section class="panel skills-panel">
           <div class="panel-title"><h2>技能欄</h2><div class="panel-title-actions"><span class="points-pill">技能點 <strong id="skillPoints">3</strong></span><button type="button" class="text-button reset-action-button" id="resetSkillsButton">免費初始化</button></div></div>
-          <p class="small-note">點擊未習得技能來學習，再次點擊施放。攻擊技能會自動追近目標。</p>
+          <p class="small-note">沒學會：點一下學習；學會後：點一下施放。</p>
           <div class="skills-grid" id="skillsGrid"></div>
           <div class="buff-status" id="buffStatus">目前沒有生效中的增益。</div>
         </section>
