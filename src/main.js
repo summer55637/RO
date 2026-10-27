@@ -43,7 +43,8 @@
       return {
         id: mapId + "-" + spawn.type + "-" + (index + 1),
         type: spawn.type, name: info.name, x: spawn.x, y: spawn.y,
-        spawnX: spawn.x, spawnY: spawn.y, radius: 17, level: info.level,
+        boss: info.boss === true, specialAttack: info.specialAttack, color: info.color,
+        spawnX: spawn.x, spawnY: spawn.y, radius: info.boss ? 35 : 17,
         hp: info.hp, maxHp: info.hp, attack: info.attack, defense: info.defense,
         exp: info.exp, gold: info.gold.slice(), cooldown: rand(0.2, 0.9),
         respawnAt: 0, poisonUntil: 0, radius: info.boss ? 35 : 17
@@ -1224,7 +1225,7 @@
 
   function update(dt) {
     if (window.RO_EXPANSION && typeof window.RO_EXPANSION.tick === "function") {
-      const action = window.RO_EXPANSION.tick({ player: state.player, mapId: state.mapId, mapType: currentMap().type, maxHp: maxHp(), dt: dt, idleEnabled: state.idleEnabled });
+      const action = window.RO_EXPANSION.tick({ player: state.player, mapId: state.mapId, mapType: currentMap().type, maxHp: maxHp(), maxSp: maxSp(), dt: dt, idleEnabled: state.idleEnabled });
       if (action && action.switchTo && DATA.maps[action.switchTo] && action.switchTo !== state.mapId) switchMap(action.switchTo);
       if (action && action.heal) usePotion(true);
     }
@@ -1339,11 +1340,12 @@
       return;
     }
     let best = null;
-    let bestDistance = 38;
+    let bestDistance = 60;
     state.monsters.forEach((monster) => {
       if (monster.hp <= 0) return;
       const dist = Math.hypot(point.x - monster.x, point.y - monster.y);
-      if (dist < bestDistance) { best = monster; bestDistance = dist; }
+      const hitRange = monster.boss ? 60 : 38;
+      if (dist < hitRange && dist < bestDistance) { best = monster; bestDistance = dist; }
     });
     if (best) {
       state.pendingSkillId = null;

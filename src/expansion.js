@@ -414,8 +414,8 @@
     }
     if (profile.retreatActive && snapshot.mapType === "town") {
       // Rest only while retreating; it is a local simulation and never runs in the background.
-      player.hp = Math.min(snapshot.maxHp, player.hp + Math.max(1, snapshot.maxHp * 0.035 * (snapshot.dt || 0)));
-      player.sp = Math.min(snapshot.maxSp || player.maxSp, player.sp + Math.max(1, player.maxSp * 0.025 * (snapshot.dt || 0)));
+      player.hp = Math.min(snapshot.maxHp, player.hp + snapshot.maxHp * 0.035 * (snapshot.dt || 0));
+      player.sp = Math.min(snapshot.maxSp || player.maxSp, player.sp + (snapshot.maxSp || player.maxSp) * 0.025 * (snapshot.dt || 0));
       if (player.hp / snapshot.maxHp * 100 >= profile.hunt.returnAt) {
         const returnMap = profile.retreatMap && API.getData().maps[profile.retreatMap] ? profile.retreatMap : "field";
         profile.retreatActive = false; profile.retreatMap = null;
