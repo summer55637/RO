@@ -51,7 +51,7 @@ for (const dataset of registry.datasets) {
   assert.equal(dataset.sourcePath, "src/data.js", "unexpected source file for " + dataset.id);
   assert.equal(dataset.recordCount, expected.length, "record count mismatch in " + dataset.id);
   assert.equal(dataset.records.length, expected.length, "registry is missing records in " + dataset.id);
-  assert.deepEqual(dataset.records.map((entry) => entry.id).sort(), expected.map((entry) => entry.id).sort(), "registry IDs must exactly match runtime data for " + dataset.id);
+  assert.equal(JSON.stringify(dataset.records.map((entry) => entry.id).sort()), JSON.stringify(expected.map((entry) => entry.id).sort()), "registry IDs must exactly match runtime data for " + dataset.id);
   for (const record of dataset.records) {
     const current = expected.find((entry) => entry.id === record.id);
     assert.equal(record.name, current.name, "display name changed without refreshing registry: " + dataset.id + "/" + record.id);
