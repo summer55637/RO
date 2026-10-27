@@ -1,0 +1,925 @@
+{
+  "schemaVersion": 1,
+  "policyId": "RO_OFFICIAL_CONTENT_POLICY.md",
+  "status": "inventory-created-all-records-unverified",
+  "target": {
+    "product": "RO仙境傳說Online",
+    "region": "Taiwan",
+    "client": "PC",
+    "baselineDate": "2026-10-27",
+    "baselineType": "official-public-notice-cutoff-not-a-client-build-id",
+    "officialClientBuildId": null,
+    "note": "以台灣官方網站截至此日已發布公告作為核對截止基準。找到 2026-10-20 維護開機公告及 2026-10-22 系統公告，但未找到官方公開的完整客戶端資料庫 build ID；不得將日期誤寫成客戶端版本號。"
+  },
+  "sources": [
+    {
+      "id": "official-all-notices-index",
+      "title": "台灣 RO 官方公告列表",
+      "url": "https://ro.gnjoy.com.tw/Notice/Notice_List",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": null,
+      "checkedOn": "2026-10-27",
+      "scope": "announcement-index-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "官方公告入口與日期"
+      ],
+      "notSupported": [
+        "不能單獨證明任何單一資料列或數值"
+      ]
+    },
+    {
+      "id": "official-news-index",
+      "title": "台灣 RO 官方新聞公告列表",
+      "url": "https://ro.gnjoy.com.tw/Notice/Notice_List?type=4",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": null,
+      "checkedOn": "2026-10-27",
+      "scope": "news-index-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "新聞公告索引"
+      ],
+      "notSupported": [
+        "不能單獨證明本專案任何資料列"
+      ]
+    },
+    {
+      "id": "official-system-notices-index",
+      "title": "台灣 RO 官方系統公告列表",
+      "url": "https://ro.gnjoy.com.tw/Notice/Notice_List?type=6",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": null,
+      "checkedOn": "2026-10-27",
+      "scope": "system-notice-index-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "系統公告索引"
+      ],
+      "notSupported": [
+        "不能單獨證明本專案任何資料列"
+      ]
+    },
+    {
+      "id": "official-guide-index",
+      "title": "台灣 RO 官方遊戲指南列表",
+      "url": "https://ro.gnjoy.com.tw/Notice/Guide_List",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": null,
+      "checkedOn": "2026-10-27",
+      "scope": "system-category-existence-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "官方指南索引列出副本、精煉與強化、裝備改造、附魔、附加能力、服飾附魔、寵物系統等主題"
+      ],
+      "notSupported": [
+        "不能證明本專案自訂規則、數值、成功率、寵物條件或具體資料正確"
+      ]
+    },
+    {
+      "id": "official-maintenance-2026-10-20",
+      "title": "2026/10/20 維護開機公告",
+      "url": "https://ro.gnjoy.com.tw/Notice/Notice_View?id=219461",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": "2026-10-20",
+      "checkedOn": "2026-10-27",
+      "scope": "maintenance-state-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "官方公告記載 2026/10/20 維護後開機，並通知下週例行維護改至 10/28"
+      ],
+      "notSupported": [
+        "未找到可代表完整客戶端資料庫版本的官方 build ID；不證明本專案任何單一資料列"
+      ]
+    },
+    {
+      "id": "official-system-notice-2026-10-22",
+      "title": "全職業腹語師暫時關閉通知（17:20 更新）",
+      "url": "https://ro.gnjoy.com.tw/notice/Notice_View?id=219478",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": "2026-10-22",
+      "checkedOn": "2026-10-27",
+      "scope": "temporary-system-state-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "官方公告表示因裝備能力異常排查，暫時關閉全職業腹語師重置技能／素質 NPC"
+      ],
+      "notSupported": [
+        "不代表此 NPC 永久移除，也不代表本專案職業資料正確"
+      ]
+    },
+    {
+      "id": "official-level-275-update-2026-02-03",
+      "title": "2026/02/03 維護公告（等級擴充與新地圖）",
+      "url": "https://ro.gnjoy.com.tw/notice/Notice_View?id=218151",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": "2026-02-03",
+      "checkedOn": "2026-10-27",
+      "scope": "specific-patch-facts-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "公告記載全職業等級擴充 Lv.275、新增兩張 Lv.260 地圖、增加 15 個職業技能及部分技能特效調整"
+      ],
+      "notSupported": [
+        "不是完整職業、技能、地圖或魔物資料表，不能推算未列資料"
+      ]
+    },
+    {
+      "id": "official-refine-guide-2024-03-06",
+      "title": "精煉與強化系統指南",
+      "url": "https://ro.gnjoy.com.tw/notice/guide_view.aspx?id=216542",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": "2024-03-06",
+      "checkedOn": "2026-10-27",
+      "scope": "system-mechanics-reference-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "官方指南說明透過城鎮精煉師操作，並指出精煉介面依不同材料顯示機率"
+      ],
+      "notSupported": [
+        "本專案的簡化精煉數值與規則未因此得到驗證"
+      ]
+    }
+  ],
+  "confirmedFacts": [
+    {
+      "id": "official-notices-listed",
+      "sourceIds": [
+        "official-all-notices-index"
+      ],
+      "claim": "台灣官方網站提供公告列表。",
+      "scope": "source-discovery-only"
+    },
+    {
+      "id": "official-guide-categories-listed",
+      "sourceIds": [
+        "official-guide-index"
+      ],
+      "claim": "官方指南索引列出副本、精煉與強化、裝備改造、附魔、附加能力、服飾附魔與寵物系統等主題。",
+      "scope": "system-category-existence-only"
+    },
+    {
+      "id": "maintenance-state-2026-10-20",
+      "sourceIds": [
+        "official-maintenance-2026-10-20"
+      ],
+      "claim": "官方公告記載 2026-10-20 維護後開機，例行維護調整到 2026-10-28。",
+      "scope": "operational-announcement-only"
+    },
+    {
+      "id": "ventriloquist-temporary-disable-2026-10-22",
+      "sourceIds": [
+        "official-system-notice-2026-10-22"
+      ],
+      "claim": "官方公告記載全職業腹語師 NPC 自 2026-10-22 起暫時關閉，以排查裝備能力異常。",
+      "scope": "temporary-system-state-only"
+    },
+    {
+      "id": "level-275-patch-2026-02-03",
+      "sourceIds": [
+        "official-level-275-update-2026-02-03"
+      ],
+      "claim": "官方公告記載全職業等級擴充 Lv.275、兩張 Lv.260 地圖與 15 個職業技能更新。",
+      "scope": "that-announcement-only"
+    },
+    {
+      "id": "official-refine-system",
+      "sourceIds": [
+        "official-refine-guide-2024-03-06"
+      ],
+      "claim": "官方指南記載精煉師與依不同材料顯示機率的精煉介面。",
+      "scope": "system-mechanics-reference-only"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "jobs",
+      "sourcePath": "src/data.js",
+      "recordCount": 13,
+      "status": "unverified",
+      "verificationGranularity": "per-record-and-per-field",
+      "note": "逐筆核對正式職業名稱、階級／系譜、轉職條件與適用版本；本批均尚無逐筆官方證據。",
+      "records": [
+        {
+          "id": "novice",
+          "name": "初心者",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "swordsman",
+          "name": "劍士",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "mage",
+          "name": "法師",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "archer",
+          "name": "弓箭手",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "thief",
+          "name": "盜賊",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "acolyte",
+          "name": "服事",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "merchant",
+          "name": "商人",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "knight",
+          "name": "騎士",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "wizard",
+          "name": "巫師",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "hunter",
+          "name": "獵人",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "assassin",
+          "name": "刺客",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "priest",
+          "name": "祭司",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "blacksmith",
+          "name": "鐵匠",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        }
+      ]
+    },
+    {
+      "id": "skills",
+      "sourcePath": "src/data.js",
+      "recordCount": 25,
+      "status": "unverified",
+      "verificationGranularity": "per-record-and-per-field",
+      "note": "逐筆核對正式技能名稱、等級、前置、SP、詠唱／延遲、效果與公式；本批均尚無逐筆官方證據。",
+      "records": [
+        {
+          "id": "basic-strike",
+          "name": "奮力一擊",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "bash",
+          "name": "狂擊",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "magnum-break",
+          "name": "怒爆",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "endure",
+          "name": "霸體",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "fire-bolt",
+          "name": "火箭術",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "cold-bolt",
+          "name": "冰箭術",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "energy-coat",
+          "name": "能量外套",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "double-strafe",
+          "name": "二連矢",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "arrow-shower",
+          "name": "箭雨",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "concentration",
+          "name": "心神凝聚",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "envenom",
+          "name": "施毒",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "double-attack",
+          "name": "二刀連擊",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "hiding",
+          "name": "隱匿",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "heal",
+          "name": "治癒術",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "holy-light",
+          "name": "神聖之光",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "blessing",
+          "name": "天使之賜福",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "mammonite",
+          "name": "金錢攻擊",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "cart-revolution",
+          "name": "手推車攻擊",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "discount",
+          "name": "低價買進",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "brandish-spear",
+          "name": "騎乘突刺",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "storm-gust",
+          "name": "暴風雪",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "arrow-rain",
+          "name": "鋼製箭矢",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "sonic-blow",
+          "name": "音速投擲",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "sanctuary",
+          "name": "聖母之頌歌",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "weapon-perfection",
+          "name": "武器值最大化",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        }
+      ]
+    },
+    {
+      "id": "items",
+      "sourcePath": "src/data.js",
+      "recordCount": 20,
+      "status": "unverified",
+      "verificationGranularity": "per-record-and-per-field",
+      "note": "逐筆核對正式道具名稱、種類、裝備限制、能力、取得方式與版本；本批均尚無逐筆官方證據。",
+      "records": [
+        {
+          "id": "novice-knife",
+          "name": "初心者短刀",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "iron-sword",
+          "name": "鐵製長劍",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "wand",
+          "name": "學徒法杖",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "short-bow",
+          "name": "短弓",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "dagger",
+          "name": "盜賊小刀",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "mace",
+          "name": "木柄釘錘",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "battle-axe",
+          "name": "商人戰斧",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "cotton-tunic",
+          "name": "棉布上衣",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "leather-armor",
+          "name": "皮革護甲",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "leather-boots",
+          "name": "輕便短靴",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "power-ring",
+          "name": "力量戒指",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "sage-clip",
+          "name": "學者髮夾",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "red-potion",
+          "name": "紅色藥水",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "green-herb",
+          "name": "綠色藥草",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "blue-potion",
+          "name": "藍色藥水",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "geffen-staff",
+          "name": "吉芬魔導杖",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "moonlight-dagger",
+          "name": "月夜短刃",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "osiris-crown",
+          "name": "冥王冠冕",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "baphomet-axe",
+          "name": "深淵巨斧",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "ancient-robe",
+          "name": "古代祭司長袍",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        }
+      ]
+    },
+    {
+      "id": "monsters",
+      "sourcePath": "src/data.js",
+      "recordCount": 17,
+      "status": "unverified",
+      "verificationGranularity": "per-record-and-per-field",
+      "note": "逐筆核對正式魔物名稱、等級、能力、種族／屬性／體型、經驗、AI、出生與掉落；本批均尚無逐筆官方證據。",
+      "records": [
+        {
+          "id": "poring",
+          "name": "波利",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "drops",
+          "name": "土波利",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "fabre",
+          "name": "綠棉蟲",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "lunatic",
+          "name": "瘋兔",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "willow",
+          "name": "柳樹",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "wolf",
+          "name": "森林狼",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "skeleton",
+          "name": "骷髏兵",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "familiar",
+          "name": "吸血蝙蝠",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "muka",
+          "name": "摩卡",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "orc-warrior",
+          "name": "獸人戰士",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "mummy",
+          "name": "木乃伊",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "mimic",
+          "name": "邪惡箱",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "marina",
+          "name": "瑪琳",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "ghostring",
+          "name": "幽靈波利",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "osiris",
+          "name": "俄塞里斯",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "moonlight-flower",
+          "name": "月夜貓",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "baphomet",
+          "name": "巴風特",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        }
+      ]
+    },
+    {
+      "id": "maps",
+      "sourcePath": "src/data.js",
+      "recordCount": 16,
+      "status": "unverified",
+      "verificationGranularity": "per-record-and-per-field",
+      "note": "逐筆核對正式地圖名稱、所屬章節／版本、連接、傳送與實際出生／魔物配置；本批均尚無逐筆官方證據。",
+      "records": [
+        {
+          "id": "field",
+          "name": "普隆德拉南門",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "town",
+          "name": "普隆德拉",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "forest",
+          "name": "迷霧森林",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "cave",
+          "name": "古代洞窟",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "geffen",
+          "name": "吉芬",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "geffen-field",
+          "name": "吉芬原野",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "geffen-dungeon",
+          "name": "吉芬魔法迴廊",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "morroc",
+          "name": "夢羅克",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "morroc-field",
+          "name": "夢羅克沙漠",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "payon",
+          "name": "斐揚",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "payon-forest",
+          "name": "斐揚森林",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "izlude",
+          "name": "依斯魯得",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "izlude-sea",
+          "name": "依斯魯得海岸",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "pyramid",
+          "name": "金字塔地下墓穴",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "glast-heim",
+          "name": "古堡遺跡",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        },
+        {
+          "id": "mvp-lair",
+          "name": "巴風特巢穴",
+          "status": "unverified",
+          "sourceEvidence": [],
+          "lastVerifiedOn": null
+        }
+      ]
+    }
+  ],
+  "codeAndAssetAudit": [
+    {
+      "path": "src/main.js",
+      "status": "unverified-locked",
+      "reason": "現有轉職門檻、EXP／傷害／冷卻／掉落與核心規則未逐項由官方證據證實；可玩原型保持鎖定。"
+    },
+    {
+      "path": "src/visual-effects.js",
+      "status": "not-official-artwork-unverified",
+      "reason": "Canvas 是本機繪製的原型效果，未證實為正服 PC 用戶端官方角色／技能素材。"
+    },
+    {
+      "path": "assets/manifest.json",
+      "status": "provenance-not-established",
+      "reason": "素材路徑不代表檔案存在、來源官方或取得再散布權。"
+    },
+    {
+      "path": "src/expansion.js",
+      "status": "disabled-not-loaded",
+      "reason": "包含尚未核實的自訂 NPC／任務／精煉／卡片／放置狩獵系統，未載入。"
+    },
+    {
+      "path": "src/pets.js",
+      "status": "disabled-not-loaded",
+      "reason": "包含尚未核實的寵物稀有度／進化／物種專屬主動技能系統，未載入。"
+    }
+  ],
+  "gatingRules": [
+    "A record stays unverified until an official Taiwan RO PC source directly supports that exact record ID and each claimed field.",
+    "A system-guide index may confirm that a system exists; it cannot validate the prototype's particular values or mechanics.",
+    "No emulator/private-server database, other regional version, AI inference, or community guess may be used as Taiwan official evidence.",
+    "CI must fail if the playable prototype is unlocked while any required core record remains unverified.",
+    "A record may be marked verified only with exact record ID, field list, official source ID, quoted evidence, reviewer and verification date."
+  ]
+}

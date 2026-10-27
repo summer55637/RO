@@ -33,6 +33,8 @@ jobs:
           node --check src/visual-effects.js
           node --check src/ui-shell.js
           node scripts/smoke-test.js
+          node --check scripts/official-content-audit.js
+          node scripts/official-content-audit.js
           node -e "JSON.parse(require('node:fs').readFileSync('assets/manifest.json', 'utf8'))"
 
       - name: Validate game data references
