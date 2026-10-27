@@ -222,6 +222,7 @@
     });
     if (huntMonsterButton) huntMonsterButton.addEventListener("click", () => {
       if (activeHuntRecommendation && activeHuntRecommendation.monsterIds.length) {
+        api.switchMap(activeHuntRecommendation.mapId);
         api.trackMonster(activeHuntRecommendation.monsterIds[0]);
       }
     });
