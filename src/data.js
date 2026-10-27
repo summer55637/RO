@@ -110,6 +110,16 @@
       "glast-heim": { id: "glast-heim", name: "古堡遺跡", shortName: "古堡", type: "cave", bg: "#444958", ground: "#444958", spawn: { x: 70, y: 300 }, monsterIds: ["skeleton", "mimic", "moonlight-flower"], spawns: [{ type: "skeleton", x: 280, y: 200 }, { type: "mimic", x: 490, y: 395 }, { type: "moonlight-flower", x: 760, y: 280 }], portals: [{ x: 35, y: 300, name: "斐揚森林", to: "payon-forest", tx: 870, ty: 300 }, { x: 918, y: 300, name: "巴風特巢穴", to: "mvp-lair", tx: 75, ty: 300 }] },
       "mvp-lair": { id: "mvp-lair", name: "巴風特巢穴", shortName: "MVP", type: "cave", bg: "#392f3b", ground: "#392f3b", spawn: { x: 70, y: 300 }, monsterIds: ["baphomet", "ghostring"], spawns: [{ type: "ghostring", x: 330, y: 220 }, { type: "baphomet", x: 690, y: 300 }], portals: [{ x: 35, y: 300, name: "古堡遺跡", to: "glast-heim", tx: 870, ty: 300 }] }
     },
+    huntRecommendations: [
+      { minLevel: 1, maxLevel: 4, mapId: "field", monsterIds: ["poring", "fabre"], title: "新手安全練等", tip: "先打波利、綠棉蟲，熟悉自動追擊；紅水不足就回城補給。" },
+      { minLevel: 5, maxLevel: 9, mapId: "forest", monsterIds: ["lunatic", "willow"], title: "開始挑戰森林", tip: "打瘋兔、柳樹；覺得吃力時先回南門。" },
+      { minLevel: 10, maxLevel: 14, mapId: "cave", monsterIds: ["familiar", "skeleton"], title: "中階練等", tip: "可挑戰吸血蝙蝠與骷髏兵；HP 掉太快就退回森林。" },
+      { minLevel: 15, maxLevel: 19, mapId: "geffen-field", monsterIds: ["orc-warrior"], title: "挑戰獸人戰士", tip: "怪物攻擊較高，記得準備紅水；打不動可先練其他怪。" },
+      { minLevel: 20, maxLevel: 24, mapId: "geffen-dungeon", monsterIds: ["mimic"], title: "進階地城", tip: "邪惡箱比較硬，先逐隻擊破；覺得危險就回吉芬原野。" },
+      { minLevel: 25, maxLevel: 31, mapId: "glast-heim", monsterIds: ["mimic"], title: "古堡熟練練等", tip: "這張地圖有 Boss；先打普通怪物，不要一開始就挑戰 Boss。" },
+      { minLevel: 32, maxLevel: 39, mapId: "pyramid", monsterIds: ["mummy", "osiris"], title: "準備挑戰 Boss", tip: "先打木乃伊，再考慮挑戰俄塞里斯；藥水不足時先回城補給。" },
+      { minLevel: 40, maxLevel: 99, mapId: "mvp-lair", monsterIds: ["ghostring", "baphomet"], title: "高階 Boss 區", tip: "巴風特屬於高難度 Boss；先確認裝備與紅水充足。" }
+    ],
     assetManifest: {
       player: "assets/sprites/player.png",
       maps: { field: "assets/maps/prontera-south.png", town: "assets/maps/prontera.png", forest: "assets/maps/misty-forest.png", cave: "assets/maps/ancient-cave.png", geffen: "assets/maps/geffen.png", "geffen-field": "assets/maps/geffen-field.png", "geffen-dungeon": "assets/maps/geffen-dungeon.png", morroc: "assets/maps/morroc.png", "morroc-field": "assets/maps/morroc-desert.png", payon: "assets/maps/payon.png", "payon-forest": "assets/maps/payon-forest.png", izlude: "assets/maps/izlude.png", "izlude-sea": "assets/maps/izlude-sea.png", pyramid: "assets/maps/pyramid.png", "glast-heim": "assets/maps/glast-heim.png", "mvp-lair": "assets/maps/mvp-lair.png" },
