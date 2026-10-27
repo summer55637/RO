@@ -135,7 +135,7 @@ assert.ok(main.includes('function buyItem(itemId)') && main.includes('state.play
 assert.ok(!main.includes('equipItem(itemId, true)') && !main.includes('購買並裝備了'), "buying gear must not automatically equip it");
 assert.ok(main.includes('"補給品" : "裝備升級"') && main.includes('"還差 " + fmt(price - state.player.gold) + " Zeny"'), "shop should group supplies and gear and explain unaffordable items");
 assert.ok(ui.includes('panels: [".equipment-panel", "#shopPanel"]') && !ui.includes('const quarantinedPanels = [".idle-panel", ".map-book-panel", "#shopPanel"'), "shop must be accessible inside the equipment modal, not hidden away");
-assert.ok(html.includes('id="shopPanel"') && html.includes("買裝備會直接穿上"), "equipment and shop guidance must be visible");
+assert.ok(html.includes('id="shopPanel"') && html.includes("商店買到的裝備先放進背包"), "equipment and shop guidance must explain purchase then equip");
 assert.ok(css.includes(".shop-section-title") && css.includes(".shop-row .mini-button:disabled"), "shop categories and unavailable purchase states must be visually distinct");
-assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v8";'), "equipment and shop UI changes must refresh offline cache");
+assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v9";'), "RO-style purchase flow must refresh offline cache");
 console.log("Smoke tests passed: intuitive equipment comparison and RO-style separate purchase/equip steps, purchase feedback, combat, reduced motion, simple progression, data references, and compact UI.");
