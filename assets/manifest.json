@@ -1,6 +1,7 @@
 {
   "version": 1,
-  "note": "Optional local licensed assets. Missing images/audio are replaced by built-in canvas art and silent sound effects.",
+  "note": "Optional local licensed assets. Missing files are replaced by built-in canvas art and silent sound effects.",
+  "available": [],
   "images": {
     "player": "assets/sprites/player.png",
     "maps": {
@@ -18,8 +19,7 @@
       "wolf": "assets/sprites/monsters/wolf.png",
       "skeleton": "assets/sprites/monsters/skeleton.png",
       "familiar": "assets/sprites/monsters/familiar.png"
-    },
-    "items": {}
+    }
   },
   "audio": {
     "attack": "assets/sounds/attack.ogg",

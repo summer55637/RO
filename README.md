@@ -1,37 +1,46 @@
-# RO — Offline Single-Player Prototype
+# RO：米德加爾特小冒險
 
-A free, static, browser-based, Ragnarok Online-inspired single-player prototype. It runs on GitHub Pages and stores progress locally in the player's browser.
+免費、純前端、點擊操作、可在 GitHub Pages 執行的 RO 風格單機 RPG 原型。無需帳號、後端、資料庫、API 金鑰或建置工具。
 
-## Play
+## 遊玩
 
-Before the first successful deployment, open the repository's **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**. The connected automation cannot enable Pages on your behalf, so this one-time setting must be done by a repository owner. Then open **Actions**, select the latest **Deploy static game to GitHub Pages** run, and choose **Re-run jobs** (or push another commit). The workflow in `.github/workflows/deploy.yml` publishes the static game.
+- 遊戲網址：<https://summer55637.github.io/RO/>
+- 直接點擊地面移動、點擊怪物自動追擊與攻擊；也可以點擊傳送門或上方地圖按鈕切換區域。
+- 首次載入後 Service Worker 會快取程式與資料。建議在線載入一次後再測試離線遊玩。
+- GitHub Pages 由 `.github/workflows/deploy.yml` 自動部署。
 
-## Current prototype features
+## 目前玩法
 
-- Canvas-based pixel-art-inspired field rendered from original shapes (no external image or server dependency).
-- Fully point-and-click controls: click the ground to move, or click a Poring-like monster to auto-chase and attack.
-- Optional idle hunting automatically finds monsters and attacks them.
-- Offline idle rewards on return (up to 8 hours), with EXP, Zeny, and potion drops.
-- On-screen buttons for potions and saving; no keyboard input is required.
-- Monster pursuit, HP/EXP, levels, potions and drops.
-- Local save/load, new game, and downloadable/importable save JSON.
-- PWA manifest and service-worker cache for offline play after the first successful load.
+- 六種一轉職業：劍士、法師、弓箭手、盜賊、服事、商人；符合等級條件後可二轉為騎士、巫師、獵人、刺客、祭司、鐵匠。
+- STR、AGI、VIT、INT、DEX、LUK 能力值配點；每次提升會依能力值改變成本。
+- 技能學習、技能點、SP 消耗、冷卻時間、傷害技能、範圍技能、治療、增益與被動技能。
+- 武器、防具、飾品、裝備屬性比較、背包、消耗品與怪物掉落。
+- 放置狩獵、自動尋找目標、自動喝藥水、血量門檻、目標優先順序、放置統計與離線收益（每次最多 8 小時）。
+- 四個區域：普隆德拉南門、普隆德拉、迷霧森林、古代洞窟；地圖傳送門與可點擊小地圖。
+- 怪物圖鑑列出等級、HP、攻擊、EXP 及各自的掉落物機率。
+- 本機 LocalStorage 存檔、JSON 匯出／匯入、自動儲存、離線快取。
 
-## Controls
+## 放置狩獵
 
-- **Click or tap the ground:** move your character to that location.
-- **Click or tap a monster:** select it; your character automatically approaches and attacks.
-- **Use a red potion:** click the potion button or the potion slot.
-- **Save/load/export:** use the on-screen buttons.
+1. 先切換到有怪物的狩獵地圖。
+2. 點擊「開啟放置狩獵」；可選擇是否自動喝藥水、喝水門檻與目標優先順序。
+3. 角色會自動找怪戰鬥，離開再回到同一個瀏覽器時會按離線時間結算，最多 8 小時。
+4. 離線收益採原型中的估算速度（約每 15 秒一隻怪物），不是官方 RO 伺服器公式。首次載入或清除瀏覽器資料會影響本機存檔。
 
-No keyboard controls are required.
+## RO 圖像與音效素材
 
-## Idle hunting
+程式支援從 `assets/manifest.json` 載入本機 PNG 圖片與 OGG 音效；沒有素材時會繼續用內建的原創 Canvas 繪圖，確保離線遊戲可以執行。素材資料夾的預期路徑與啟用方式見 [assets/README.md](assets/README.md)。
 
-Click **開啟放置狩獵** to let the character automatically find and attack Poring-like monsters. The mode and cumulative idle stats are saved locally. When you return after closing the game, elapsed time is settled at an intentionally conservative rate of about one monster every 15 seconds, capped at 8 hours per visit. Offline settlement grants EXP, Zeny, and estimated potion drops. Keep idle hunting enabled before leaving to receive offline rewards.
+目前倉庫並未含有官方 RO 用戶端 GRF 或 RO 官方圖片／音效檔案，因此不會假稱已經整合官方美術，也不會從預覽伺服器抓取圖片重新散布。要加入官方素材，請只放入你已獲允許並且許可範圍明確涵蓋修改、網站發布與再散布的檔案，並在素材文件中登記來源與許可依據。可參考開源工具 <https://github.com/joaopedrosgs/ragx>（由自行合法持有的用戶端轉出素材）與 <https://github.com/adsonpleal/ragassets>（提供渲染／擷取工具；工具專案不隨附 RO 美術素材）。
 
-## Project notes
+## 本機資料與開發
 
-This is an original, lightweight prototype rather than a complete implementation of the official RO client or server. It does not include official game assets or copied third-party source code. Monster names and numbers in this prototype are starter data. Future RO data/assets should only be added after confirming that the relevant license and permission cover modification, redistribution, and web publication.
+- `src/data.js`：職業、技能、物品、怪物、地圖及可選素材路徑。
+- `src/main.js`：遊戲循環、點擊操作、戰鬥、成長、裝備、放置與存檔。
+- `assets/manifest.json`：可選素材清單；預設 `available` 為空，沒有素材也不會造成 404。
+- `sw.js`：網站快取與離線 fallback。
+- `node --check src/data.js`、`node --check src/main.js` 可檢查 JavaScript 語法。
 
-No build step, backend, account, or API key is required. Saving uses the browser's local storage; browser data clearing can remove local progress.
+## 範圍說明
+
+這是原創、輕量化的 RO 風格單機原型，不是官方客戶端，也不連接官方伺服器；數值和掉落機率是為了可玩性設計的起始值，並非官方資料庫的完整精確複製。

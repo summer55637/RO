@@ -1,13 +1,15 @@
 "use strict";
 
-const CACHE_NAME = "ro-offline-field-v3";
+const CACHE_NAME = "ro-offline-adventure-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css",
+  "./src/data.js",
   "./src/main.js",
   "./manifest.webmanifest",
-  "./icon.svg"
+  "./icon.svg",
+  "./assets/manifest.json"
 ];
 
 self.addEventListener("install", (event) => {

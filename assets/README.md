@@ -9,7 +9,7 @@ The game is static and offline-friendly. It supports optional local PNG sprites/
 - `assets/maps/<name>.png`: optional 960×600 background for each map; keep entrances and collision-free paths clear.
 - `assets/sounds/attack.ogg`, `skill.ogg`, `level-up.ogg`, `item-drop.ogg`: short sound effects.
 
-The mapping is recorded in `assets/manifest.json` and `src/data.js`. A normal static PNG is expected; sprite-sheet animation parsing is not implemented yet.
+The mapping is recorded in `assets/manifest.json` and `src/data.js`. To enable a file, place it at the exact path above and add its key to the JSON `available` array (examples: `player`, `map:field`, `monster:poring`, `sound:attack`). A normal static PNG is expected; sprite-sheet animation parsing is not implemented yet.
 
 ## Important provenance note
 

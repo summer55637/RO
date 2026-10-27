@@ -68,6 +68,7 @@
     lastUi: 0,
     lastSave: Date.now(),
     lastTime: 0,
+    spRegenAccumulator: 0,
     idleEnabled: false,
     idleSettings: { autoPotion: true, potionThreshold: 45, priority: "nearest" },
     idleStats: { kills: 0, exp: 0, gold: 0, drops: 0 },
@@ -282,7 +283,7 @@
       });
     }
     state.inventory = Array.isArray(data.inventory)
-      ? data.inventory.filter((entry) => entry && DATA.items[entry.id] && DATA.items[entry.id].slot === undefined && entry.id !== "red-potion")
+      ? data.inventory.filter((entry) => entry && DATA.items[entry.id] && entry.id !== "red-potion")
         .map((entry) => ({ id: entry.id, qty: Math.round(safeNum(entry.qty, 1, 1, 999999)) }))
       : [{ id: "green-herb", qty: 2 }, { id: "blue-potion", qty: 1 }];
     const eq = data.equipment && typeof data.equipment === "object" ? data.equipment : {};
@@ -1138,9 +1139,6 @@
   }
 
   function killMonster(monster, quiet) {
-    if (!monster || monster.hp > 0 && monster.hp !== 0) {
-      // Keep the guard below simple and deterministic; only dead monsters enter the reward path.
-    }
     if (!monster || monster.hp !== 0 || monster._rewarded) return;
     monster._rewarded = true;
     const goldBase = Math.floor(rand(monster.gold[0], monster.gold[1] + 1));
@@ -1192,6 +1190,12 @@
       if (state.buffs[id] <= 0) delete state.buffs[id];
     });
 
+    state.spRegenAccumulator += dt;
+    if (state.spRegenAccumulator >= 1) {
+      const ticks = Math.floor(state.spRegenAccumulator);
+      state.spRegenAccumulator -= ticks;
+      state.player.sp = Math.min(maxSp(), state.player.sp + ticks * (1 + Math.floor(totalStat("int") / 20)));
+    }
     autoPotionIfNeeded();
     if (state.idleEnabled && !targetMonster() && !state.moveTarget && currentMap().type !== "town") {
       const next = bestTarget();
@@ -1688,6 +1692,7 @@
       const data = JSON.parse(raw);
       applySave(data);
       applyOfflineProgress(data.savedAt);
+      saveGame(false);
       $("saveIndicator").textContent = "已讀取本機存檔";
       logMessage("已讀取上次的冒險進度。", "muted");
       return true;

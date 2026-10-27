@@ -25,7 +25,29 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check JavaScript syntax
-        run: node --check src/main.js
+        run: |
+          node --check src/data.js
+          node --check src/main.js
+          node -e "JSON.parse(require('node:fs').readFileSync('assets/manifest.json', 'utf8'))"
+
+      - name: Validate game data references
+        run: |
+          node <<'NODE'
+          global.window = {};
+          require('./src/data.js');
+          const data = window.RO_DATA;
+          for (const job of data.jobs) {
+            for (const id of job.skills) if (!data.skills[id]) throw new Error('Missing skill: ' + id + ' in ' + job.id);
+          }
+          for (const monster of Object.values(data.monsters)) {
+            for (const drop of monster.drops) if (!data.items[drop.id]) throw new Error('Missing drop item: ' + drop.id);
+          }
+          for (const map of Object.values(data.maps)) {
+            for (const spawn of map.spawns) if (!data.monsters[spawn.type]) throw new Error('Missing monster: ' + spawn.type);
+            for (const portal of map.portals) if (!data.maps[portal.to]) throw new Error('Missing portal destination: ' + portal.to);
+          }
+          console.log('Validated jobs, skills, drops, maps, and portals.');
+          NODE
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
