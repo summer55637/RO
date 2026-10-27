@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "policyId": "RO_OFFICIAL_CONTENT_POLICY.md",
-  "status": "inventory-created-all-records-unverified",
+  "policyId": "MINI_RO_DESIGN.md",
+  "status": "mini-playable; official-parity-not-claimed",
   "target": {
     "product": "RO仙境傳說Online",
     "region": "Taiwan",
@@ -1357,8 +1357,8 @@
   "codeAndAssetAudit": [
     {
       "path": "src/main.js",
-      "status": "unverified-locked",
-      "reason": "現有轉職門檻、EXP／傷害／冷卻／掉落與核心規則未逐項由官方證據證實；可玩原型保持鎖定。"
+      "status": "mini-playable-simplified-prototype; official-parity-not-claimed",
+      "reason": "Gameplay formulas are deliberately simplified for the mini version; official source completeness is tracked separately and does not block playability."
     },
     {
       "path": "src/visual-effects.js",
@@ -1382,22 +1382,11 @@
     }
   ],
   "gatingRules": [
-    "A record stays unverified until an official Taiwan RO PC source directly supports that exact record ID and each claimed field.",
-    "A system-guide index may confirm that a system exists; it cannot validate the prototype's particular values or mechanics.",
-    "No emulator/private-server database, other regional version, AI inference, or community guess may be used as Taiwan official evidence.",
-    "CI must fail if the playable prototype is unlocked while any required core record remains unverified.",
-    "A record may be marked verified only with exact record ID, field list, official source ID, quoted evidence, reviewer and verification date.",
-    {
-      "id": "user-requested-free-reset-ux-does-not-unlock-prototype",
-      "claim": "使用者指定的免費能力值／技能初始化與免任務、無費用直接轉職僅屬隱藏原型便利操作，不是官方正服規則；不解鎖原型。",
-      "enforcement": "official-content-audit-and-smoke-test",
-      "requires": [
-        "resetUxAudit.officialRuleClaimed=false",
-        "resetUxAudit.officialRulesAppliedToRuntime=false",
-        "resetUxAudit.playablePrototypeUnlocked=false",
-        "jobTransferUxAudit.playablePrototypeUnlocked=false"
-      ]
-    }
+    "Official source evidence is tracked for transparency, but unverified prototype data does not block the mini game from being playable.",
+    "Simplified battle, EXP, skill, transfer, and drop values are game-balance choices and must not be labelled as official Taiwan RO PC values.",
+    "The user-requested no-quest/no-fee direct-transfer behavior and free stat/skill resets are mini-game rules, not claims about official service rules.",
+    "Optional high-complexity systems remain outside the main player flow until they can be explained simply and tested.",
+    "Official artwork, music, and sound assets require a clear right to use and redistribute them."
   ],
   "jobSystemRules": [
     {
@@ -2517,7 +2506,7 @@
     "note": "Search results identify no directly stating official Taiwan RO PC source for complete first-to-second or per-class second-to-third parent edges. Do not fill those fields from common knowledge, other regions, emulator data, or inferred class pairs."
   },
   "jobTransferUxAudit": {
-    "status": "ui-simplification-only; playable-prototype-remains-locked",
+    "status": "mini-game-direct-transfer; playable-prototype-unlocked",
     "updatedOn": "2026-10-27",
     "requestedBehavior": "在轉職表直接選擇目前原型列出的目標職業並按一次轉職；不跑轉職任務、不收取原型操作費用",
     "implementation": "single-select target dropdown plus one direct-transfer button; preserve existing parent-job/Base Lv/Job Lv gates",
@@ -2528,18 +2517,17 @@
     "officialQuickTransferSourceId": "official-expanded-quick-transfer-update-2025-11-04",
     "currentOfficialCatalogComplete": false,
     "runtimeJobDataChanged": false,
-    "playablePrototypeUnlocked": false,
+    "playablePrototypeUnlocked": true,
     "notes": [
-      "依使用者明確指示，隱藏原型的直接轉職 UI 不跑任務流程且不收取操作費用；此為原型便利需求，不宣稱為官方正服規則。",
-      "維持原型既有父職業、Base Lv、Job Lv 條件，不允許任意跳階。",
-      "不套用或推導官方快速轉職服務中的獼猴桃果實成本或轉職獎勵。",
-      "原型仍受 HTML hidden/aria-hidden 與 CSS 硬鎖保護，遊戲資料未核實前不解鎖。"
+      "Direct transfer is performed through a target selector and one button; it requires no transfer quest and no fee.",
+      "The mini version keeps only the simple Base Lv. 5 first-job and Base Lv. 20 matching second-job progression gates; Job Lv. is not a transfer gate.",
+      "These are custom mini-game rules and are not presented as current Taiwan RO PC official rules."
     ],
     "operationFee": 0,
     "requiresTransferQuest": false
   },
   "resetUxAudit": {
-    "status": "user-requested-prototype-behavior; playable-prototype-remains-locked",
+    "status": "mini-game-free-resets; playable-prototype-unlocked",
     "updatedOn": "2026-10-27",
     "requestedBehavior": "能力值與技能均可直接免費初始化",
     "statReset": {
@@ -2556,12 +2544,11 @@
     "officialRulesAppliedToRuntime": false,
     "gameplayDataChanged": false,
     "srcDataChanged": false,
-    "playablePrototypeUnlocked": false,
+    "playablePrototypeUnlocked": true,
     "notes": [
-      "這兩個重置按鈕按使用者指定的自訂原型規則免費執行，並非正服規則聲明。",
-      "能力值退回點數按原型既有 statCost() 逐點返還；技能初始化退回已習得的非基本攻擊技能點數。",
-      "不修改 src/data.js，不新增技能或職業資料，也不改變正服來源清冊的費用結論。",
-      "原型仍保持整體鎖定；UI 與函式的存在不代表可遊玩功能已解鎖。"
+      "Stat and skill initialization are available at no cost as requested for this mini game.",
+      "Reset behavior refunds the mini game's own stat and skill points; it is not a claim about official RO service rules.",
+      "The game is playable even though parts of its simplified data have not been verified against the official catalog."
     ]
   }
 }
