@@ -1386,7 +1386,18 @@
     "A system-guide index may confirm that a system exists; it cannot validate the prototype's particular values or mechanics.",
     "No emulator/private-server database, other regional version, AI inference, or community guess may be used as Taiwan official evidence.",
     "CI must fail if the playable prototype is unlocked while any required core record remains unverified.",
-    "A record may be marked verified only with exact record ID, field list, official source ID, quoted evidence, reviewer and verification date."
+    "A record may be marked verified only with exact record ID, field list, official source ID, quoted evidence, reviewer and verification date.",
+    {
+      "id": "user-requested-free-reset-ux-does-not-unlock-prototype",
+      "claim": "使用者指定的免費能力值／技能初始化與免任務、無費用直接轉職僅屬隱藏原型便利操作，不是官方正服規則；不解鎖原型。",
+      "enforcement": "official-content-audit-and-smoke-test",
+      "requires": [
+        "resetUxAudit.officialRuleClaimed=false",
+        "resetUxAudit.officialRulesAppliedToRuntime=false",
+        "resetUxAudit.playablePrototypeUnlocked=false",
+        "jobTransferUxAudit.playablePrototypeUnlocked=false"
+      ]
+    }
   ],
   "jobSystemRules": [
     {
@@ -2506,10 +2517,10 @@
     "note": "Search results identify no directly stating official Taiwan RO PC source for complete first-to-second or per-class second-to-third parent edges. Do not fill those fields from common knowledge, other regions, emulator data, or inferred class pairs."
   },
   "jobTransferUxAudit": {
-    "status": "ui-simplification-only; playable-prototype-remains-locked",
+    "status": "user-requested-prototype-behavior; playable-prototype-remains-locked",
     "updatedOn": "2026-10-27",
-    "requestedBehavior": "select an eligible target job and activate one direct-transfer button",
-    "implementation": "single-select target dropdown plus one action button",
+    "requestedBehavior": "在轉職表直接選擇目前原型列出的目標職業並按一次轉職；不跑轉職任務、不收取原型操作費用",
+    "implementation": "single-select target dropdown plus one direct-transfer button; preserve existing parent-job/Base Lv/Job Lv gates",
     "eligibilitySource": "existing prototype eligibility checks retained unchanged",
     "eligibleTargetOnly": true,
     "allowsArbitraryJobSkip": false,
@@ -2519,10 +2530,38 @@
     "runtimeJobDataChanged": false,
     "playablePrototypeUnlocked": false,
     "notes": [
-      "This change simplifies the dormant prototype UI only; it does not claim that this UI is an official client feature.",
-      "Only target jobs that pass the existing prototype conditions are listed. That condition set remains unverified and is unchanged.",
-      "No kiwi-fruit inventory/costs or transfer-completion rewards are simulated because the job data and current complete requirements have not been verified.",
-      "The global prototype remains locked while core data are unverified."
+      "依使用者明確指示，隱藏原型的直接轉職 UI 不跑任務流程且不收取操作費用；此為原型便利需求，不宣稱為官方正服規則。",
+      "維持原型既有父職業、Base Lv、Job Lv 條件，不允許任意跳階。",
+      "不套用或推導官方快速轉職服務中的獼猴桃果實成本或轉職獎勵。",
+      "原型仍受 HTML hidden/aria-hidden 與 CSS 硬鎖保護，遊戲資料未核實前不解鎖。"
+    ],
+    "operationFee": 0,
+    "requiresTransferQuest": false
+  },
+  "resetUxAudit": {
+    "status": "user-requested-prototype-behavior; playable-prototype-remains-locked",
+    "updatedOn": "2026-10-27",
+    "requestedBehavior": "能力值與技能均可直接免費初始化",
+    "statReset": {
+      "controlId": "resetStatsButton",
+      "behavior": "restore each base stat to the prototype baseline of 5; refund the corresponding prototype stat-point costs",
+      "operationFee": 0
+    },
+    "skillReset": {
+      "controlId": "resetSkillsButton",
+      "behavior": "restore learned skills to the prototype's basic-strike starter and refund spent prototype skill points",
+      "operationFee": 0
+    },
+    "officialRuleClaimed": false,
+    "officialRulesAppliedToRuntime": false,
+    "gameplayDataChanged": false,
+    "srcDataChanged": false,
+    "playablePrototypeUnlocked": false,
+    "notes": [
+      "這兩個重置按鈕按使用者指定的自訂原型規則免費執行，並非正服規則聲明。",
+      "能力值退回點數按原型既有 statCost() 逐點返還；技能初始化退回已習得的非基本攻擊技能點數。",
+      "不修改 src/data.js，不新增技能或職業資料，也不改變正服來源清冊的費用結論。",
+      "原型仍保持整體鎖定；UI 與函式的存在不代表可遊玩功能已解鎖。"
     ]
   }
 }

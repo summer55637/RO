@@ -66,15 +66,15 @@
         </section>
         <section class="panel job-panel">
           <div class="panel-title"><h2>職業與轉職</h2><span class="panel-subtitle">JOB CHANGE</span></div>
-          <p class="small-note">選擇可直接轉職的目標後，按一次「直接轉職」。這是原型操作簡化，不代表正服可任意跳階；職業資料與現行門檻仍待官方核實。</p>
+          <p class="small-note">在轉職表選擇目標後按「直接轉職」，不跑轉職任務、不收原型操作費用。這是原型操作簡化，不代表正服可任意跳階；既有父職業與等級條件照舊，職業資料與現行門檻仍待官方核實。</p>
           <div class="job-options" id="jobOptions" aria-live="polite"></div>
         </section>
         <section class="panel stats-panel">
-          <div class="panel-title"><h2>能力值配點</h2><span class="points-pill">可用 <strong id="statPoints">5</strong> 點</span></div>
+          <div class="panel-title"><h2>能力值配點</h2><div class="panel-title-actions"><span class="points-pill">可用 <strong id="statPoints">5</strong> 點</span><button type="button" class="text-button reset-action-button" id="resetStatsButton">免費初始化</button></div></div>
           <div class="stats-list" id="statsList"></div>
         </section>
         <section class="panel skills-panel">
-          <div class="panel-title"><h2>技能欄</h2><span class="points-pill">技能點 <strong id="skillPoints">3</strong></span></div>
+          <div class="panel-title"><h2>技能欄</h2><div class="panel-title-actions"><span class="points-pill">技能點 <strong id="skillPoints">3</strong></span><button type="button" class="text-button reset-action-button" id="resetSkillsButton">免費初始化</button></div></div>
           <p class="small-note">點擊未習得技能來學習，再次點擊施放。攻擊技能會自動追近目標。</p>
           <div class="skills-grid" id="skillsGrid"></div>
           <div class="buff-status" id="buffStatus">目前沒有生效中的增益。</div>

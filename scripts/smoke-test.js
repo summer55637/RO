@@ -117,6 +117,17 @@ assert.ok(main.includes("if (select.value) changeJob(select.value)"), "direct-tr
 assert.ok(main.includes('job.tier === 1 && state.player.jobId === "novice" && state.player.level >= 5'), "first-job prototype gate must remain unchanged");
 assert.ok(main.includes('job.tier === 2 && state.player.jobId === job.parent && state.player.level >= 20 && state.player.jobLevel >= 10'), "second-job prototype gate must remain unchanged");
 assert.ok(html.includes("這是原型操作簡化，不代表正服可任意跳階"), "direct-transfer UI must not promise unsupported arbitrary job skipping");
+assert.ok(html.includes("不跑轉職任務、不收原型操作費用"), "direct-transfer prototype UX must waive task flow and operation fees by user request");
+assert.ok(html.includes('id="resetStatsButton">免費初始化</button>'), "free stat initialization button must exist in hidden prototype");
+assert.ok(html.includes('id="resetSkillsButton">免費初始化</button>'), "free skill initialization button must exist in hidden prototype");
+assert.ok(main.includes("function resetStats()"), "stat reset handler must exist");
+assert.ok(main.includes("function resetSkills()"), "skill reset handler must exist");
+assert.ok(main.includes('$("resetStatsButton").addEventListener("click", resetStats)'), "stat initialization button must invoke handler");
+assert.ok(main.includes('$("resetSkillsButton").addEventListener("click", resetSkills)'), "skill initialization button must invoke handler");
+assert.ok(main.includes('player.stats[stat.id] = 5;'), "stat reset must restore prototype baseline");
+assert.ok(main.includes('state.learnedSkills = ["basic-strike"];'), "skill reset must restore starter skill");
+assert.ok(main.includes("state.player.skillPoints += refundedPoints;"), "skill reset must refund prototype skill points");
+assert.ok(main.includes("player.statPoints += refundedPoints;"), "stat reset must refund prototype stat points");
 assert.ok(main.includes("for (let piece = 0; piece < 10; piece++)"), "monster death should dissolve into pixel fragments");
 
 const ui = read("src/ui-shell.js");
@@ -150,7 +161,7 @@ assert.ok(!sw.includes('"./src/expansion.js"'), "offline cache must not precache
 assert.ok(!sw.includes('"./src/pets.js"'), "offline cache must not precache the quarantined pet module");
 assert.ok(sw.includes('"./src/visual-effects.js"'), "offline cache shell must include visual effects");
 assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
-assert.ok(sw.includes("ro-offline-adventure-v13"), "service worker cache must be invalidated after the direct-transfer UI change");
+assert.ok(sw.includes("ro-offline-adventure-v14"), "service worker cache must be invalidated after the direct-transfer UI change");
 
 assert.ok(!html.includes('src/pets.js'), "unverified pet module must not be loaded");
 assert.ok(!html.includes('src/expansion.js'), "unverified expansion module must not be loaded");

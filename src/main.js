@@ -518,6 +518,47 @@
     });
   }
 
+  function resetStats() {
+    const player = state.player;
+    let refundedPoints = 0;
+
+    // The reset targets this prototype's initial allocation (5 in every base stat).
+    // Refund exactly the points that the prototype's statCost() charged for those levels.
+    DATA.stats.forEach((stat) => {
+      const currentValue = Math.max(5, Math.floor(Number(player.stats[stat.id]) || 5));
+      for (let value = 5; value < currentValue; value += 1) {
+        refundedPoints += statCost(value);
+      }
+      player.stats[stat.id] = 5;
+    });
+
+    player.statPoints += refundedPoints;
+    player.hp = clamp(player.hp, 1, maxHp());
+    player.sp = clamp(player.sp, 0, maxSp());
+    logMessage(refundedPoints > 0
+      ? "能力值已免費初始化，返還 " + refundedPoints + " 點能力值點數。"
+      : "能力值已是初始配置，無須重置。", refundedPoints > 0 ? undefined : "muted");
+    renderStats();
+    updateUI();
+    saveGame(false);
+  }
+
+  function resetSkills() {
+    const refundedPoints = state.learnedSkills.filter((skillId) =>
+      skillId !== "basic-strike" && skillInfo(skillId)
+    ).length;
+
+    state.player.skillPoints += refundedPoints;
+    state.learnedSkills = ["basic-strike"];
+    state.cooldowns = {};
+    state.buffs = {};
+    state.pendingSkillId = null;
+    logMessage("技能已免費初始化，返還 " + refundedPoints + " 點技能點。");
+    renderSkills();
+    updateUI();
+    saveGame(false);
+  }
+
   function renderSkills() {
     const container = $("skillsGrid");
     container.replaceChildren();
@@ -1993,6 +2034,8 @@
   canvas.addEventListener("pointerdown", handleWorldClick);
   miniCanvas.addEventListener("pointerdown", (event) => { event.preventDefault(); handleMiniMapClick(event); });
   $("potionButton").addEventListener("click", () => usePotion(false));
+  $("resetStatsButton").addEventListener("click", resetStats);
+  $("resetSkillsButton").addEventListener("click", resetSkills);
   $("idleToggleButton").disabled = true;
   $("idleToggleButton").addEventListener("click", () => {
     state.idleEnabled = false;
