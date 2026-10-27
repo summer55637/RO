@@ -217,6 +217,50 @@
         "不能證明 Base Lv／Job Lv 上限或 2026 現行轉職條件。",
         "不能證明一轉、二轉、轉生二轉、三轉、擴充職業及其完整父職業鏈。"
       ]
+    },
+    {
+      "id": "official-fourth-job-naming-table-2022",
+      "title": "《RO仙境傳說》四轉！即將開放｜四轉職業命名投票結果",
+      "url": "https://event.gnjoy.com.tw/Ro/ACT_20220208_FourthJobOpen/Activity_Name",
+      "publisher": "台灣 RO 官方活動網站",
+      "official": true,
+      "publishedDate": null,
+      "eventContentDate": "2022-02-23",
+      "checkedOn": "2026-10-27",
+      "scope": "historical-third-era-to-fourth-job-naming-pairs-only",
+      "recordLevelEvidenceAllowed": true,
+      "supportedClaims": [
+        "表格標題為「三轉時期名稱 | 四轉職業中文名稱」，逐列列出13組職業名稱對應。",
+        "宮廷樂師對應天籟頌者，浪姬舞者對應樂之舞靈，頁面各自有獨立描述。"
+      ],
+      "notSupported": [
+        "不列出初心者至一轉、一轉至二轉、二轉至進階二轉或二轉至三轉的逐職業父職業關係。",
+        "不證明這些歷史名稱配對在2026-10-27仍是所有版本／職系的現行完整系譜。",
+        "不證明 Base Lv／Job Lv 上限或完整現行轉職前置。"
+      ]
+    },
+    {
+      "id": "official-anniversary-job-phase-examples-2026-10",
+      "title": "《RO仙境傳說Online》二十四週年：潛能啟發專家活動",
+      "url": "https://event.gnjoy.com.tw/Ro/ACT_20261012_ro24thAnniversary/Event",
+      "publisher": "台灣 RO 官方活動網站",
+      "official": true,
+      "publishedDate": null,
+      "activityStartDate": "2026-10-13",
+      "activityEndDate": "2026-11-10",
+      "checkedOn": "2026-10-27",
+      "scope": "official-current-activity-examples-of-job-stage-labels-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "活動範例明稱「初心者」、「一轉劍士」、「二轉騎士」及「轉生進階二轉騎士領主」。",
+        "頁面可支持這些名稱在該活動範例中的階段標籤，不支持它們之間的逐職業父職業關係。"
+      ],
+      "notSupported": [
+        "各範例是快速升級活動案例，不是職業轉職流程圖。",
+        "不得從一轉劍士與二轉騎士分別出現在兩個案例就推斷前者是後者的父職業。",
+        "活動所述 BaseLv/JobLv 範例值不是所有職業通用上限或轉職條件。",
+        "不提供三轉完整名單或逐職業父職業關係。"
+      ]
     }
   ],
   "confirmedFacts": [
@@ -1343,7 +1387,18 @@
       "status": "historical-rule-requires-current-revalidation",
       "appliesToRuntime": false,
       "checkedOn": "2026-10-27",
-      "notes": "這是歷史公告內容；找到適用 2026-10-27 的完整官方規則前，不套用到遊戲邏輯。"
+      "notes": "這是歷史公告內容；找到適用 2026-10-27 的完整官方規則前，不套用到遊戲邏輯。",
+      "historicalEffectiveDate": "2022-03-22",
+      "verifiedFields": [
+        "historicalRuleText",
+        "historicalTransferTier",
+        "jobLevelPrerequisite"
+      ],
+      "unverifiedScope": [
+        "per-class parent job",
+        "current applicability on 2026-10-27",
+        "Base Lv/Job Lv caps"
+      ]
     },
     {
       "id": "historical-third-job-requires-reborn-second",
@@ -1356,7 +1411,17 @@
       "status": "historical-rule-requires-current-revalidation",
       "appliesToRuntime": false,
       "checkedOn": "2026-10-27",
-      "notes": "公告也指出當時部分經驗值調整不包含擴充職業，不可將該通則直接泛化到全部職系。"
+      "notes": "公告也指出當時部分經驗值調整不包含擴充職業，不可將該通則直接泛化到全部職系。",
+      "historicalEffectiveDate": "2022-03-22",
+      "verifiedFields": [
+        "historicalRuleText",
+        "generalPrerequisiteCategory"
+      ],
+      "unverifiedScope": [
+        "individual second-job parent for each third-job class",
+        "current applicability on 2026-10-27",
+        "complete expansion-job scope"
+      ]
     },
     {
       "id": "historical-fourth-job-requires-reborn-third",
@@ -1475,9 +1540,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-empire-guardian-parent-royal-guard",
@@ -1511,9 +1577,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-arch-mage-parent-warlock",
@@ -1547,9 +1614,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-elemental-master-parent-sorcerer",
@@ -1583,9 +1651,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-meister-parent-mechanic",
@@ -1619,9 +1688,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-biolo-parent-geneticist",
@@ -1655,9 +1725,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-cardinal-parent-archbishop",
@@ -1691,9 +1762,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-inquisitor-parent-sura",
@@ -1727,9 +1799,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-shadow-cross-parent-guillotine-cross",
@@ -1763,9 +1836,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-abyss-chaser-parent-shadow-chaser",
@@ -1799,9 +1873,10 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
       "id": "fourth-wind-hawk-parent-ranger",
@@ -1835,29 +1910,23 @@
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-naming-table-2022",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "Official event page explicitly states this historical parent relationship. It does not by itself establish that the relationship remains unchanged at the 2026-10-27 baseline. Do not apply to runtime."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     },
     {
-      "id": "fourth-troubadour-trouvere-parent-group",
-      "recordType": "group-parent-edge",
-      "childJobNames": [
-        "天籟頌者",
-        "樂之舞靈"
-      ],
-      "parentJobNames": [
-        "宮廷樂師",
-        "浪姬舞者"
-      ],
+      "id": "fourth-troubadour-parent-court-musician",
+      "recordType": "individual-parent-edge",
+      "childJobName": "天籟頌者",
+      "parentJobName": "宮廷樂師",
       "childTier": "fourth-job",
-      "evidenceStatus": "historical-official-group-transition-confirmed",
+      "evidenceStatus": "historical-official-parent-edge-confirmed",
       "verifiedFields": [
-        "childJobNames",
-        "parentJobNames",
+        "childJobName",
+        "parentJobName",
         "childTier"
       ],
-      "individualChildParentPairingStatus": "unverified",
       "currentApplicabilityStatus": "unverified",
       "baseLevelCapStatus": "unverified",
       "jobLevelCapStatus": "unverified",
@@ -1865,22 +1934,60 @@
       "appliesToRuntime": false,
       "sourceEvidence": [
         {
-          "sourceId": "official-fourth-job-event-2022-02-08",
-          "recordId": "job-hierarchy/fourth-troubadour-trouvere-parent-group",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "recordId": "job-hierarchy/fourth-troubadour-parent-court-musician",
           "fields": [
-            "childJobNames",
-            "parentJobNames",
+            "childJobName",
+            "parentJobName",
             "childTier"
           ],
-          "evidenceExcerpt": "天籟頌者 & 樂之舞靈：自宮廷樂師 & 浪姬舞者轉職",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；宮廷樂師 | 天籟頌者；宮廷樂師轉職的4轉職業",
           "verifiedBy": "official-source-review",
           "verifiedOn": "2026-10-27"
         }
       ],
       "corroboratingSources": [
+        "official-fourth-job-event-2022-02-08",
         "official-fourth-expanded-job-adjustment-2025-11-03"
       ],
-      "note": "The official text groups two child jobs and two parent jobs but does not individually pair them in text. Do not infer individual pairs until an official source clarifies them."
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
+    },
+    {
+      "id": "fourth-trouvere-parent-wanderer",
+      "recordType": "individual-parent-edge",
+      "childJobName": "樂之舞靈",
+      "parentJobName": "浪姬舞者",
+      "childTier": "fourth-job",
+      "evidenceStatus": "historical-official-parent-edge-confirmed",
+      "verifiedFields": [
+        "childJobName",
+        "parentJobName",
+        "childTier"
+      ],
+      "currentApplicabilityStatus": "unverified",
+      "baseLevelCapStatus": "unverified",
+      "jobLevelCapStatus": "unverified",
+      "transferRequirementsStatus": "unverified",
+      "appliesToRuntime": false,
+      "sourceEvidence": [
+        {
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "recordId": "job-hierarchy/fourth-trouvere-parent-wanderer",
+          "fields": [
+            "childJobName",
+            "parentJobName",
+            "childTier"
+          ],
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；浪姬舞者 | 樂之舞靈；浪姬舞者轉職的4轉職業",
+          "verifiedBy": "official-source-review",
+          "verifiedOn": "2026-10-27"
+        }
+      ],
+      "corroboratingSources": [
+        "official-fourth-job-event-2022-02-08",
+        "official-fourth-expanded-job-adjustment-2025-11-03"
+      ],
+      "note": "This is a directly documented historical third-to-fourth relationship. It is not proof of current applicability or of the child's second-job parent. Do not apply to runtime."
     }
   ],
   "officialJobRosterEvidence": {
@@ -1905,6 +2012,7 @@
     ],
     "sourceIds": [
       "official-fourth-job-event-2022-02-08",
+      "official-fourth-job-naming-table-2022",
       "official-fourth-expanded-job-adjustment-2025-11-03"
     ],
     "evidenceExcerpt": "13種四轉職業",
@@ -1912,32 +2020,450 @@
     "fullJobTreeComplete": false,
     "appliesToRuntime": false,
     "checkedOn": "2026-10-27",
-    "note": "This is a confirmed subset of the fourth-job tier, not the complete game job tree. No prototype jobs were added or changed."
+    "note": "Official source names 13 historical third-to-fourth pairs. This is not the complete first-through-fourth job tree."
   },
   "jobHierarchyAudit": {
-    "status": "partial-official-relationships-recorded-full-tree-not-established",
+    "status": "historical-third-to-fourth-edges-confirmed; first-through-third-tree-unverified",
     "targetBaselineDate": "2026-10-27",
-    "sourceCoverage": "Official Taiwan RO fourth-job introduction page linked from the official 2022/03/22 fourth-job announcement; checked against the official 2025/11/03 skill adjustment notice for class-name presence.",
-    "confirmedIndividualHistoricalParentEdges": 11,
-    "confirmedGroupedTransitionRelations": 1,
-    "individualPairingsStillUnverified": 1,
+    "sourceCoverage": "Official Taiwan RO pages: fourth-job descriptions and official name-result table; current 2026 event examples only establish their stated stage labels, not individual lineage.",
+    "confirmedIndividualHistoricalParentEdges": 13,
+    "confirmedGroupedTransitionRelations": 0,
+    "individualPairingsStillUnverified": 0,
     "officialFourthJobCountClaim": 13,
     "prototypeJobsInDataJs": 13,
     "prototypeJobRecordsVerified": 0,
     "runtimeDataChanged": false,
     "fullJobTreeComplete": false,
     "uncoveredLayers": [
-      "novice-to-first-job",
-      "first-job-to-second-job",
-      "rebirth-and-transcendent-job-lines",
-      "second-job-to-third-job",
-      "all-expanded-job-family parent relationships",
-      "individual parent mapping for 天籟頌者 and 樂之舞靈",
-      "current applicability of historical fourth-job parent links",
+      "novice-to-first-job exact parent transitions",
+      "first-job-to-second-job exact parent transitions",
+      "second-job-to-reborn-advanced-second-job exact per-class lineage",
+      "reborn-second-job-to-third-job exact per-class parent mapping",
+      "full ordinary and expanded job branches",
+      "per-job family assignment across first through third tiers",
+      "current applicability of historical third-to-fourth parent links",
       "per-job Base Lv cap",
       "per-job Job Lv cap",
       "current per-job transfer requirements"
     ],
-    "note": "The official source establishes only a slice of the job tree. All 13 current prototype job rows and their name/tier/parent/family/level-cap/transfer fields remain unverified; the playable prototype stays locked."
+    "note": "The official sources establish the 13 historical third-to-fourth pairs and only a few activity stage examples. No first-to-second or class-specific second-to-third parent relationship has been verified from a directly stating Taiwan RO PC official source. The prototype remains locked."
+  },
+  "jobProgressionEvidence": [
+    {
+      "id": "phase-example-novice",
+      "recordType": "official-activity-job-stage-example",
+      "subjectName": "初心者",
+      "subjectTier": "novice",
+      "evidenceStatus": "official-activity-example-confirmed",
+      "applicabilityStartDate": "2026-10-13",
+      "applicabilityEndDate": "2026-11-10",
+      "sourceEvidence": [
+        {
+          "sourceId": "official-anniversary-job-phase-examples-2026-10",
+          "recordId": "job-progression/phase-example-novice",
+          "fields": [
+            "subjectName",
+            "subjectTier"
+          ],
+          "evidenceExcerpt": "範例1若是BaseLv.1&JobLv.1初心者使用會升級到BaseLv.99&JobLv.10",
+          "verifiedBy": "official-source-review",
+          "verifiedOn": "2026-10-27",
+          "applicableDateRange": "2026-10-13 to 2026-11-10 activity period only"
+        }
+      ],
+      "fieldStatus": {
+        "name": "verified-as-official-activity-example",
+        "tier": "verified-as-official-activity-example",
+        "parentJobName": "unverified",
+        "family": "unverified",
+        "baseLevelCap": "unverified",
+        "jobLevelCap": "unverified",
+        "transferRequirements": "unverified"
+      },
+      "parentJobName": null,
+      "parentJobStatus": "unverified",
+      "familyStatus": "unverified",
+      "baseLevelCapStatus": "unverified",
+      "jobLevelCapStatus": "unverified",
+      "transferRequirementsStatus": "unverified",
+      "appliesToRuntime": false,
+      "note": "This is an official activity example, not an explicit job-change lineage or universal level-cap statement. No parent link may be inferred from the example."
+    },
+    {
+      "id": "phase-example-swordsman",
+      "recordType": "official-activity-job-stage-example",
+      "subjectName": "劍士",
+      "subjectTier": "first-job",
+      "evidenceStatus": "official-activity-example-confirmed",
+      "applicabilityStartDate": "2026-10-13",
+      "applicabilityEndDate": "2026-11-10",
+      "sourceEvidence": [
+        {
+          "sourceId": "official-anniversary-job-phase-examples-2026-10",
+          "recordId": "job-progression/phase-example-swordsman",
+          "fields": [
+            "subjectName",
+            "subjectTier"
+          ],
+          "evidenceExcerpt": "範例2若是BaseLv30&JobLv.17一轉劍士使用會升級到BaseLv.99&JobLv.50",
+          "verifiedBy": "official-source-review",
+          "verifiedOn": "2026-10-27",
+          "applicableDateRange": "2026-10-13 to 2026-11-10 activity period only"
+        }
+      ],
+      "fieldStatus": {
+        "name": "verified-as-official-activity-example",
+        "tier": "verified-as-official-activity-example",
+        "parentJobName": "unverified",
+        "family": "unverified",
+        "baseLevelCap": "unverified",
+        "jobLevelCap": "unverified",
+        "transferRequirements": "unverified"
+      },
+      "parentJobName": null,
+      "parentJobStatus": "unverified",
+      "familyStatus": "unverified",
+      "baseLevelCapStatus": "unverified",
+      "jobLevelCapStatus": "unverified",
+      "transferRequirementsStatus": "unverified",
+      "appliesToRuntime": false,
+      "note": "This is an official activity example, not an explicit job-change lineage or universal level-cap statement. No parent link may be inferred from the example."
+    },
+    {
+      "id": "phase-example-knight",
+      "recordType": "official-activity-job-stage-example",
+      "subjectName": "騎士",
+      "subjectTier": "second-job",
+      "evidenceStatus": "official-activity-example-confirmed",
+      "applicabilityStartDate": "2026-10-13",
+      "applicabilityEndDate": "2026-11-10",
+      "sourceEvidence": [
+        {
+          "sourceId": "official-anniversary-job-phase-examples-2026-10",
+          "recordId": "job-progression/phase-example-knight",
+          "fields": [
+            "subjectName",
+            "subjectTier"
+          ],
+          "evidenceExcerpt": "範例3若是BaseLv65&JobLv.1二轉騎士使用會升級到BaseLv.99&JobLv.50",
+          "verifiedBy": "official-source-review",
+          "verifiedOn": "2026-10-27",
+          "applicableDateRange": "2026-10-13 to 2026-11-10 activity period only"
+        }
+      ],
+      "fieldStatus": {
+        "name": "verified-as-official-activity-example",
+        "tier": "verified-as-official-activity-example",
+        "parentJobName": "unverified",
+        "family": "unverified",
+        "baseLevelCap": "unverified",
+        "jobLevelCap": "unverified",
+        "transferRequirements": "unverified"
+      },
+      "parentJobName": null,
+      "parentJobStatus": "unverified",
+      "familyStatus": "unverified",
+      "baseLevelCapStatus": "unverified",
+      "jobLevelCapStatus": "unverified",
+      "transferRequirementsStatus": "unverified",
+      "appliesToRuntime": false,
+      "note": "This is an official activity example, not an explicit job-change lineage or universal level-cap statement. No parent link may be inferred from the example."
+    },
+    {
+      "id": "phase-example-lord-knight",
+      "recordType": "official-activity-job-stage-example",
+      "subjectName": "騎士領主",
+      "subjectTier": "reborn-advanced-second-job",
+      "evidenceStatus": "official-activity-example-confirmed",
+      "applicabilityStartDate": "2026-10-13",
+      "applicabilityEndDate": "2026-11-10",
+      "sourceEvidence": [
+        {
+          "sourceId": "official-anniversary-job-phase-examples-2026-10",
+          "recordId": "job-progression/phase-example-lord-knight",
+          "fields": [
+            "subjectName",
+            "subjectTier"
+          ],
+          "evidenceExcerpt": "範例4若是BaseLv70&jobLv.30 轉生進階二轉騎士領主使用會升級到BaseLv.99&JobLv.70",
+          "verifiedBy": "official-source-review",
+          "verifiedOn": "2026-10-27",
+          "applicableDateRange": "2026-10-13 to 2026-11-10 activity period only"
+        }
+      ],
+      "fieldStatus": {
+        "name": "verified-as-official-activity-example",
+        "tier": "verified-as-official-activity-example",
+        "parentJobName": "unverified",
+        "family": "unverified",
+        "baseLevelCap": "unverified",
+        "jobLevelCap": "unverified",
+        "transferRequirements": "unverified"
+      },
+      "parentJobName": null,
+      "parentJobStatus": "unverified",
+      "familyStatus": "unverified",
+      "baseLevelCapStatus": "unverified",
+      "jobLevelCapStatus": "unverified",
+      "transferRequirementsStatus": "unverified",
+      "appliesToRuntime": false,
+      "note": "This is an official activity example, not an explicit job-change lineage or universal level-cap statement. No parent link may be inferred from the example."
+    }
+  ],
+  "jobLineageGaps": [
+    {
+      "id": "gap-novice-to-first-job",
+      "fromTier": "novice",
+      "toTier": "first-job",
+      "exactParentMappingsStatus": "unverified",
+      "officialStageExamples": [
+        "phase-example-novice",
+        "phase-example-swordsman"
+      ],
+      "checkedSourceIds": [
+        "official-anniversary-job-phase-examples-2026-10",
+        "official-job-transfer-rules-2022-03-22"
+      ],
+      "directEvidenceForParentEdge": null,
+      "reason": "The 2026 official activity shows a Novice example and a separate First Job Swordsman example; neither excerpt explicitly states the transition from Novice to Swordsman or lists the other first-job branches.",
+      "currentApplicabilityStatus": "unverified",
+      "appliesToRuntime": false
+    },
+    {
+      "id": "gap-first-job-to-second-job",
+      "fromTier": "first-job",
+      "toTier": "second-job",
+      "exactParentMappingsStatus": "unverified",
+      "officialStageExamples": [
+        "phase-example-swordsman",
+        "phase-example-knight"
+      ],
+      "checkedSourceIds": [
+        "official-anniversary-job-phase-examples-2026-10",
+        "official-job-transfer-rules-2022-03-22",
+        "official-fourth-job-naming-table-2022"
+      ],
+      "directEvidenceForParentEdge": null,
+      "reason": "The official activity labels Swordsman as First Job and Knight as Second Job in separate activity examples; this is not a direct claim that Swordsman is Knight's parent, and it says nothing about the other class branches.",
+      "currentApplicabilityStatus": "unverified",
+      "appliesToRuntime": false
+    },
+    {
+      "id": "gap-second-to-reborn-advanced-second-job",
+      "fromTier": "second-job",
+      "toTier": "reborn-advanced-second-job",
+      "exactParentMappingsStatus": "unverified",
+      "officialStageExamples": [
+        "phase-example-knight",
+        "phase-example-lord-knight"
+      ],
+      "checkedSourceIds": [
+        "official-anniversary-job-phase-examples-2026-10",
+        "official-job-transfer-rules-2022-03-22"
+      ],
+      "directEvidenceForParentEdge": null,
+      "reason": "The official activity labels a Second Job Knight example and a Transcendent Advanced Second Job Lord Knight example, but does not state their parent-child lineage. The 2022 notice's JOB50 rule is a general historical requirement, not per-class parent evidence.",
+      "currentApplicabilityStatus": "unverified",
+      "appliesToRuntime": false
+    },
+    {
+      "id": "gap-reborn-second-job-to-third-job",
+      "fromTier": "reborn-advanced-second-job",
+      "toTier": "third-job",
+      "exactParentMappingsStatus": "unverified",
+      "generalHistoricalPrerequisite": {
+        "status": "historical-official-rule-confirmed",
+        "sourceId": "official-job-transfer-rules-2022-03-22",
+        "sourceUrl": "https://ro.gnjoy.com.tw/notice/notice_view.aspx?id=125135",
+        "publishedDate": "2022-03-21",
+        "effectiveDate": "2022-03-22",
+        "evidenceExcerpt": "三轉職業：需轉生二轉才可進行轉職",
+        "verifiedFields": [
+          "generalPrerequisiteCategory",
+          "historicalRuleText",
+          "historicalEffectiveDate"
+        ],
+        "unknownScope": [
+          "the exact second-job parent for each individual third-job class",
+          "whether this rule remains applicable on 2026-10-27",
+          "the complete expanded-job scope"
+        ]
+      },
+      "thirdTierClasses": [
+        {
+          "jobName": "盧恩騎士",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；盧恩騎士 | 盧恩龍爵",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "皇家禁衛隊",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；皇家禁衛隊 | 帝國聖衛軍",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "咒術士",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；咒術士 | 禁咒魔導士",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "妖術師",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；妖術師 | 元素支配者",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "機械工匠",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；機械工匠 | 機甲神匠",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "基因學者",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；基因學者 | 生命締造者",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "大主教",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；大主教 | 樞機主教",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "修羅",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；修羅 | 聖裁者",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "十字斬首者",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；十字斬首者 | 十字影武",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "魅影追蹤者",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；魅影追蹤者 | 深淵追跡者",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "遊俠",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；遊俠 | 風鷹狩獵者",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "宮廷樂師",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；宮廷樂師 | 天籟頌者",
+          "appliesToRuntime": false
+        },
+        {
+          "jobName": "浪姬舞者",
+          "tier": "third-job",
+          "nameStatus": "historical-official-name-confirmed",
+          "tierStatus": "historical-third-era-label-confirmed",
+          "parentJobName": null,
+          "parentJobStatus": "unverified",
+          "sourceId": "official-fourth-job-naming-table-2022",
+          "evidenceExcerpt": "三轉時期名稱 | 四轉職業中文名稱；浪姬舞者 | 樂之舞靈",
+          "appliesToRuntime": false
+        }
+      ],
+      "checkedSourceIds": [
+        "official-job-transfer-rules-2022-03-22",
+        "official-fourth-job-naming-table-2022",
+        "official-fourth-job-event-2022-02-08",
+        "official-fourth-expanded-job-adjustment-2025-11-03"
+      ],
+      "currentApplicabilityStatus": "unverified",
+      "appliesToRuntime": false,
+      "reason": "The 2022 official announcement directly states the general prerequisite category 'reborn second job'; it does not enumerate the exact parent class for each third-job class. Those individual parentJobName fields remain unverified."
+    }
+  ],
+  "jobProgressionAudit": {
+    "status": "partial-evidence-only; no complete first-through-third lineage",
+    "targetBaselineDate": "2026-10-27",
+    "confirmedPhaseExampleCount": 4,
+    "confirmedHistoricalThirdTierNameCount": 13,
+    "verifiedFirstToSecondParentEdges": 0,
+    "verifiedSecondToThirdIndividualParentEdges": 0,
+    "verifiedNoviceToFirstParentEdges": 0,
+    "historicalGeneralSecondToThirdPrerequisiteConfirmed": true,
+    "currentApplicabilityOfHistoricalRules": "unverified",
+    "fullJobTreeComplete": false,
+    "runtimeDataChanged": false,
+    "sourcesReviewed": [
+      "official-anniversary-job-phase-examples-2026-10",
+      "official-job-transfer-rules-2022-03-22",
+      "official-fourth-job-naming-table-2022",
+      "official-fourth-job-event-2022-02-08",
+      "official-fourth-expanded-job-adjustment-2025-11-03"
+    ],
+    "note": "Search results identify no directly stating official Taiwan RO PC source for complete first-to-second or per-class second-to-third parent edges. Do not fill those fields from common knowledge, other regions, emulator data, or inferred class pairs."
   }
 }

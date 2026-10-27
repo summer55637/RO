@@ -61,16 +61,27 @@ assert.ok(registry.jobSystemRules.some((rule) => rule.id === "level-expansion-lv
 assert.ok(registry.jobSystemRules.some((rule) => rule.status === "historical-rule-requires-current-revalidation"), "historical transfer conditions must not automatically become current runtime rules");
 
 const hierarchy = registry.jobHierarchyEvidence;
-assert.ok(Array.isArray(hierarchy) && hierarchy.length === 12, "official fourth-job hierarchy evidence must be recorded without inflating the full job tree");
-assert.equal(hierarchy.filter((edge) => edge.recordType === "individual-parent-edge").length, 11, "direct parent relations must match source text");
-assert.equal(hierarchy.filter((edge) => edge.recordType === "group-parent-edge").length, 1, "paired song/dance jobs must keep grouped evidence");
-assert.ok(hierarchy.every((edge) => edge.appliesToRuntime === false && edge.currentApplicabilityStatus === "unverified"), "historical relationships must not be applied to runtime");
-assert.ok(hierarchy.some((edge) => edge.childJobName === "盧恩龍爵" && edge.parentJobName === "盧恩騎士"), "official Rune Dragon Knight lineage must be retained");
-assert.ok(hierarchy.some((edge) => edge.childJobName === "風鷹狩獵者" && edge.parentJobName === "遊俠"), "official Wind Hawk lineage must be retained");
-const grouped = hierarchy.find((edge) => edge.recordType === "group-parent-edge");
-assert.equal(grouped.individualChildParentPairingStatus, "unverified", "do not infer individual singer/dancer mappings from grouped text");
+assert.ok(Array.isArray(hierarchy) && hierarchy.length === 13, "all 13 historical third-to-fourth edges must be recorded");
+assert.equal(hierarchy.filter((edge) => edge.recordType === "individual-parent-edge").length, 13, "direct parent mappings must not be left as an ambiguous group when the official naming table individually pairs them");
+assert.ok(hierarchy.every((edge) => edge.appliesToRuntime === false && edge.currentApplicabilityStatus === "unverified"), "historical relations must not be applied to runtime");
+assert.ok(hierarchy.some((edge) => edge.childJobName === "天籟頌者" && edge.parentJobName === "宮廷樂師"), "official naming table must establish the Troubadour pairing");
+assert.ok(hierarchy.some((edge) => edge.childJobName === "樂之舞靈" && edge.parentJobName === "浪姬舞者"), "official naming table must establish the Trouvere pairing");
 assert.equal(registry.jobHierarchyAudit.fullJobTreeComplete, false, "incomplete source coverage must never be marked complete");
-assert.ok(registry.datasets.find((dataset) => dataset.id === "jobs").records.every((record) => record.status === "unverified"), "this source cannot verify the simplified prototype job table");
+
+const phaseExamples = registry.jobProgressionEvidence;
+assert.equal(phaseExamples.length, 4, "official activity examples should document the phase labels actually stated");
+assert.ok(phaseExamples.some((example) => example.subjectName === "劍士" && example.subjectTier === "first-job"), "current official example should identify a first-job stage");
+assert.ok(phaseExamples.some((example) => example.subjectName === "騎士" && example.subjectTier === "second-job"), "current official example should identify a second-job stage");
+assert.ok(phaseExamples.every((example) => example.parentJobName === null && example.parentJobStatus === "unverified"), "stage examples must not be inferred as parent mappings");
+
+const lineageAudit = registry.jobProgressionAudit;
+assert.equal(lineageAudit.verifiedFirstToSecondParentEdges, 0, "no unsupported first-to-second class relationship may be invented");
+assert.equal(lineageAudit.verifiedSecondToThirdIndividualParentEdges, 0, "a general transfer rule cannot replace individual parent evidence");
+assert.equal(lineageAudit.verifiedNoviceToFirstParentEdges, 0, "no unsupported novice-to-first edge may be invented");
+assert.equal(lineageAudit.fullJobTreeComplete, false);
+assert.equal(lineageAudit.runtimeDataChanged, false);
+assert.equal(registry.jobLineageGaps.length, 4);
+assert.ok(registry.datasets.find((dataset) => dataset.id === "jobs").records.every((record) => record.status === "unverified"), "the simplified prototype job table remains unverified");
 
 const html = read("index.html");
 const scriptPaths = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((m) => m[1].replace(/^\.\//, ""));

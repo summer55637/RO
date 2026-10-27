@@ -127,53 +127,102 @@ assert.ok(jobRules.some((rule) => rule.id === "level-expansion-lv275" && rule.ap
 assert.ok(jobRules.some((rule) => rule.id === "historical-fourth-job-requires-reborn-third"), "historical fourth-job rule must be preserved as historical");
 assert.ok(jobRules.some((rule) => rule.id === "fourth-and-expanded-job-families-confirmed"), "fourth/expanded-job coverage gap must be recorded");
 
+const namingSource = sourceMap.get("official-fourth-job-naming-table-2022");
+const phaseSource = sourceMap.get("official-anniversary-job-phase-examples-2026-10");
 const hierarchySource = sourceMap.get("official-fourth-job-event-2022-02-08");
-assert.ok(hierarchySource && hierarchySource.official, "official fourth-job introduction source must be registered");
-assert.equal(new URL(hierarchySource.url).hostname, "event.gnjoy.com.tw", "the direct transition source must be the registered official event host");
-assert.equal(hierarchySource.recordLevelEvidenceAllowed, true, "only the direct official transition page can support parent-edge evidence");
-assert.ok(hierarchySource.linkedFromOfficialSourceIds.includes("official-job-transfer-rules-2022-03-22"), "official transition page must be linked from an official Taiwan RO notice");
+assert.ok(hierarchySource && namingSource && phaseSource, "official progression sources must all be registered");
+assert.equal(new URL(hierarchySource.url).hostname, "event.gnjoy.com.tw");
+assert.equal(new URL(namingSource.url).hostname, "event.gnjoy.com.tw");
+assert.equal(new URL(phaseSource.url).hostname, "event.gnjoy.com.tw");
+assert.equal(hierarchySource.recordLevelEvidenceAllowed, true);
+assert.equal(namingSource.recordLevelEvidenceAllowed, true);
+assert.equal(phaseSource.recordLevelEvidenceAllowed, false, "activity stage examples must not serve as parent-lineage evidence");
 
 const hierarchy = registry.jobHierarchyEvidence;
-assert.ok(Array.isArray(hierarchy) && hierarchy.length === 12, "11 direct fourth-job parent links and one grouped relation must be preserved");
+assert.ok(Array.isArray(hierarchy) && hierarchy.length === 13, "all 13 individual historical third-to-fourth mappings must be preserved");
 const hierarchyIds = new Set();
 let directEdges = 0;
-let groupedEdges = 0;
 for (const edge of hierarchy) {
   assert.ok(edge.id && !hierarchyIds.has(edge.id), "job hierarchy edge IDs must be unique");
   hierarchyIds.add(edge.id);
+  assert.equal(edge.recordType, "individual-parent-edge", "job hierarchy records must contain explicit individual mappings only");
   assert.equal(edge.appliesToRuntime, false, "historical hierarchy facts must not modify live game behavior");
-  assert.equal(edge.currentApplicabilityStatus, "unverified", "historical parent relationship must not be called current without revalidation");
+  assert.equal(edge.currentApplicabilityStatus, "unverified", "historical parent relationships must not be called current without revalidation");
+  assert.ok(edge.childJobName && edge.parentJobName, "individual hierarchy record must name both jobs");
   assert.ok(Array.isArray(edge.sourceEvidence) && edge.sourceEvidence.length > 0, "every hierarchy claim needs direct official evidence");
   for (const evidence of edge.sourceEvidence) {
-    assert.equal(evidence.sourceId, "official-fourth-job-event-2022-02-08", "hierarchy evidence must come from the source that states the relationship");
+    const evidenceSource = sourceMap.get(evidence.sourceId);
+    assert.ok(evidenceSource && evidenceSource.official && evidenceSource.recordLevelEvidenceAllowed, "each parent mapping must cite an official source allowed for direct parent evidence");
     assert.equal(evidence.recordId, "job-hierarchy/" + edge.id, "hierarchy evidence must point at the exact edge");
     assert.ok(Array.isArray(evidence.fields) && evidence.fields.length > 0, "hierarchy evidence must list exact fields");
     assert.ok(evidence.evidenceExcerpt && evidence.evidenceExcerpt.trim().length >= 12, "hierarchy evidence excerpt must be substantive");
     assert.ok(evidence.verifiedBy && evidence.verifiedOn === "2026-10-27", "hierarchy review date and reviewer must be recorded");
   }
   for (const sourceId of edge.corroboratingSources) assert.ok(sourceMap.has(sourceId) && sourceMap.get(sourceId).official, "hierarchy corroboration must use registered official sources");
-  if (edge.recordType === "individual-parent-edge") {
-    directEdges += 1;
-    assert.ok(edge.childJobName && edge.parentJobName, "direct edge must name a child and parent job");
-    assert.equal(edge.evidenceStatus, "historical-official-parent-edge-confirmed", "direct edge must preserve historical scope");
-    assert.deepEqual(edge.verifiedFields, ["childJobName", "parentJobName", "childTier"], "direct edge supported fields must stay narrowly scoped");
-  } else if (edge.recordType === "group-parent-edge") {
-    groupedEdges += 1;
-    assert.equal(edge.individualChildParentPairingStatus, "unverified", "the grouped song/dance job pairs must not be inferred individually");
-    assert.deepEqual(edge.childJobNames, ["天籟頌者", "樂之舞靈"], "paired fourth-job names must match the official source");
-    assert.deepEqual(edge.parentJobNames, ["宮廷樂師", "浪姬舞者"], "paired parents must match the official source");
-  } else assert.fail("unknown hierarchy record type: " + edge.recordType);
+  assert.equal(edge.evidenceStatus, "historical-official-parent-edge-confirmed");
+  assert.deepEqual(edge.verifiedFields, ["childJobName", "parentJobName", "childTier"]);
+  assert.equal(edge.baseLevelCapStatus, "unverified");
+  assert.equal(edge.jobLevelCapStatus, "unverified");
+  assert.equal(edge.transferRequirementsStatus, "unverified");
+  directEdges += 1;
 }
-assert.equal(directEdges, 11, "official page should produce 11 individually stated fourth-job parent edges");
-assert.equal(groupedEdges, 1, "song/dance relationship must remain one grouped record");
+assert.equal(directEdges, 13, "historical third-to-fourth parent mappings must cover the thirteen names in the official source");
 const officialRoster = registry.officialJobRosterEvidence;
 assert.ok(officialRoster && officialRoster.status === "partial-official-subtree", "official job roster must be marked as a partial subtree");
-assert.equal(officialRoster.officialCountClaim, 13, "official page's 13 fourth-job claim must be preserved");
-assert.equal(new Set(officialRoster.childJobNames).size, 13, "fourth-job roster should contain thirteen distinct names");
-assert.equal(officialRoster.childJobNames.length, 13, "fourth-job roster should list thirteen class names");
-assert.equal(officialRoster.fullJobTreeComplete, false, "a fourth-job subset must never be described as the complete job tree");
-assert.equal(registry.jobHierarchyAudit.fullJobTreeComplete, false, "job hierarchy audit must remain explicitly incomplete");
-assert.equal(registry.jobHierarchyAudit.runtimeDataChanged, false, "hierarchy research must not change runtime game data");
+assert.equal(officialRoster.officialCountClaim, 13);
+assert.equal(new Set(officialRoster.childJobNames).size, 13);
+assert.equal(officialRoster.childJobNames.length, 13);
+assert.equal(officialRoster.fullJobTreeComplete, false);
+
+const phaseExamples = registry.jobProgressionEvidence;
+assert.ok(Array.isArray(phaseExamples) && phaseExamples.length === 4, "four official job-stage examples must be recorded");
+const expectedPhaseExamples = new Map([
+  ["phase-example-novice", ["初心者", "novice"]],
+  ["phase-example-swordsman", ["劍士", "first-job"]],
+  ["phase-example-knight", ["騎士", "second-job"]],
+  ["phase-example-lord-knight", ["騎士領主", "reborn-advanced-second-job"]]
+]);
+for (const example of phaseExamples) {
+  const expected = expectedPhaseExamples.get(example.id);
+  assert.ok(expected, "unexpected phase example: " + example.id);
+  assert.equal(example.subjectName, expected[0]);
+  assert.equal(example.subjectTier, expected[1]);
+  assert.equal(example.appliesToRuntime, false, "activity examples must not be used as runtime class records");
+  assert.equal(example.parentJobName, null, "a phase example is not a direct parent mapping");
+  assert.equal(example.parentJobStatus, "unverified");
+  assert.equal(example.familyStatus, "unverified");
+  assert.equal(example.baseLevelCapStatus, "unverified");
+  assert.equal(example.jobLevelCapStatus, "unverified");
+  assert.equal(example.transferRequirementsStatus, "unverified");
+  assert.deepEqual(example.fieldStatus, {name:"verified-as-official-activity-example",tier:"verified-as-official-activity-example",parentJobName:"unverified",family:"unverified",baseLevelCap:"unverified",jobLevelCap:"unverified",transferRequirements:"unverified"});
+  for (const evidence of example.sourceEvidence) {
+    assert.equal(evidence.sourceId, "official-anniversary-job-phase-examples-2026-10");
+    assert.equal(evidence.recordId, "job-progression/" + example.id);
+    assert.deepEqual(evidence.fields, ["subjectName", "subjectTier"]);
+    assert.ok(evidence.evidenceExcerpt && evidence.evidenceExcerpt.length > 15);
+    assert.equal(evidence.verifiedOn, "2026-10-27");
+    assert.equal(evidence.applicableDateRange, "2026-10-13 to 2026-11-10 activity period only");
+  }
+}
+const lineageAudit = registry.jobProgressionAudit;
+assert.ok(lineageAudit && lineageAudit.status === "partial-evidence-only; no complete first-through-third lineage");
+assert.equal(lineageAudit.verifiedFirstToSecondParentEdges, 0, "do not infer first-to-second lineage");
+assert.equal(lineageAudit.verifiedSecondToThirdIndividualParentEdges, 0, "general historical rule cannot stand in for per-class second-to-third edges");
+assert.equal(lineageAudit.verifiedNoviceToFirstParentEdges, 0);
+assert.equal(lineageAudit.historicalGeneralSecondToThirdPrerequisiteConfirmed, true);
+assert.equal(lineageAudit.currentApplicabilityOfHistoricalRules, "unverified");
+assert.equal(lineageAudit.fullJobTreeComplete, false);
+assert.equal(lineageAudit.runtimeDataChanged, false);
+assert.equal(registry.jobLineageGaps.length, 4);
+const gapById = new Map(registry.jobLineageGaps.map((gap) => [gap.id, gap]));
+assert.equal(gapById.get("gap-novice-to-first-job").exactParentMappingsStatus, "unverified");
+assert.equal(gapById.get("gap-first-job-to-second-job").exactParentMappingsStatus, "unverified");
+assert.equal(gapById.get("gap-second-to-reborn-advanced-second-job").exactParentMappingsStatus, "unverified");
+assert.equal(gapById.get("gap-reborn-second-job-to-third-job").exactParentMappingsStatus, "unverified");
+assert.equal(gapById.get("gap-reborn-second-job-to-third-job").generalHistoricalPrerequisite.status, "historical-official-rule-confirmed");
+assert.equal(gapById.get("gap-reborn-second-job-to-third-job").generalHistoricalPrerequisite.evidenceExcerpt, "三轉職業：需轉生二轉才可進行轉職");
+assert.equal(lineageAudit.confirmedHistoricalThirdTierNameCount, 13);
+assert.equal(registry.jobProgressionAudit.runtimeDataChanged, false);
 assert.equal(jobDataset.records.filter((record) => record.status === "verified").length, 0, "the 13 prototype job records remain unverified");
 assert.ok(jobDataset.records.every((record) => Object.values(record.fieldStatus).every((status) => status === "unverified")), "all prototype job fields remain unverified");
 
