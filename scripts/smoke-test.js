@@ -56,6 +56,8 @@ const scriptPaths = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((m) => m[
 assert.ok(scriptPaths.includes("src/main.js"), "main runtime script must be included");
 assert.ok(scriptPaths.includes("src/expansion.js"), "expansion runtime script must be included");
 assert.ok(scriptPaths.indexOf("src/main.js") < scriptPaths.indexOf("src/expansion.js"), "game API must load before expansion");
+assert.ok(scriptPaths.includes("src/ui-shell.js"), "integrated UI shell must be included");
+assert.ok(scriptPaths.indexOf("src/expansion.js") < scriptPaths.indexOf("src/ui-shell.js"), "UI shell must load after dynamic expansion panels");
 for (const path of scriptPaths) assert.ok(fs.existsSync(root + "/" + path), "missing script file: " + path);
 
 const main = read("src/main.js");
@@ -65,11 +67,19 @@ for (const feature of ["attackMonster", "performSkill", "changeJob", "equipmentB
 assert.ok(main.includes('new CustomEvent("ro:monster-killed"'), "quest progress combat event missing");
 assert.ok(main.includes('window.RO_GAME_API ='), "expansion integration API missing");
 
+const ui = read("src/ui-shell.js");
+for (const feature of ["character", "quests", "equipment", "hunt", "save", "mapQuickSelect", "roExpansionGuild", "roExpansionGear", "roExpansionHunt"]) {
+  assert.ok(ui.includes(feature), "integrated menu section missing: " + feature);
+}
+assert.ok(ui.includes('setAttribute("role", "tablist")'), "integrated menu should expose accessible tabs");
 const css = read("style.css");
+assert.ok(css.includes(".game-menu-tabs"), "integrated menu styling must exist");
+assert.ok(css.includes(".map-quicknav"), "compact map selector styling must exist");
 assert.ok(css.includes("@media (max-width: 620px)"), "responsive layout rules must exist");
 assert.ok(css.includes(".expansion-gear-row"), "expansion mobile styles must be present");
 const sw = read("sw.js");
 assert.ok(sw.includes('"./src/expansion.js"'), "offline cache shell must include expansion module");
-assert.ok(sw.includes("ro-offline-adventure-v5"), "service worker cache version should be bumped");
+assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
+assert.ok(sw.includes("ro-offline-adventure-v6"), "service worker cache version should be bumped");
 
 console.log("Smoke tests passed: job/skill/item references, combat stats, drops, all map and portal references, MVP tags, required gameplay pathways, script order, and mobile/offline assets.");

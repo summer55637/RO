@@ -223,3 +223,75 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   .expansion-npc-controls { grid-template-columns: minmax(0,1fr); }
   .expansion-panel .mini-button { min-height: 34px; }
 }
+
+
+/* Unified compact game menu: keep the world visible and group secondary panels. */
+.side-column { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; align-items: start; }
+.game-menu-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(18, 28, 35, .94);
+  box-shadow: 0 8px 24px rgba(0,0,0,.14);
+}
+.game-menu-tab {
+  display: flex;
+  min-width: 0;
+  min-height: 58px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 3px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #91a4ae;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.game-menu-icon { font-size: 18px; line-height: 1; color: #aebfc5; }
+.game-menu-label { font-size: 11px; font-weight: 750; line-height: 1.2; white-space: nowrap; }
+.game-menu-tab:hover { color: var(--text); background: rgba(255,255,255,.035); }
+.game-menu-tab.active {
+  color: #fff0c8;
+  border-color: rgba(217,184,118,.24);
+  background: linear-gradient(155deg, rgba(118,91,49,.34), rgba(57,76,73,.4));
+  box-shadow: inset 0 1px rgba(255,255,255,.04);
+}
+.game-menu-tab.active .game-menu-icon { color: #e8c87f; }
+.game-menu-tab:focus-visible, .map-quicknav-select:focus-visible {
+  outline: 2px solid #d9b876;
+  outline-offset: 2px;
+}
+.game-menu-views { min-width: 0; }
+.game-menu-view { display: grid; min-width: 0; gap: 11px; }
+.game-menu-view[hidden] { display: none !important; }
+.game-menu-view-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 2px 2px 1px; }
+.game-menu-view-heading h3 { margin: 0; color: #eef3ed; font-size: 15px; letter-spacing: .02em; }
+.game-menu-view-heading p { margin: 0; color: var(--muted); font-size: 10px; text-align: right; }
+.game-menu-view > .panel { min-width: 0; }
+.menu-empty-note { margin: 0; padding: 12px; border: 1px dashed var(--line); border-radius: 9px; color: var(--muted); font-size: 12px; }
+.map-quicknav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 11px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(28,42,49,.9); }
+.map-quicknav-label { color: var(--muted); font-size: 11px; font-weight: 700; flex: 0 0 auto; }
+.map-quicknav-select { width: min(70%, 270px); min-width: 0; padding: 8px 10px; border: 1px solid #40565d; border-radius: 8px; background: #19282f; color: #e8f0ea; font: inherit; font-size: 12px; }
+#mapTabs[hidden] { display: none !important; }
+@media (max-width: 920px) {
+  .side-column { grid-template-columns: minmax(0,1fr); gap: 11px; }
+  .game-menu-tabs { position: sticky; top: 6px; z-index: 4; }
+}
+@media (max-width: 620px) {
+  .game-menu-tabs { gap: 3px; padding: 4px; border-radius: 10px; }
+  .game-menu-tab { min-height: 53px; padding: 6px 2px; gap: 4px; }
+  .game-menu-icon { font-size: 16px; }
+  .game-menu-label { font-size: 10px; }
+  .game-menu-view { gap: 9px; }
+  .game-menu-view-heading h3 { font-size: 14px; }
+  .game-menu-view-heading p { max-width: 62%; font-size: 9px; }
+  .map-quicknav { gap: 8px; padding: 7px 8px; }
+  .map-quicknav-select { width: 72%; padding: 8px; }
+}
