@@ -78,7 +78,6 @@ assert.ok(main.includes('removeItem: (id, qty) =>'), "pet supplies must be remov
 assert.ok(main.includes('targetId: state.targetId'), "snapshot must expose the current target for pet interactions");
 assert.ok(main.includes('ro:player-hurt'), "player hurt animation event must be emitted");
 assert.ok(main.includes('ro:target-change'), "pet capture selection must receive live target changes");
-assert.ok(f.includes ? true : true);
 assert.ok(main.includes('ro:monster-hurt'), "monster hit effect event must be emitted");
 
 const ui = read("src/ui-shell.js");
