@@ -72,6 +72,8 @@
       "osiris-crown": { id: "osiris-crown", name: "冥王冠冕", icon: "👑", slot: "accessory", hpBonus: 45, spBonus: 25, stats: { vit: 3, int: 3 }, price: 1800, description: "古王的稀有飾品。HP +45、SP +25、VIT +3、INT +3。" },
       "baphomet-axe": { id: "baphomet-axe", name: "深淵巨斧", icon: "🪓", slot: "weapon", attack: 25, stats: { str: 5, vit: 2 }, hpBonus: 20, price: 2600, description: "MVP 巴風特的稀有武器。攻擊 +25、STR +5、VIT +2。" },
       "ancient-robe": { id: "ancient-robe", name: "古代祭司長袍", icon: "🥋", slot: "armor", hpBonus: 62, spBonus: 15, stats: { vit: 4, int: 2 }, price: 1500, description: "古代洞窟深處的稀有防具。HP +62、SP +15。" },
+      "pet-treat": { id: "pet-treat", name: "魔物捕捉零食", icon: "🍬", kind: "consumable", price: 90, description: "帶有魔力香氣的小點心，可用於嘗試收服野生魔物。" },
+      "pet-snack": { id: "pet-snack", name: "寵物營養餅", icon: "🍪", kind: "consumable", price: 45, description: "寵物喜愛的營養餅乾，可提升親密度與寵物經驗。" },
     },
     monsters: {
       "poring": { id: "poring", name: "波利", level: 1, hp: 26, attack: 3, defense: 0, exp: 12, gold: [3, 8], color: "#d95d83", sprite: "poring", drops: [{ id: "red-potion", chance: 0.16 }, { id: "green-herb", chance: 0.22 }, { id: "cotton-tunic", chance: 0.025 }] },
