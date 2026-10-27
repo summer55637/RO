@@ -820,6 +820,7 @@
   function setTarget(monster) {
     state.targetId = monster ? monster.id : null;
     state.moveTarget = null;
+    window.dispatchEvent(new CustomEvent("ro:target-change", { detail: { targetId: state.targetId, type: monster ? monster.type : null } }));
     if (monster) {
       logMessage("鎖定目標：" + monster.name + "。角色會自動接近並攻擊。", "muted");
     }
