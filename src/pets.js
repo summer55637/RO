@@ -179,9 +179,9 @@
   }
   function getActive() {const pet=activePet(),species=speciesOf(pet);return pet&&species?Object.assign({},pet,species):null;}
   load(); mountUI(); grantStarterKit();
-  window.RO_PETS={species:SPECIES,getActive:getActive,getPets:()=>profile.pets.map((pet)=>Object.assign({},pet)),bonuses:bonuses,tick:tick,save:save};
+  window.RO_PETS={species:SPECIES,getActive:getActive,getPets:()=>profile.pets.map((pet)=>Object.assign({},pet)),bonuses:bonuses,tick:tick,save:save,refresh:render};
   window.addEventListener("ro:monster-killed",onKill);
-  window.addEventListener("ro:level-up",render);window.addEventListener("ro:map-change",render);
+  window.addEventListener("ro:level-up",render);window.addEventListener("ro:map-change",render);window.addEventListener("ro:target-change",render);
   window.addEventListener("ro:pet-attack",()=>{if(performance.now()-lastUiRefresh>300){render();lastUiRefresh=performance.now();}});
   window.addEventListener("pagehide",save);
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")save();});
