@@ -354,15 +354,8 @@
     }
   }
 
-  function jobExpReward(amount, quiet) {
-    const p = state.player;
-    p.jobExp += amount;
-    while (p.jobLevel < 50 && p.jobExp >= jobExpNeeded()) {
-      p.jobExp -= jobExpNeeded();
-      p.jobLevel += 1;
-      if (p.jobLevel % 2 === 0) p.skillPoints += 1;
-      if (!quiet) logMessage("Job 升級！Job Lv. " + p.jobLevel + "。");
-    }
+  function jobExpReward() {
+    // Mini RO uses Base Level for visible progression; keep this hook for legacy-save compatibility.
   }
 
   function statCost(value) {
