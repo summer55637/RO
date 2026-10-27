@@ -60,6 +60,18 @@ assert.ok(jobRegistry.records.every((record) => Object.values(record.fieldStatus
 assert.ok(registry.jobSystemRules.some((rule) => rule.id === "level-expansion-lv275" && rule.appliesToRuntime === false), "Lv275 official announcement must not be guessed into runtime data");
 assert.ok(registry.jobSystemRules.some((rule) => rule.status === "historical-rule-requires-current-revalidation"), "historical transfer conditions must not automatically become current runtime rules");
 
+const hierarchy = registry.jobHierarchyEvidence;
+assert.ok(Array.isArray(hierarchy) && hierarchy.length === 12, "official fourth-job hierarchy evidence must be recorded without inflating the full job tree");
+assert.equal(hierarchy.filter((edge) => edge.recordType === "individual-parent-edge").length, 11, "direct parent relations must match source text");
+assert.equal(hierarchy.filter((edge) => edge.recordType === "group-parent-edge").length, 1, "paired song/dance jobs must keep grouped evidence");
+assert.ok(hierarchy.every((edge) => edge.appliesToRuntime === false && edge.currentApplicabilityStatus === "unverified"), "historical relationships must not be applied to runtime");
+assert.ok(hierarchy.some((edge) => edge.childJobName === "盧恩龍爵" && edge.parentJobName === "盧恩騎士"), "official Rune Dragon Knight lineage must be retained");
+assert.ok(hierarchy.some((edge) => edge.childJobName === "風鷹狩獵者" && edge.parentJobName === "遊俠"), "official Wind Hawk lineage must be retained");
+const grouped = hierarchy.find((edge) => edge.recordType === "group-parent-edge");
+assert.equal(grouped.individualChildParentPairingStatus, "unverified", "do not infer individual singer/dancer mappings from grouped text");
+assert.equal(registry.jobHierarchyAudit.fullJobTreeComplete, false, "incomplete source coverage must never be marked complete");
+assert.ok(registry.datasets.find((dataset) => dataset.id === "jobs").records.every((record) => record.status === "unverified"), "this source cannot verify the simplified prototype job table");
+
 const html = read("index.html");
 const scriptPaths = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((m) => m[1].replace(/^\.\//, ""));
 assert.ok(scriptPaths.includes("src/main.js"), "main runtime script must be included");

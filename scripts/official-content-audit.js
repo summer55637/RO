@@ -22,7 +22,7 @@ assert.equal(registry.target.baselineDate, "2026-10-27", "baseline date must sta
 assert.equal(registry.target.baselineType, "official-public-notice-cutoff-not-a-client-build-id", "baseline must not be misrepresented as an official client build");
 assert.equal(registry.target.officialClientBuildId, null, "do not invent an official client build id");
 
-const allowedHosts = new Set(["ro.gnjoy.com.tw", "www.ro.gnjoy.com.tw"]);
+const allowedHosts = new Set(["ro.gnjoy.com.tw", "www.ro.gnjoy.com.tw", "event.gnjoy.com.tw"]);
 const sourceMap = new Map();
 for (const source of registry.sources) {
   assert.ok(source.id && !sourceMap.has(source.id), "source IDs must exist and be unique");
@@ -126,6 +126,56 @@ assert.equal(jobDataset.records.filter((record) => record.status === "verified")
 assert.ok(jobRules.some((rule) => rule.id === "level-expansion-lv275" && rule.appliesToRuntime === false), "Lv275 announcement must not be guessed into Base/Job fields");
 assert.ok(jobRules.some((rule) => rule.id === "historical-fourth-job-requires-reborn-third"), "historical fourth-job rule must be preserved as historical");
 assert.ok(jobRules.some((rule) => rule.id === "fourth-and-expanded-job-families-confirmed"), "fourth/expanded-job coverage gap must be recorded");
+
+const hierarchySource = sourceMap.get("official-fourth-job-event-2022-02-08");
+assert.ok(hierarchySource && hierarchySource.official, "official fourth-job introduction source must be registered");
+assert.equal(new URL(hierarchySource.url).hostname, "event.gnjoy.com.tw", "the direct transition source must be the registered official event host");
+assert.equal(hierarchySource.recordLevelEvidenceAllowed, true, "only the direct official transition page can support parent-edge evidence");
+assert.ok(hierarchySource.linkedFromOfficialSourceIds.includes("official-job-transfer-rules-2022-03-22"), "official transition page must be linked from an official Taiwan RO notice");
+
+const hierarchy = registry.jobHierarchyEvidence;
+assert.ok(Array.isArray(hierarchy) && hierarchy.length === 12, "11 direct fourth-job parent links and one grouped relation must be preserved");
+const hierarchyIds = new Set();
+let directEdges = 0;
+let groupedEdges = 0;
+for (const edge of hierarchy) {
+  assert.ok(edge.id && !hierarchyIds.has(edge.id), "job hierarchy edge IDs must be unique");
+  hierarchyIds.add(edge.id);
+  assert.equal(edge.appliesToRuntime, false, "historical hierarchy facts must not modify live game behavior");
+  assert.equal(edge.currentApplicabilityStatus, "unverified", "historical parent relationship must not be called current without revalidation");
+  assert.ok(Array.isArray(edge.sourceEvidence) && edge.sourceEvidence.length > 0, "every hierarchy claim needs direct official evidence");
+  for (const evidence of edge.sourceEvidence) {
+    assert.equal(evidence.sourceId, "official-fourth-job-event-2022-02-08", "hierarchy evidence must come from the source that states the relationship");
+    assert.equal(evidence.recordId, "job-hierarchy/" + edge.id, "hierarchy evidence must point at the exact edge");
+    assert.ok(Array.isArray(evidence.fields) && evidence.fields.length > 0, "hierarchy evidence must list exact fields");
+    assert.ok(evidence.evidenceExcerpt && evidence.evidenceExcerpt.trim().length >= 12, "hierarchy evidence excerpt must be substantive");
+    assert.ok(evidence.verifiedBy && evidence.verifiedOn === "2026-10-27", "hierarchy review date and reviewer must be recorded");
+  }
+  for (const sourceId of edge.corroboratingSources) assert.ok(sourceMap.has(sourceId) && sourceMap.get(sourceId).official, "hierarchy corroboration must use registered official sources");
+  if (edge.recordType === "individual-parent-edge") {
+    directEdges += 1;
+    assert.ok(edge.childJobName && edge.parentJobName, "direct edge must name a child and parent job");
+    assert.equal(edge.evidenceStatus, "historical-official-parent-edge-confirmed", "direct edge must preserve historical scope");
+    assert.deepEqual(edge.verifiedFields, ["childJobName", "parentJobName", "childTier"], "direct edge supported fields must stay narrowly scoped");
+  } else if (edge.recordType === "group-parent-edge") {
+    groupedEdges += 1;
+    assert.equal(edge.individualChildParentPairingStatus, "unverified", "the grouped song/dance job pairs must not be inferred individually");
+    assert.deepEqual(edge.childJobNames, ["天籟頌者", "樂之舞靈"], "paired fourth-job names must match the official source");
+    assert.deepEqual(edge.parentJobNames, ["宮廷樂師", "浪姬舞者"], "paired parents must match the official source");
+  } else assert.fail("unknown hierarchy record type: " + edge.recordType);
+}
+assert.equal(directEdges, 11, "official page should produce 11 individually stated fourth-job parent edges");
+assert.equal(groupedEdges, 1, "song/dance relationship must remain one grouped record");
+const officialRoster = registry.officialJobRosterEvidence;
+assert.ok(officialRoster && officialRoster.status === "partial-official-subtree", "official job roster must be marked as a partial subtree");
+assert.equal(officialRoster.officialCountClaim, 13, "official page's 13 fourth-job claim must be preserved");
+assert.equal(new Set(officialRoster.childJobNames).size, 13, "fourth-job roster should contain thirteen distinct names");
+assert.equal(officialRoster.childJobNames.length, 13, "fourth-job roster should list thirteen class names");
+assert.equal(officialRoster.fullJobTreeComplete, false, "a fourth-job subset must never be described as the complete job tree");
+assert.equal(registry.jobHierarchyAudit.fullJobTreeComplete, false, "job hierarchy audit must remain explicitly incomplete");
+assert.equal(registry.jobHierarchyAudit.runtimeDataChanged, false, "hierarchy research must not change runtime game data");
+assert.equal(jobDataset.records.filter((record) => record.status === "verified").length, 0, "the 13 prototype job records remain unverified");
+assert.ok(jobDataset.records.every((record) => Object.values(record.fieldStatus).every((status) => status === "unverified")), "all prototype job fields remain unverified");
 
 const hasHtmlLock = html.includes('<main id="roPrototype" class="layout" hidden aria-hidden="true">');
 const hasCssLock = css.includes("#roPrototype { display: none !important; }");
