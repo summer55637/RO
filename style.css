@@ -45,6 +45,16 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .map-tab { border: 1px solid #334753; border-radius: 8px; background: #1b2932; color: #a8bac4; padding: 8px 12px; font-size: 11px; font-weight: 700; }
 .map-tab:hover { border-color: #719b87; color: #e4f2ea; }
 .map-tab.active { background: #315343; border-color: #719f80; color: #eaffef; box-shadow: inset 0 0 0 1px #7cac8b27; }
+.hunt-guide { margin: 0 0 12px; padding: 12px 13px; border: 1px solid rgba(127,219,172,.24); border-radius: 10px; background: linear-gradient(130deg,rgba(48,83,63,.34),rgba(27,39,49,.94) 68%); }
+.hunt-guide-head { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
+.hunt-level-badge { padding: 4px 7px; border: 1px solid rgba(127,219,172,.26); border-radius: 999px; color: #b9e8c9; background: rgba(39,88,59,.23); font-size: 9px; white-space: nowrap; }
+.hunt-guide h3 { margin: 7px 0 5px; color: #e8f2e9; font-size: 13px; }
+.hunt-guide p { margin: 0; color: #9db2b5; font-size: 10px; line-height: 1.55; }
+.hunt-target-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 7px; margin-top: 8px; color: #91a7b1; font-size: 10px; }
+.hunt-target-row strong { color: #e3cf96; font-size: 10px; }
+.hunt-guide-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.hunt-guide-actions .mini-button { flex: 1 1 145px; min-height: 32px; }
+.hunt-guide .eyebrow { font-size: 9px; }
 .game-frame { overflow: hidden; position: relative; border: 1px solid rgba(193,221,219,.23); border-radius: 13px; background: #3c754c; box-shadow: 0 18px 42px rgba(0,0,0,.2),0 0 0 5px rgba(255,255,255,.015); }
 #game { display: block; width: 100%; height: auto; aspect-ratio: 8/5; image-rendering: pixelated; touch-action: manipulation; cursor: crosshair; }
 .canvas-hint { position: absolute; bottom: 11px; left: 12px; padding: 7px 10px; background: rgba(20,34,35,.86); color: #d4e6d9; border: 1px solid rgba(225,245,228,.17); border-radius: 7px; font-size: 10px; pointer-events: none; backdrop-filter: blur(4px); }
