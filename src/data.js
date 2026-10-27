@@ -117,4 +117,23 @@
       sounds: { attack: "assets/sounds/attack.ogg", skill: "assets/sounds/skill.ogg", levelup: "assets/sounds/level-up.ogg", drop: "assets/sounds/item-drop.ogg" }
     }
   };
+
+  // Mini RO combat balance: fewer hit points, gentler attacks, and clearer rewards.
+  // These are deliberate mini-game values, not official RO server formulas.
+  const MINI_RO_BALANCE = Object.freeze({
+    monsterHp: 0.75,
+    bossHp: 0.45,
+    monsterAttack: 0.75,
+    bossAttack: 0.7,
+    monsterDefense: 0.7,
+    monsterExp: 1.35
+  });
+  Object.values(window.RO_DATA.monsters).forEach((monster) => {
+    monster.hp = Math.max(12, Math.round(monster.hp * (monster.boss ? MINI_RO_BALANCE.bossHp : MINI_RO_BALANCE.monsterHp)));
+    monster.attack = Math.max(1, Math.round(monster.attack * (monster.boss ? MINI_RO_BALANCE.bossAttack : MINI_RO_BALANCE.monsterAttack)));
+    monster.defense = Math.max(0, Math.round(monster.defense * MINI_RO_BALANCE.monsterDefense));
+    monster.exp = Math.ceil(monster.exp * MINI_RO_BALANCE.monsterExp);
+  });
+  window.RO_DATA.items["red-potion"].healing = 45;
+  window.RO_DATA.items["red-potion"].description = "恢復 45 HP。";
 })();
