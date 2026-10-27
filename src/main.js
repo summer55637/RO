@@ -153,8 +153,6 @@
     const earnedExp = kills * 12;
     const earnedGold = kills * 5;
     const earnedPotions = Math.floor(kills * 0.18);
-    const startingLevel = state.player.level;
-
     state.idleKills += kills;
     state.idleTotalExp += earnedExp;
     state.idleTotalGold += earnedGold;
@@ -179,9 +177,6 @@
       ? Math.floor(seconds / 3600) + " 小時"
       : Math.max(1, Math.floor(seconds / 60)) + " 分鐘";
     logMessage("放置結算：" + duration + "，擊倒 " + kills + " 隻波利，獲得 " + earnedExp + " EXP、" + earnedGold + " Zeny。");
-    if (state.player.level > startingLevel) {
-      logMessage("離線期間升級至 Lv. " + state.player.level + "！");
-    }
     if (earnedPotions > 0) logMessage("放置掉落紅色藥水 ×" + earnedPotions + "。", "muted");
     updateUI();
     return true;
@@ -241,11 +236,12 @@
   function killMonster(monster) {
     monster.hp = 0;
     monster.respawnAt = Date.now() + 8000;
-    state.player.gold += Math.round(rand(3, 8));
+    const earnedGold = Math.round(rand(3, 8));
+    state.player.gold += earnedGold;
     if (state.idleEnabled) {
       state.idleKills += 1;
       state.idleTotalExp += monster.exp;
-      state.idleTotalGold += 5;
+      state.idleTotalGold += earnedGold;
     }
     gainExp(monster.exp);
     logMessage("波利被打倒了！獲得 Zeny。");
