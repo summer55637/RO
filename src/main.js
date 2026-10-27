@@ -147,6 +147,13 @@
       result.spBonus += extra.spBonus || 0;
       Object.keys(extra.stats || {}).forEach((key) => { result.stats[key] = (result.stats[key] || 0) + extra.stats[key]; });
     }
+    const petExtra = window.RO_PETS && typeof window.RO_PETS.bonuses === "function" ? window.RO_PETS.bonuses() : null;
+    if (petExtra) {
+      result.attack += petExtra.attack || 0;
+      result.hpBonus += petExtra.hpBonus || 0;
+      result.spBonus += petExtra.spBonus || 0;
+      Object.keys(petExtra.stats || {}).forEach((key) => { result.stats[key] = (result.stats[key] || 0) + petExtra.stats[key]; });
+    }
     return result;
   }
 
@@ -1127,6 +1134,7 @@
     }
     state.player.hp = Math.max(0, state.player.hp - damage);
     state.player._hurtUntil = performance.now() + 280;
+    window.dispatchEvent(new CustomEvent("ro:player-hurt", { detail: { damage: damage, mapId: state.mapId } }));
     spawnEffect(state.player.x, state.player.y - 15, "text", "#ffaaa6", "-" + damage);
     logMessage(monster.name + "攻擊你，損失 " + damage + " HP。", "muted");
     if (state.player.hp <= 0) {
@@ -1145,6 +1153,7 @@
     if (!monster || monster.hp <= 0) return;
     monster.hp = Math.max(0, monster.hp - damage);
     monster._hurtUntil = performance.now() + 260;
+    window.dispatchEvent(new CustomEvent("ro:monster-hurt", { detail: { id: monster.id, type: monster.type, x: monster.x, y: monster.y, damage: damage } }));
     spawnEffect(monster.x, monster.y - (monster.boss ? 42 : 22), "text", "#fff0bd", String(damage));
     if (monster.hp > 0) {
       if (source && Math.random() < 0.28) logMessage(source + "造成 " + damage + " 傷害。", "muted");
@@ -1963,10 +1972,10 @@
   updateUI();
   window.RO_GAME_API = {
     getData: () => DATA,
-    getSnapshot: () => ({ mapId: state.mapId, mapName: currentMap().name, mapType: currentMap().type, idleEnabled: state.idleEnabled,
+    getSnapshot: () => ({ mapId: state.mapId, mapName: currentMap().name, mapType: currentMap().type, idleEnabled: state.idleEnabled, targetId: state.targetId,
       player: Object.assign({}, state.player, { stats: Object.assign({}, state.player.stats), maxHp: maxHp(), maxSp: maxSp() }),
       learnedSkills: state.learnedSkills.slice(), cooldowns: Object.assign({}, state.cooldowns),
-      monsters: state.monsters.map((m) => ({ id: m.id, type: m.type, name: m.name, hp: m.hp, maxHp: m.maxHp, level: m.level, boss: m.boss === true })) }),
+      monsters: state.monsters.map((m) => ({ id: m.id, type: m.type, name: m.name, x: m.x, y: m.y, hp: m.hp, maxHp: m.maxHp, level: m.level, boss: m.boss === true, color: m.color })) }),
     getPlayer: () => state.player,
     getEquipment: () => Object.assign({}, state.equipment),
     getInventory: () => state.inventory.map((item) => Object.assign({}, item)),
@@ -1978,6 +1987,18 @@
     log: (message, kind) => logMessage(String(message).slice(0, 240), kind),
     save: () => saveGame(false),
     addItem: (id, qty) => { if (DATA.items[id]) { addInventory(id, Math.max(1, Math.floor(qty || 1))); updateUI(); saveGame(false); return true; } return false; },
+    removeItem: (id, qty) => { const removed = removeInventory(id, Math.max(1, Math.floor(qty || 1))); if (removed) { updateUI(); saveGame(false); } return removed; },
+    petAttack: (monsterId, damage, petName) => {
+      const monster = state.monsters.find((entry) => entry.id === monsterId && entry.hp > 0);
+      if (!monster || currentMap().type === "town") return false;
+      const amount = Math.max(1, Math.floor(Number(damage) || 1));
+      spawnEffect(monster.x, monster.y - (monster.boss ? 34 : 16), "burst", "#a9e8ff", "夥伴連擊");
+      applyDamage(monster, amount, (petName || "寵物") + "攻擊");
+      window.dispatchEvent(new CustomEvent("ro:pet-attack", { detail: { monsterId: monsterId, x: monster.x, y: monster.y, damage: amount, petName: petName || "寵物" } }));
+      updateUI();
+      saveGame(false);
+      return true;
+    },
     reward: (reward) => {
       const r = reward || {};
       state.player.gold += Math.max(0, Math.floor(r.gold || 0));
