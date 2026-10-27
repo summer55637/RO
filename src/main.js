@@ -32,6 +32,14 @@
     damage: "單體攻擊", magic: "魔法攻擊", aoe: "範圍攻擊",
     heal: "治療", buff: "輔助", passive: "被動"
   }[kind] || "技能");
+  function huntDifficultyLabel(monster) {
+    if (monster.boss) return "Boss 挑戰 · 建議 Lv. " + Math.max(1, monster.level - 3) + "+";
+    if (monster.level <= 3) return "新手 · 建議 Lv. 1–4";
+    if (monster.level <= 7) return "初階 · 建議 Lv. 5–9";
+    if (monster.level <= 13) return "中階 · 建議 Lv. 10–14";
+    if (monster.level <= 20) return "進階 · 建議 Lv. 15–24";
+    return "高難度 · 建議 Lv. 20+";
+  }
 
   const defaultPlayer = () => ({
     x: 466, y: 345, hp: 100, maxHp: 100, sp: 100, maxSp: 100,
@@ -742,7 +750,7 @@
       const title = document.createElement("strong");
       title.textContent = monster.name + " · Lv. " + monster.level;
       const statLine = document.createElement("small");
-      statLine.textContent = "HP " + monster.hp + " · EXP " + monster.exp + " · ATK " + monster.attack;
+      statLine.textContent = huntDifficultyLabel(monster) + " · HP " + monster.hp + " · EXP " + monster.exp + " · ATK " + monster.attack;
       const drops = document.createElement("span");
       drops.className = "drop-lines";
       drops.textContent = "掉落：" + monster.drops.map((drop) => itemInfo(drop.id).name + " " + Math.round(drop.chance * 100) + "%").join("、");
@@ -2148,6 +2156,7 @@
     getMapId: () => state.mapId,
     getCurrentMap: () => currentMap(),
     switchMap: (id) => switchMap(id),
+    trackMonster: (type) => trackMonster(type),
     log: (message, kind) => logMessage(String(message).slice(0, 240), kind),
     save: () => saveGame(false),
     addItem: (id, qty) => { if (DATA.items[id]) { addInventory(id, Math.max(1, Math.floor(qty || 1))); updateUI(); saveGame(false); return true; } return false; },
