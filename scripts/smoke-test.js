@@ -72,7 +72,8 @@ for (const feature of ["character", "quests", "equipment", "hunt", "save", "mapQ
   assert.ok(ui.includes(feature), "integrated menu section missing: " + feature);
 }
 assert.ok(ui.includes('setAttribute("aria-label", "主要功能選單")'), "single-screen dock should expose an accessible navigation label");
-assert.ok(ui.includes('className = "game-dashboard"'), "compact always-visible game dashboard must exist");
+assert.ok(ui.includes('make("div", "game-dashboard")'), "compact always-visible game dashboard must exist");
+assert.ok(ui.includes("const panelNodes = new Map()"), "secondary panels must be preserved while moving to modals");
 assert.ok(ui.includes('className = "game-modal"'), "secondary panels should open in modal overlays");
 assert.ok(ui.includes('play.insertBefore(quickNav, oldMapTabs)'), "compact map selector must be inserted into the play column");
 assert.ok(!ui.includes('game-menu-views'), "old scrolling tab-page interface should be removed");

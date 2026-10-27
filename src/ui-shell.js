@@ -27,9 +27,16 @@
     shell.dataset.oneScreen = "true";
 
     // The core game stays visible. All long-form tools are moved into lightweight overlays.
-    const characterPanel = $(".character-panel", side);
-    const skillsPanel = $(".skills-panel", side);
-    const targetPanel = $(".target-panel", side);
+    const panelNodes = new Map();
+    actions.forEach((action) => {
+      action.panels.forEach((selector) => {
+        if (!panelNodes.has(selector)) panelNodes.set(selector, $(selector, side));
+      });
+    });
+
+    const characterPanel = panelNodes.get(".character-panel");
+    const skillsPanel = panelNodes.get(".skills-panel");
+    const targetPanel = panelNodes.get(".target-panel");
     if (!characterPanel || !skillsPanel || !targetPanel) return;
 
     const dashboard = make("div", "game-dashboard");
@@ -84,7 +91,7 @@
 
       const body = make("div", "game-modal-body");
       action.panels.forEach((selector) => {
-        const panel = $(selector, side);
+        const panel = panelNodes.get(selector);
         if (panel) body.appendChild(panel);
       });
       if (action.id === "quests" && !$("#roExpansionGuild", body)) {
