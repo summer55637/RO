@@ -883,6 +883,7 @@
     if (!length) return;
     dx /= length;
     dy /= length;
+    player._facing = dx < -0.08 ? -1 : dx > 0.08 ? 1 : (player._facing || 1);
     const speed = 178;
     const nx = clamp(player.x + dx * speed * dt, 22, WORLD_W - 22);
     const ny = clamp(player.y + dy * speed * dt, 26, WORLD_H - 26);
@@ -1133,6 +1134,8 @@
       logMessage(monster.name + "施放「" + (monster.specialAttack || "MVP 強擊") + "」！", "muted");
       spawnEffect(state.player.x, state.player.y, "burst", "#ff8b8b", "BOSS SKILL");
     }
+    monster._attackUntil = performance.now() + 260;
+    monster._facing = state.player.x < monster.x ? -1 : 1;
     state.player.hp = Math.max(0, state.player.hp - damage);
     state.player._hurtUntil = performance.now() + 280;
     window.dispatchEvent(new CustomEvent("ro:player-hurt", { detail: { damage: damage, mapId: state.mapId } }));
@@ -1217,7 +1220,9 @@
   function attackMonster(monster) {
     if (!monster || monster.hp <= 0 || state.attackCooldown > 0) return;
     state.attackCooldown = attackInterval();
-    state.player._attackUntil = performance.now() + 240;
+    state.player._facing = monster.x < state.player.x ? -1 : 1;
+    state.player._attackStart = performance.now();
+    state.player._attackUntil = state.player._attackStart + 260;
     spawnEffect(monster.x, monster.y - (monster.boss ? 34 : 14), "slash", "#ffe6a3", "");
     window.dispatchEvent(new CustomEvent("ro:attack", { detail: { target: monster.type } }));
     const accuracy = clamp(82 + totalStat("dex") * 1.4 + state.player.level - monster.level * 2.1 + (state.buffs.focus ? 10 : 0), 40, 99);
@@ -1313,7 +1318,7 @@
         const move = 35 * dt;
         const nx = clamp(monster.x + ((state.player.x - monster.x) / gap) * move, 22, WORLD_W - 22);
         const ny = clamp(monster.y + ((state.player.y - monster.y) / gap) * move, 26, WORLD_H - 26);
-        if (!circleHitsObstacle(nx, ny, 9)) { monster.x = nx; monster.y = ny; }
+        if (!circleHitsObstacle(nx, ny, 9)) { monster.x = nx; monster.y = ny; monster._walkFrame = (monster._walkFrame || 0) + dt * 11; monster._facing = state.player.x < monster.x ? -1 : 1; }
       }
       monster.cooldown = Math.max(0, monster.cooldown - dt);
       if (currentMap().type !== "town" && gap < 35 && monster.cooldown <= 0) {
@@ -1520,11 +1525,21 @@
   function drawMonster(monster) {
     const info = monsterInfo(monster.type);
     if (monster.hp <= 0) {
-      if (monster._deathAt && performance.now() - monster._deathAt < 520) {
-        const progress = (performance.now() - monster._deathAt) / 520;
+      if (monster._deathAt && performance.now() - monster._deathAt < 720) {
+        const progress = (performance.now() - monster._deathAt) / 720;
+        const color = info.color || "#e6b5cd";
         ctx.save(); ctx.globalAlpha = 1 - progress;
-        ctx.fillStyle = info.color || "#e6b5cd";
-        ctx.beginPath(); ctx.ellipse(monster.x, monster.y, 18 + progress * 27, 13 + progress * 22, 0, 0, Math.PI * 2); ctx.fill();
+        for (let piece = 0; piece < 10; piece++) {
+          const angle = piece * 2.399 + (monster.x % 17) * 0.05;
+          const distance = 5 + progress * (18 + (piece % 4) * 4);
+          const px = monster.x + Math.cos(angle) * distance;
+          const py = monster.y - progress * 12 + Math.sin(angle) * distance * 0.68 + progress * progress * 20;
+          ctx.save(); ctx.translate(px, py); ctx.rotate(angle + progress * 3);
+          ctx.fillStyle = piece % 3 === 0 ? "#fff0bd" : color;
+          const size = Math.max(1, 5 - progress * 4);
+          ctx.fillRect(-size / 2, -size / 2, size, size);
+          ctx.restore();
+        }
         ctx.restore();
       }
       return;
@@ -1533,8 +1548,11 @@
     const selected = state.targetId === monster.id;
     const boss = info.boss === true;
     const hurt = monster._hurtUntil && performance.now() < monster._hurtUntil;
-    const bounce = Math.sin(performance.now() / 190 + monster.x) * 2;
-    const y = monster.y + bounce;
+    const now = performance.now();
+    const walk = Math.sin((monster._walkFrame || 0) * 1.8) * 1.8;
+    const attackProgress = monster._attackUntil && now < monster._attackUntil ? (monster._attackUntil - now) / 260 : 0;
+    const bounce = Math.sin(now / 190 + monster.x) * 1.5;
+    const y = monster.y + bounce + walk * 0.7;
     ctx.fillStyle = "rgba(26,51,39,.28)";
     ctx.beginPath(); ctx.ellipse(monster.x, monster.y + 12, 19, 8, 0, 0, Math.PI * 2); ctx.fill();
     if (boss) {
@@ -1567,6 +1585,11 @@
         ctx.fillStyle = "#743a55"; ctx.fillRect(monster.x - 2, y + 7, 4, 2);
       }
     }
+    if (attackProgress > 0) {
+      ctx.save(); ctx.globalAlpha = Math.min(0.9, attackProgress + 0.15); ctx.strokeStyle = "#ffc7a3"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(monster.x + (monster._facing || 1) * 10, y + 3, 11 + (1 - attackProgress) * 7, -0.8, 1.05); ctx.stroke();
+      ctx.fillStyle = "#fff0c8"; ctx.fillRect(monster.x + (monster._facing || 1) * (boss ? 25 : 15), y + 7, 4, 4); ctx.restore();
+    }
     if (hurt) {
       ctx.save(); ctx.globalAlpha = 0.42; ctx.fillStyle = "#ff646d";
       ctx.beginPath(); ctx.ellipse(monster.x, y, boss ? 33 : 20, boss ? 28 : 19, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
@@ -1583,41 +1606,139 @@
     const p = state.player;
     const sprite = state.images.player;
     const now = performance.now();
-    const moving = Boolean(state.moveTarget || state.targetId !== null);
+    const target = targetMonster();
+    const moving = Boolean(state.moveTarget || (target && distance(p, target) > 32));
     const attacking = p._attackUntil && now < p._attackUntil;
     const casting = p._castUntil && now < p._castUntil;
     const hurt = p._hurtUntil && now < p._hurtUntil;
-    const bob = moving ? Math.sin(state.walkFrame * 2) * 2 : 0;
+    const facing = p._facing || 1;
+    const phase = state.walkFrame * 2.4;
+    const step = moving ? Math.sin(phase) * 3 : 0;
+    const bob = moving ? Math.abs(Math.sin(phase)) * 1.8 : Math.sin(now / 480) * 0.5;
+    const family = currentJob().family;
+    const palette = {
+      novice: { shirt: "#31506b", trim: "#e0bd72", hair: "#76513d", pants: "#4e6674", accent: "#d7e5e8" },
+      swordsman: { shirt: "#315a82", trim: "#e3c47b", hair: "#70503a", pants: "#3d4d62", accent: "#eff0df" },
+      mage: { shirt: "#6656a4", trim: "#e0d1ff", hair: "#483450", pants: "#373854", accent: "#bbd9ff" },
+      archer: { shirt: "#3f805c", trim: "#a7d18a", hair: "#6c593b", pants: "#3c5b46", accent: "#e4e8b0" },
+      thief: { shirt: "#94713e", trim: "#e5bf76", hair: "#443b36", pants: "#514b44", accent: "#fff0c2" },
+      acolyte: { shirt: "#6b9caa", trim: "#f1e6c5", hair: "#856443", pants: "#4a7184", accent: "#fff5de" },
+      merchant: { shirt: "#b77b4b", trim: "#f2d08a", hair: "#60412c", pants: "#6b5443", accent: "#f5e0a7" }
+    };
+    const colors = palette[family] || palette.novice;
     if (casting) {
       ctx.strokeStyle = "rgba(145,218,255,.8)"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.ellipse(p.x, p.y + 2, 24 + Math.sin(now / 55) * 3, 31, 0, 0, Math.PI * 2); ctx.stroke();
     }
-    if (attacking) {
-      ctx.strokeStyle = "rgba(255,238,180,.95)"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(p.x + 14, p.y - 2, 24, -1.05, 1.05); ctx.stroke();
-    }
-    if (hurt) {
-      ctx.fillStyle = "rgba(255,75,85,.42)";
-      ctx.beginPath(); ctx.ellipse(p.x, p.y, 20, 27, 0, 0, Math.PI * 2); ctx.fill();
-    }
     ctx.fillStyle = "rgba(26,49,37,.3)";
     ctx.beginPath(); ctx.ellipse(p.x, p.y + 12, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(p.x, p.y + bob);
+    ctx.scale(facing, 1);
     if (sprite) {
-      ctx.drawImage(sprite, p.x - 22, p.y - 30 + bob, 44, 52);
-      return;
+      ctx.drawImage(sprite, -22, -30, 44, 52);
+    } else {
+      // Original job-tinted pixel adventurer with a stepped walk cycle.
+      ctx.fillStyle = "#27333d";
+      ctx.fillRect(-8, 10 + Math.max(0, step), 6, 11);
+      ctx.fillRect(3, 10 + Math.max(0, -step), 6, 11);
+      ctx.fillStyle = "#4c4140";
+      ctx.fillRect(-9, 19 + Math.max(0, step), 8, 4);
+      ctx.fillRect(2, 19 + Math.max(0, -step), 8, 4);
+      ctx.fillStyle = colors.shirt;
+      ctx.fillRect(-10, -3, 20, 17);
+      ctx.fillStyle = colors.trim;
+      ctx.fillRect(-11, -5, 22, 4);
+      ctx.fillRect(-2, -2, 4, 13);
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect(-8, 1, 3, 9);
+      if (family === "mage") {
+        ctx.fillStyle = "#4c3b80"; ctx.fillRect(-12, -2, 24, 16);
+        ctx.fillStyle = colors.trim; ctx.fillRect(-12, 11, 24, 3);
+        ctx.fillStyle = "#a99bd8"; ctx.fillRect(-10, -5, 20, 3);
+      } else if (family === "archer") {
+        ctx.fillStyle = "#2c674b"; ctx.fillRect(-11, 0, 22, 12);
+        ctx.fillStyle = "#d7d49b"; ctx.fillRect(-11, 3, 22, 2);
+        ctx.fillStyle = "#b18b56"; ctx.fillRect(5, -4, 6, 9);
+      } else if (family === "thief") {
+        ctx.fillStyle = "#9a783f"; ctx.fillRect(-12, -4, 24, 4);
+        ctx.fillStyle = "#ddc47a"; ctx.fillRect(-4, 0, 8, 14);
+        ctx.fillStyle = "#b95e48"; ctx.fillRect(-11, 4, 22, 3);
+      } else if (family === "acolyte") {
+        ctx.fillStyle = "#d9e7df"; ctx.fillRect(-10, 0, 20, 13);
+        ctx.fillStyle = "#d2b46e"; ctx.fillRect(-2, 1, 4, 8);
+        ctx.fillRect(-5, 4, 10, 3);
+      } else if (family === "merchant") {
+        ctx.fillStyle = "#744b34"; ctx.fillRect(-12, -1, 24, 15);
+        ctx.fillStyle = colors.trim; ctx.fillRect(-11, 3, 22, 3);
+        ctx.fillStyle = "#68442f"; ctx.fillRect(-14, 5, 5, 7);
+      }
+      ctx.fillStyle = "#dba879";
+      ctx.fillRect(-8, -17, 16, 14);
+      ctx.fillStyle = colors.hair;
+      ctx.fillRect(-9, -21, 18, 8);
+      ctx.fillRect(-11, -17, 4, 8);
+      ctx.fillRect(-5, -23, 10, 4);
+      if (family === "mage") {
+        ctx.fillStyle = "#6656a4"; ctx.fillRect(-10, -25, 20, 4); ctx.fillRect(-6, -32, 12, 8);
+        ctx.fillStyle = "#e7d39b"; ctx.fillRect(-2, -29, 4, 3);
+      } else if (family === "archer") {
+        ctx.fillStyle = "#477c56"; ctx.fillRect(-10, -23, 20, 5); ctx.fillRect(-7, -27, 14, 4);
+      } else if (family === "merchant") {
+        ctx.fillStyle = "#bb8756"; ctx.fillRect(-11, -24, 22, 5); ctx.fillRect(-7, -28, 14, 4);
+        ctx.fillStyle = "#efd49b"; ctx.fillRect(-2, -24, 4, 3);
+      } else if (family === "acolyte") {
+        ctx.fillStyle = "#eee5d2"; ctx.fillRect(-10, -23, 20, 4);
+        ctx.fillStyle = "#c6a86c"; ctx.fillRect(-2, -22, 4, 3);
+      }
+      ctx.fillStyle = "#473d3c"; ctx.fillRect(3, -12, 2, 2);
+      ctx.fillStyle = "#fff1cf"; ctx.fillRect(-7, -7, 3, 2);
+      const armProgress = attacking ? clamp((now - (p._attackStart || (p._attackUntil - 260))) / 260, 0, 1) : 0;
+      const armLift = attacking ? -Math.sin(armProgress * Math.PI) * 5 : (moving ? step * 0.6 : 0);
+      ctx.fillStyle = colors.shirt; ctx.fillRect(8, -1 + armLift, 5, 10);
+      ctx.fillStyle = "#dba879"; ctx.fillRect(9, 7 + armLift, 4, 3);
     }
-    const family = currentJob().family;
-    const shirt = family === "mage" ? "#7866b3" : family === "archer" ? "#4e9364" : family === "thief" ? "#a17d45" : family === "acolyte" ? "#78a9ba" : family === "merchant" ? "#bd7f52" : "#31506b";
-    ctx.fillStyle = shirt; ctx.fillRect(p.x - 10, p.y - 1 + bob, 20, 18);
-    ctx.fillStyle = "#e0bd72"; ctx.fillRect(p.x - 11, p.y - 4 + bob, 22, 5);
-    ctx.fillStyle = "#5a7e91"; ctx.fillRect(p.x - 7, p.y + 10 + bob, 5, 9); ctx.fillRect(p.x + 3, p.y + 10 + bob, 5, 9);
-    ctx.fillStyle = "#dba879"; ctx.fillRect(p.x - 8, p.y - 16 + bob, 16, 15);
-    ctx.fillStyle = "#76513d"; ctx.fillRect(p.x - 9, p.y - 20 + bob, 18, 8); ctx.fillRect(p.x - 11, p.y - 15 + bob, 4, 9);
-    ctx.fillStyle = "#473d3c"; ctx.fillRect(p.x - 5, p.y - 10 + bob, 2, 2); ctx.fillRect(p.x + 4, p.y - 10 + bob, 2, 2);
-    ctx.fillStyle = "#d6e7e7"; ctx.fillRect(p.x + 11, p.y - 10 + bob, 3, 19);
-    ctx.fillStyle = "#fff1c7"; ctx.fillRect(p.x + 10, p.y - 15 + bob, 5, 6);
-    ctx.fillStyle = "#d9d5bc"; ctx.fillRect(p.x + 7, p.y + 8 + bob, 8, 3);
-    ctx.fillStyle = "rgba(255,240,182,.9)"; ctx.fillRect(p.x - 12, p.y + 24, 24, 3);
+
+    const swingProgress = attacking ? clamp((now - (p._attackStart || (p._attackUntil - 260))) / 260, 0, 1) : 0;
+    const swingAngle = attacking ? -1.6 + swingProgress * 2.95 : -0.45;
+    ctx.save();
+    ctx.translate(11, -5 + (attacking ? -Math.sin(swingProgress * Math.PI) * 5 : 0));
+    ctx.rotate(swingAngle);
+    if (family === "archer") {
+      ctx.strokeStyle = "#d6b17a"; ctx.lineWidth = 2.6;
+      ctx.beginPath(); ctx.arc(0, 3, 11, -1.15, 1.15); ctx.stroke();
+      ctx.strokeStyle = "#f4e6bb"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(0, 14); ctx.stroke();
+    } else if (family === "mage") {
+      ctx.fillStyle = "#8f714e"; ctx.fillRect(-1, -2, 3, 21);
+      ctx.fillStyle = "#a7dfff"; ctx.fillRect(-3, -6, 7, 6);
+      ctx.fillStyle = "#fff4c9"; ctx.fillRect(-1, -5, 3, 3);
+    } else {
+      ctx.fillStyle = "#d2d8db"; ctx.fillRect(-2, -3, 5, 17);
+      ctx.fillStyle = "#f9f2d7"; ctx.fillRect(-3, -8, 7, 7);
+      ctx.fillStyle = family === "merchant" ? "#b77b4b" : "#e1c67c";
+      ctx.fillRect(-3, 6, 7, 3);
+      ctx.fillStyle = "#73523c"; ctx.fillRect(-1, 12, 3, 7);
+      if (family === "thief") { ctx.fillStyle = "#e1e3d3"; ctx.fillRect(0, -1, 2, 11); }
+    }
+    ctx.restore();
+    if (attacking) {
+      const arc = Math.sin(swingProgress * Math.PI);
+      ctx.strokeStyle = "rgba(255,238,180," + (0.18 + arc * 0.8) + ")";
+      ctx.lineWidth = 2 + arc * 2;
+      ctx.beginPath(); ctx.arc(13, -2, 14 + arc * 8, -1.25, 0.85); ctx.stroke();
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = i === 1 ? "#fff8d6" : "#f5d98b";
+        ctx.fillRect(12 + arc * 18 + i * 3, -4 + i * 5, 3, 3);
+      }
+    }
+    if (hurt) {
+      ctx.globalAlpha = 0.68;
+      ctx.fillStyle = "#ff5868";
+      ctx.fillRect(-12, -23, 24, 37);
+    }
+    ctx.restore();
   }
 
   function drawPortals() {
