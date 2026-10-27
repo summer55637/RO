@@ -3,12 +3,12 @@
 
   const actions = [
     { id: "character", label: "角色", icon: "♙", title: "角色與能力值", description: "直接轉職、調整能力值，全部免費重置", panels: [".job-panel", ".stats-panel"] },
-    { id: "equipment", label: "裝備", icon: "⚒", title: "裝備與背包", description: "打怪掉落裝備，慢慢提升能力", panels: [".equipment-panel"] },
+    { id: "equipment", label: "裝備", icon: "⚒", title: "裝備、背包與商店", description: "看懂能力差異；買裝備會直接穿上，舊裝備會收回背包", panels: [".equipment-panel", "#shopPanel"] },
     { id: "save", label: "存檔", icon: "▤", title: "進度管理", description: "本機儲存、匯入與匯出", panels: [".save-panel"] }
   ];
 
   // Keep optional systems out of the main path so first-time players see only core controls.
-  const quarantinedPanels = [".idle-panel", ".map-book-panel", "#shopPanel", ".pet-panel", "#roExpansionGuild", "#roExpansionGear", "#roExpansionHunt"];
+  const quarantinedPanels = [".idle-panel", ".map-book-panel", ".pet-panel", "#roExpansionGuild", "#roExpansionGear", "#roExpansionHunt"];
 
   const $ = (selector, root) => (root || document).querySelector(selector);
   function make(tag, className, text) {
@@ -108,7 +108,10 @@
       const body = make("div", "game-modal-body");
       action.panels.forEach((selector) => {
         const panel = panelNodes.get(selector);
-        if (panel) body.appendChild(panel);
+        if (panel) {
+          if (selector === "#shopPanel") panel.hidden = false;
+          body.appendChild(panel);
+        }
       });
 
       dialog.append(header, body);
