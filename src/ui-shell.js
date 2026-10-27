@@ -192,6 +192,43 @@
       syncMap();
     }
 
+    // Recommend one simple map and a small target list based on the player's Base Level.
+    const huntGuide = $("#huntGuide");
+    const huntData = api.getData();
+    const huntMapButton = $("#huntMapButton");
+    const huntMonsterButton = $("#huntMonsterButton");
+    let activeHuntRecommendation = null;
+    function renderHuntGuide() {
+      if (!huntGuide || !huntData.huntRecommendations) return;
+      const snapshot = api.getSnapshot();
+      const level = Math.max(1, Number(snapshot && snapshot.player && snapshot.player.level) || 1);
+      const recommendations = huntData.huntRecommendations;
+      activeHuntRecommendation = recommendations.find((entry) => level >= entry.minLevel && level <= entry.maxLevel)
+        || recommendations[recommendations.length - 1];
+      if (!activeHuntRecommendation) return;
+      const map = huntData.maps[activeHuntRecommendation.mapId];
+      const targetNames = activeHuntRecommendation.monsterIds
+        .map((id) => huntData.monsters[id])
+        .filter(Boolean);
+      $("#huntLevelBadge").textContent = "你的等級 Lv. " + level + " · 推薦 Lv. " + activeHuntRecommendation.minLevel + "–" + activeHuntRecommendation.maxLevel;
+      $("#huntTitle").textContent = activeHuntRecommendation.title;
+      $("#huntSummary").textContent = "推薦地圖：" + (map ? map.name : activeHuntRecommendation.mapId) + "。 " + activeHuntRecommendation.tip;
+      $("#huntMonsterNames").textContent = targetNames.map((monster) => monster.name + " Lv." + monster.level).join("、");
+      if (huntMapButton) huntMapButton.textContent = "前往「" + (map ? map.shortName || map.name : "推薦地圖") + "」";
+      if (huntMonsterButton) huntMonsterButton.textContent = targetNames.length ? "追蹤：" + targetNames[0].name : "追蹤推薦怪物";
+    }
+    if (huntMapButton) huntMapButton.addEventListener("click", () => {
+      if (activeHuntRecommendation) api.switchMap(activeHuntRecommendation.mapId);
+    });
+    if (huntMonsterButton) huntMonsterButton.addEventListener("click", () => {
+      if (activeHuntRecommendation && activeHuntRecommendation.monsterIds.length) {
+        api.trackMonster(activeHuntRecommendation.monsterIds[0]);
+      }
+    });
+    window.addEventListener("ro:level-up", renderHuntGuide);
+    window.addEventListener("ro:map-change", renderHuntGuide);
+    renderHuntGuide();
+
     // The minimap is useful for exploration, but not required for the one-screen control layout.
     const mapInfo = $(".map-info-row", play);
     if (mapInfo) mapInfo.classList.add("compact-hidden-map-info");
