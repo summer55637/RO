@@ -71,17 +71,22 @@ const ui = read("src/ui-shell.js");
 for (const feature of ["character", "quests", "equipment", "hunt", "save", "mapQuickSelect", "roExpansionGuild", "roExpansionGear", "roExpansionHunt"]) {
   assert.ok(ui.includes(feature), "integrated menu section missing: " + feature);
 }
-assert.ok(ui.includes('setAttribute("role", "tablist")'), "integrated menu should expose accessible tabs");
-assert.ok(ui.includes('document.querySelector(".play-column")?.insertBefore(quickNav, oldMapTabs)'), "compact map selector must be inserted into the play column");
-assert.ok(!ui.includes('side.querySelector(".play-column")'), "play column is a sibling of the menu side bar");
+assert.ok(ui.includes('setAttribute("aria-label", "主要功能選單")'), "single-screen dock should expose an accessible navigation label");
+assert.ok(ui.includes('className = "game-dashboard"'), "compact always-visible game dashboard must exist");
+assert.ok(ui.includes('className = "game-modal"'), "secondary panels should open in modal overlays");
+assert.ok(ui.includes('play.insertBefore(quickNav, oldMapTabs)'), "compact map selector must be inserted into the play column");
+assert.ok(!ui.includes('game-menu-views'), "old scrolling tab-page interface should be removed");
 const css = read("style.css");
-assert.ok(css.includes(".game-menu-tabs"), "integrated menu styling must exist");
+assert.ok(css.includes(".game-dock"), "one-screen bottom dock styling must exist");
+assert.ok(css.includes(".game-modal"), "secondary feature modal styling must exist");
+assert.ok(css.includes("overflow: hidden"), "page-level scrolling should be disabled for the game shell");
+assert.ok(css.includes("100dvh"), "layout should fit the dynamic viewport height");
 assert.ok(css.includes(".map-quicknav"), "compact map selector styling must exist");
 assert.ok(css.includes("@media (max-width: 620px)"), "responsive layout rules must exist");
 assert.ok(css.includes(".expansion-gear-row"), "expansion mobile styles must be present");
 const sw = read("sw.js");
 assert.ok(sw.includes('"./src/expansion.js"'), "offline cache shell must include expansion module");
 assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
-assert.ok(sw.includes("ro-offline-adventure-v6"), "service worker cache version should be bumped");
+assert.ok(sw.includes("ro-offline-adventure-v7"), "service worker cache version should be bumped");
 
 console.log("Smoke tests passed: job/skill/item references, combat stats, drops, all map and portal references, MVP tags, required gameplay pathways, script order, and mobile/offline assets.");
