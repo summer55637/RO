@@ -124,6 +124,7 @@
       dockButtons.get(id).classList.add("active");
       dockButtons.get(id).setAttribute("aria-expanded", "true");
       document.body.classList.add("modal-open");
+      if (id === "pets" && window.RO_PETS && typeof window.RO_PETS.refresh === "function") window.RO_PETS.refresh();
       record.close.focus({ preventScroll: true });
     }
     function closeModal(id, restoreFocus) {
