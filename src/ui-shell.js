@@ -3,7 +3,7 @@
 
   const actions = [
     { id: "character", label: "角色", icon: "♙", title: "角色與能力值", description: "直接轉職、調整能力值，全部免費重置", panels: [".job-panel", ".stats-panel"] },
-    { id: "equipment", label: "裝備", icon: "⚒", title: "裝備、背包與商店", description: "看懂能力差異；買裝備會直接穿上，舊裝備會收回背包", panels: [".equipment-panel", "#shopPanel"] },
+    { id: "equipment", label: "裝備", icon: "⚒", title: "裝備、背包與商店", description: "商店購買先放進背包；穿戴由你決定", panels: [".equipment-panel", "#shopPanel"] },
     { id: "save", label: "存檔", icon: "▤", title: "進度管理", description: "本機儲存、匯入與匯出", panels: [".save-panel"] }
   ];
 
