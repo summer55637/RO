@@ -798,7 +798,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "mini-button primary";
-      button.textContent = item.slot ? "購買並裝備" : "購買";
+      button.textContent = "購買";
       button.disabled = !affordable;
       if (!affordable) button.title = "還差 " + fmt(price - state.player.gold) + " Zeny";
       button.addEventListener("click", () => buyItem(id));
@@ -1052,7 +1052,7 @@
     saveGame(false);
   }
 
-  function equipItem(itemId, suppressMessage) {
+  function equipItem(itemId) {
     const item = itemInfo(itemId);
     if (!item.slot || !removeInventory(itemId, 1)) {
       logMessage("背包中沒有可裝備的物品。", "muted");
@@ -1065,7 +1065,7 @@
     state.equipment[item.slot] = itemId;
     state.player.hp = clamp(state.player.hp + (maxHp() - hpBefore), 1, maxHp());
     state.player.sp = clamp(state.player.sp + (maxSp() - spBefore), 0, maxSp());
-    if (!suppressMessage) logMessage("裝備了" + item.name + "。");
+    logMessage("裝備了" + item.name + "。");
     renderEquipment();
     renderInventory();
     renderStats();
@@ -1099,12 +1099,7 @@
     }
     state.player.gold -= price;
     addInventory(itemId, 1);
-    if (item.slot) {
-      equipItem(itemId, true);
-      logMessage("購買並裝備了" + item.name + "，花費 " + price + " Zeny。");
-    } else {
-      logMessage("購買了" + item.name + "，花費 " + price + " Zeny。");
-    }
+    logMessage("購買了" + item.name + "，花費 " + price + " Zeny。");
     renderInventory();
     renderShop();
     updateUI();
