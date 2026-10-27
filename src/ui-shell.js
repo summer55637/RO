@@ -164,10 +164,12 @@
       select.id = "mapQuickSelect";
       select.setAttribute("aria-label", "快速切換地圖");
       const allMaps = api.getData().maps;
+      const beginnerMapIds = new Set(["field", "forest"]);
       [
-        { title: "城鎮", test: (map) => map.type === "town" },
-        { title: "野外", test: (map) => map.type !== "town" && map.type !== "cave" },
-        { title: "地下城與 Boss", test: (map) => map.type === "cave" }
+        { title: "新手推薦", test: (map) => beginnerMapIds.has(map.id) },
+        { title: "其他野外", test: (map) => map.type !== "town" && map.type !== "cave" && !beginnerMapIds.has(map.id) },
+        { title: "城鎮（補給）", test: (map) => map.type === "town" },
+        { title: "地下城與 Boss（較難）", test: (map) => map.type === "cave" }
       ].forEach((group) => {
         const optionGroup = document.createElement("optgroup");
         optionGroup.label = group.title;
@@ -193,6 +195,32 @@
     // The minimap is useful for exploration, but not required for the one-screen control layout.
     const mapInfo = $(".map-info-row", play);
     if (mapInfo) mapInfo.classList.add("compact-hidden-map-info");
+
+    // Short, event-driven hints guide the first fight without opening a separate tutorial.
+    const guideText = $("#newPlayerGuideText");
+    if (guideText) {
+      const snapshot = api.getSnapshot();
+      let guidePhase = snapshot && snapshot.player && snapshot.player.level > 1 ? "returning" : "start";
+      if (guidePhase === "returning") {
+        guideText.textContent = "點怪物開始自動戰鬥；「角色」可配點，「技能」可學習或施放。";
+      }
+      window.addEventListener("ro:target-change", (event) => {
+        if ((guidePhase === "start" || guidePhase === "returning") && event.detail && event.detail.targetId) {
+          guidePhase = "combat";
+          guideText.textContent = "選到目標了！角色會自動走近並攻擊。";
+        }
+      });
+      window.addEventListener("ro:monster-killed", () => {
+        if (guidePhase === "start" || guidePhase === "combat") {
+          guidePhase = "first-kill";
+          guideText.textContent = "擊倒一隻了！繼續打怪賺 EXP，升級就能變強。";
+        }
+      });
+      window.addEventListener("ro:level-up", () => {
+        guidePhase = "level-up";
+        guideText.textContent = "升級了！點底部「角色」加點，或在技能欄學新技能。";
+      });
+    }
 
     // Existing game functions are unchanged; the viewport is now the layout boundary.
     window.RO_UI_SHELL = {
