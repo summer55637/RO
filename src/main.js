@@ -468,7 +468,7 @@
     transferButton.className = "primary-button full-button job-transfer-button";
     transferButton.id = "jobTransferButton";
     transferButton.textContent = "直接轉職";
-    transferButton.disabled = eligibleJobs.length === 0;
+    transferButton.disabled = true;
 
     select.addEventListener("change", () => {
       transferButton.disabled = !select.value;

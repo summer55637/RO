@@ -117,7 +117,6 @@ assert.ok(main.includes("if (select.value) changeJob(select.value)"), "direct-tr
 assert.ok(main.includes('job.tier === 1 && state.player.jobId === "novice" && state.player.level >= 5'), "first-job prototype gate must remain unchanged");
 assert.ok(main.includes('job.tier === 2 && state.player.jobId === job.parent && state.player.level >= 20 && state.player.jobLevel >= 10'), "second-job prototype gate must remain unchanged");
 assert.ok(html.includes("這是原型操作簡化，不代表正服可任意跳階"), "direct-transfer UI must not promise unsupported arbitrary job skipping");
-assert.ok(css.includes(".job-transfer-select"), "direct-transfer selector styling must exist");
 assert.ok(main.includes("for (let piece = 0; piece < 10; piece++)"), "monster death should dissolve into pixel fragments");
 
 const ui = read("src/ui-shell.js");
@@ -136,6 +135,7 @@ assert.ok(ui.includes('make("div", "game-modal")'), "secondary panels should ope
 assert.ok(ui.includes('play.insertBefore(quickNav, oldMapTabs)'), "compact map selector must be inserted into the play column");
 assert.ok(!ui.includes('game-menu-views'), "old scrolling tab-page interface should be removed");
 const css = read("style.css");
+assert.ok(css.includes(".job-transfer-select"), "direct-transfer selector styling must exist");
 assert.ok(css.includes(".game-dock"), "one-screen bottom dock styling must exist");
 assert.ok(css.includes(".game-modal"), "secondary feature modal styling must exist");
 assert.ok(css.includes("overflow: hidden"), "page-level scrolling should be disabled for the game shell");
