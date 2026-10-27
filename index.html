@@ -27,6 +27,13 @@
           <span class="location-pill"><span aria-hidden="true">☀</span><span id="mapSubtitle">狩獵區域</span></span>
         </div>
         <div class="map-tabs" id="mapTabs" aria-label="選擇地圖"></div>
+        <section class="hunt-guide" id="huntGuide" aria-label="目前等級的練等推薦" aria-live="polite">
+          <div class="hunt-guide-head"><span class="eyebrow">HUNTING GUIDE</span><span class="hunt-level-badge" id="huntLevelBadge">推薦等級 Lv. 1–4</span></div>
+          <h3 id="huntTitle">新手安全練等</h3>
+          <p id="huntSummary">先打波利、綠棉蟲，熟悉自動追擊；紅水不足就回城補給。</p>
+          <div class="hunt-target-row"><span>推薦目標</span><strong id="huntMonsterNames">波利、綠棉蟲</strong></div>
+          <div class="hunt-guide-actions"><button type="button" class="mini-button primary" id="huntMapButton">前往推薦地圖</button><button type="button" class="mini-button" id="huntMonsterButton">追蹤推薦怪物</button></div>
+        </section>
         <div class="game-frame">
           <canvas id="game" width="960" height="600" aria-label="點擊怪物開始自動戰鬥；點擊地面可以移動。"></canvas>
           <div class="canvas-hint" id="newPlayerGuide" aria-live="polite"><span class="guide-mark" aria-hidden="true">新手</span><span id="newPlayerGuideText">點一下波利，角色就會自動追擊攻擊。</span></div>
