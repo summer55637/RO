@@ -51,6 +51,15 @@ for (const [id, map] of Object.entries(data.maps)) {
 for (const id of ["geffen", "morroc", "payon", "izlude", "pyramid", "glast-heim", "mvp-lair"]) assert.ok(data.maps[id], "missing expansion location: " + id);
 for (const id of ["osiris", "moonlight-flower", "baphomet"]) assert.equal(data.monsters[id].boss, true, "MVP must be tagged: " + id);
 
+const registry = JSON.parse(read("data/official-content-registry.json"));
+const jobRegistry = registry.datasets.find((dataset) => dataset.id === "jobs");
+assert.ok(jobRegistry, "job registry section must exist");
+assert.equal(jobRegistry.records.length, data.jobs.length, "every prototype job needs a registry entry");
+assert.ok(jobRegistry.records.every((record) => record.status === "unverified"), "job records must remain unverified until direct official evidence exists");
+assert.ok(jobRegistry.records.every((record) => Object.values(record.fieldStatus || {}).every((status) => status === "unverified")), "job hierarchy/level/transfer fields must remain unverified");
+assert.ok(registry.jobSystemRules.some((rule) => rule.id === "level-expansion-lv275" && rule.appliesToRuntime === false), "Lv275 official announcement must not be guessed into runtime data");
+assert.ok(registry.jobSystemRules.some((rule) => rule.status === "historical-rule-requires-current-revalidation"), "historical transfer conditions must not automatically become current runtime rules");
+
 const html = read("index.html");
 const scriptPaths = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((m) => m[1].replace(/^\.\//, ""));
 assert.ok(scriptPaths.includes("src/main.js"), "main runtime script must be included");

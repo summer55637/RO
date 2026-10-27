@@ -34,7 +34,7 @@ for (const source of registry.sources) {
 }
 
 const expectedRecords = {
-  jobs: data.jobs.map((record) => ({ id: record.id, name: record.name })),
+  jobs: data.jobs.map((record) => ({ id: record.id, name: record.name, tier: record.tier, parent: record.parent, family: record.family })),
   skills: Object.entries(data.skills).map(([id, record]) => ({ id, name: record.name })),
   items: Object.entries(data.items).map(([id, record]) => ({ id, name: record.name })),
   monsters: Object.entries(data.monsters).map(([id, record]) => ({ id, name: record.name })),
@@ -57,6 +57,29 @@ for (const dataset of registry.datasets) {
     assert.equal(record.name, current.name, "display name changed without refreshing registry: " + dataset.id + "/" + record.id);
     assert.ok(["unverified", "verified"].includes(record.status), "invalid evidence status: " + dataset.id + "/" + record.id);
     assert.ok(Array.isArray(record.sourceEvidence), "sourceEvidence must be an array");
+    if (dataset.id === "jobs") {
+      const expectedPrototypeFields = { tier: current.tier, parent: current.parent, family: current.family };
+      assert.equal(JSON.stringify(record.prototypeFields), JSON.stringify(expectedPrototypeFields), "job prototype snapshot mismatch: " + record.id);
+      const requiredFields = ["name", "tier", "parent", "family", "baseLevelCap", "jobLevelCap", "transferRequirements"];
+      assert.ok(record.fieldStatus && record.fieldEvidence, "job records require field-level verification state: " + record.id);
+      for (const field of requiredFields) {
+        assert.ok(["unverified", "verified"].includes(record.fieldStatus[field]), "invalid job field status: " + record.id + "/" + field);
+        assert.ok(Array.isArray(record.fieldEvidence[field]), "job field evidence must be an array: " + record.id + "/" + field);
+        if (record.fieldStatus[field] === "verified") {
+          assert.ok(record.fieldEvidence[field].length > 0, "verified job field requires direct evidence: " + record.id + "/" + field);
+          for (const evidence of record.fieldEvidence[field]) {
+            const source = sourceMap.get(evidence.sourceId);
+            assert.ok(source && source.official && source.recordLevelEvidenceAllowed, "job field can only be verified by a direct official source: " + record.id + "/" + field);
+            assert.ok(evidence.fields && evidence.fields.includes(field), "job field evidence must name the field: " + record.id + "/" + field);
+            assert.ok(evidence.evidenceExcerpt && evidence.evidenceExcerpt.trim().length >= 12, "job field evidence excerpt required: " + record.id + "/" + field);
+            assert.ok(evidence.verifiedBy && evidence.verifiedOn, "job field verification reviewer/date required: " + record.id + "/" + field);
+          }
+        }
+      }
+      if (record.status === "verified") {
+        assert.ok(requiredFields.every((field) => record.fieldStatus[field] === "verified"), "job record cannot be verified with unresolved fields: " + record.id);
+      }
+    }
     if (record.status === "unverified") {
       unverifiedTotal += 1;
       for (const evidence of record.sourceEvidence) assert.ok(sourceMap.has(evidence.sourceId), "unknown partial-evidence source: " + evidence.sourceId);
@@ -79,6 +102,31 @@ for (const dataset of registry.datasets) {
   recordTotal += dataset.recordCount;
 }
 
+const jobRules = registry.jobSystemRules;
+assert.ok(Array.isArray(jobRules) && jobRules.length >= 6, "official job-system rule ledger is required");
+const jobRuleIds = new Set();
+for (const rule of jobRules) {
+  assert.ok(rule.id && !jobRuleIds.has(rule.id), "job rule IDs must be unique");
+  jobRuleIds.add(rule.id);
+  assert.ok(rule.claim && rule.evidenceExcerpt && rule.evidenceExcerpt.trim().length >= 12, "each job rule requires direct official excerpt");
+  assert.ok(Array.isArray(rule.sourceIds) && rule.sourceIds.length > 0, "each job rule requires source IDs");
+  assert.equal(rule.appliesToRuntime, false, "unrevalidated job-system facts must not drive runtime: " + rule.id);
+  assert.ok(["official-announcement-confirmed-scope-unclear", "historical-rule-requires-current-revalidation", "official-evidence-of-prototype-coverage-gap"].includes(rule.status), "job rule must use an explicit cautious status: " + rule.id);
+  for (const sourceId of rule.sourceIds) {
+    const source = sourceMap.get(sourceId);
+    assert.ok(source && source.official, "job rule must reference a registered official source: " + rule.id + "/" + sourceId);
+  }
+}
+const jobDataset = registry.datasets.find((dataset) => dataset.id === "jobs");
+assert.equal(jobDataset.records.length, data.jobs.length, "job registry must enumerate every prototype job");
+assert.equal(jobDataset.coverageStatus, "incomplete", "job coverage must remain explicitly incomplete");
+assert.equal(registry.jobDatasetAudit.status, "incomplete-and-unverified", "job audit must not overstate completeness");
+assert.ok(jobDataset.records.every((record) => record.status === "unverified"), "no prototype job can be verified without per-record evidence");
+assert.equal(jobDataset.records.filter((record) => record.status === "verified").length, 0, "this round found no per-job verification set");
+assert.ok(jobRules.some((rule) => rule.id === "level-expansion-lv275" && rule.appliesToRuntime === false), "Lv275 announcement must not be guessed into Base/Job fields");
+assert.ok(jobRules.some((rule) => rule.id === "historical-fourth-job-requires-reborn-third"), "historical fourth-job rule must be preserved as historical");
+assert.ok(jobRules.some((rule) => rule.id === "fourth-and-expanded-job-families-confirmed"), "fourth/expanded-job coverage gap must be recorded");
+
 const hasHtmlLock = html.includes('<main id="roPrototype" class="layout" hidden aria-hidden="true">');
 const hasCssLock = css.includes("#roPrototype { display: none !important; }");
 assert.ok(hasHtmlLock && hasCssLock, "unverified playable prototype must remain hidden");
@@ -89,4 +137,4 @@ assert.ok(main.includes("offline hunting is not enabled until verified"), "simul
 assert.ok(fs.existsSync("RO_OFFICIAL_CONTENT_POLICY.md"), "strict official content policy is required");
 if (unverifiedTotal > 0) assert.ok(hasHtmlLock && hasCssLock, "any unverified core record requires the prototype lock");
 
-console.log("Official content audit passed: baseline " + registry.target.baselineDate + "; " + recordTotal + " core data records inventoried; " + verifiedTotal + " record-level verified; " + unverifiedTotal + " still unverified. Playable prototype remains locked. This audit validates provenance structure and gating, not completeness or the truth of unreviewed game data.");
+console.log("Official content audit passed: baseline " + registry.target.baselineDate + "; " + recordTotal + " core data records inventoried; " + verifiedTotal + " record-level verified; " + unverifiedTotal + " still unverified; " + jobDataset.records.length + " prototype job records remain unverified. Playable prototype remains locked. This audit validates provenance structure and gating, not completeness or the truth of unreviewed game data.");

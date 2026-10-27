@@ -116,20 +116,21 @@
     },
     {
       "id": "official-level-275-update-2026-02-03",
-      "title": "2026/02/03 維護公告（等級擴充與新地圖）",
+      "title": "2026/02/03 維護公告：全職業等級擴充 Lv275",
       "url": "https://ro.gnjoy.com.tw/notice/Notice_View?id=218151",
       "publisher": "台灣 RO 官方網站",
       "official": true,
-      "publishedDate": "2026-02-03",
+      "publishedDate": "2026-02-02",
       "checkedOn": "2026-10-27",
-      "scope": "specific-patch-facts-only",
+      "scope": "official-announcement-exact-wording; does-not-separate-base-vs-job-level",
       "recordLevelEvidenceAllowed": false,
       "supportedClaims": [
         "公告記載全職業等級擴充 Lv.275、新增兩張 Lv.260 地圖、增加 15 個職業技能及部分技能特效調整"
       ],
       "notSupported": [
         "不是完整職業、技能、地圖或魔物資料表，不能推算未列資料"
-      ]
+      ],
+      "effectiveDate": "2026-02-03"
     },
     {
       "id": "official-refine-guide-2024-03-06",
@@ -146,6 +147,50 @@
       ],
       "notSupported": [
         "本專案的簡化精煉數值與規則未因此得到驗證"
+      ]
+    },
+    {
+      "id": "official-job-transfer-rules-2022-03-22",
+      "title": "2022/03/22 四轉職業改版與轉職條件調整公告",
+      "url": "https://ro.gnjoy.com.tw/notice/notice_view.aspx?id=125135",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": "2022-03-21",
+      "effectiveDate": "2022-03-22",
+      "checkedOn": "2026-10-27",
+      "scope": "historical-transfer-rules-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "公告記載進階二轉職業需 JOB Lv.50 才可轉職。",
+        "公告記載三轉職業需轉生二轉職業才可轉職。",
+        "公告記載僅有轉生三轉職業可進行四轉。",
+        "公告記載非轉生三轉職業在 Base Lv.200 時可走特殊轉生流程。",
+        "公告記載當時快速轉職二轉／三轉／四轉分別需要獼猴桃果實 4／30／70 個。"
+      ],
+      "notSupported": [
+        "此為 2022 年歷史公告，不能單獨證明各條件在 2026-10-27 仍全部適用。",
+        "不能證明本專案每一筆職業名稱、父職業、階級或流程正確。",
+        "不能提供所有職業 Base Lv 與 Job Lv 上限完整表。"
+      ]
+    },
+    {
+      "id": "official-fourth-expanded-job-adjustment-2025-11-03",
+      "title": "2025 四轉、擴充次上位技能調整",
+      "url": "https://ro.gnjoy.com.tw/Notice/Notice_View?id=218253",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": "2025-11-03",
+      "effectiveDate": "2025-11-04",
+      "checkedOn": "2026-10-27",
+      "scope": "official-evidence-of-fourth-and-expanded-job-coverage",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "官方公告標題為「2025四轉、擴充次上位技能調整」。",
+        "公告的職業／技能表包含盧恩龍爵、帝國聖衛軍、機甲神匠、生命締造者、十字影武、深淵追跡者、禁咒魔導士、元素支配者、樞機主教、聖裁者、風鷹狩獵者等名稱。"
+      ],
+      "notSupported": [
+        "此為技能調整公告，不是完整職業樹、轉職前置或等級上限資料庫。",
+        "不能單憑該公告推導所有職業分支與各階段轉職條件。"
       ]
     }
   ],
@@ -197,6 +242,30 @@
       ],
       "claim": "官方指南記載精煉師與依不同材料顯示機率的精煉介面。",
       "scope": "system-mechanics-reference-only"
+    },
+    {
+      "id": "official-level-275-wording",
+      "sourceIds": [
+        "official-level-275-update-2026-02-03"
+      ],
+      "claim": "2026/02/03 官方維護公告使用「全職業等級擴充Lv275」字樣。",
+      "scope": "announcement-exact-wording-only-base-job-split-unclear"
+    },
+    {
+      "id": "historical-job-transfer-conditions",
+      "sourceIds": [
+        "official-job-transfer-rules-2022-03-22"
+      ],
+      "claim": "2022/03/22 官方改版公告列出當時的進階二轉、三轉、四轉及快速轉職條件。",
+      "scope": "historical-notice-only-must-not-be-applied-as-current-without-revalidation"
+    },
+    {
+      "id": "fourth-and-expanded-second-upper-classes-mentioned",
+      "sourceIds": [
+        "official-fourth-expanded-job-adjustment-2025-11-03"
+      ],
+      "claim": "2025/11/03 官方公告列出四轉與擴充次上位職業技能調整。",
+      "scope": "proves-coverage-gap-not-full-job-tree"
     }
   ],
   "datasets": [
@@ -213,93 +282,395 @@
           "name": "初心者",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 0,
+            "parent": null,
+            "family": "novice"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "swordsman",
           "name": "劍士",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 1,
+            "parent": "novice",
+            "family": "swordsman"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "mage",
           "name": "法師",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 1,
+            "parent": "novice",
+            "family": "mage"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "archer",
           "name": "弓箭手",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 1,
+            "parent": "novice",
+            "family": "archer"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "thief",
           "name": "盜賊",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 1,
+            "parent": "novice",
+            "family": "thief"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "acolyte",
           "name": "服事",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 1,
+            "parent": "novice",
+            "family": "acolyte"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "merchant",
           "name": "商人",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 1,
+            "parent": "novice",
+            "family": "merchant"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "knight",
           "name": "騎士",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 2,
+            "parent": "swordsman",
+            "family": "swordsman"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "wizard",
           "name": "巫師",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 2,
+            "parent": "mage",
+            "family": "mage"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "hunter",
           "name": "獵人",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 2,
+            "parent": "archer",
+            "family": "archer"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "assassin",
           "name": "刺客",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 2,
+            "parent": "thief",
+            "family": "thief"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "priest",
           "name": "祭司",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 2,
+            "parent": "acolyte",
+            "family": "acolyte"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         },
         {
           "id": "blacksmith",
           "name": "鐵匠",
           "status": "unverified",
           "sourceEvidence": [],
-          "lastVerifiedOn": null
+          "lastVerifiedOn": null,
+          "prototypeFields": {
+            "tier": 2,
+            "parent": "merchant",
+            "family": "merchant"
+          },
+          "fieldStatus": {
+            "name": "unverified",
+            "tier": "unverified",
+            "parent": "unverified",
+            "family": "unverified",
+            "baseLevelCap": "unverified",
+            "jobLevelCap": "unverified",
+            "transferRequirements": "unverified"
+          },
+          "fieldEvidence": {
+            "name": [],
+            "tier": [],
+            "parent": [],
+            "family": [],
+            "baseLevelCap": [],
+            "jobLevelCap": [],
+            "transferRequirements": []
+          }
         }
-      ]
+      ],
+      "coverageStatus": "incomplete",
+      "coverageGap": "官方 2025/11/03 公告含四轉及擴充次上位職業技能調整；原型目前僅有 tier 0/1/2 的 13 筆記錄，不能視為完整職業表。",
+      "notes": "本輪對 13 筆逐一保持 unverified。每筆增加原型現況快照與欄位核實狀態；官方通則或歷史轉職公告不能替代逐職業直接證據。"
     },
     {
       "id": "skills",
@@ -921,5 +1292,129 @@
     "No emulator/private-server database, other regional version, AI inference, or community guess may be used as Taiwan official evidence.",
     "CI must fail if the playable prototype is unlocked while any required core record remains unverified.",
     "A record may be marked verified only with exact record ID, field list, official source ID, quoted evidence, reviewer and verification date."
-  ]
+  ],
+  "jobSystemRules": [
+    {
+      "id": "level-expansion-lv275",
+      "topic": "level-cap",
+      "claim": "官方 2026/02/03 維護公告明文寫有「全職業等級擴充Lv275」。",
+      "evidenceExcerpt": "全職業等級擴充Lv275。",
+      "sourceIds": [
+        "official-level-275-update-2026-02-03"
+      ],
+      "status": "official-announcement-confirmed-scope-unclear",
+      "appliesToRuntime": false,
+      "checkedOn": "2026-10-27",
+      "notes": "該公告列點未逐一拆分 Base Lv 與 Job Lv，也沒有列出每個職業階級的 Base/Job 上限。不得直接把 275 寫入每個職業欄位。"
+    },
+    {
+      "id": "historical-advanced-second-job-job50",
+      "topic": "transfer-requirement",
+      "claim": "2022/03/22 公告曾記載進階二轉職業需 JOB Lv.50 才可轉職。",
+      "evidenceExcerpt": "進階二轉職業：JOB50才可進行轉職",
+      "sourceIds": [
+        "official-job-transfer-rules-2022-03-22"
+      ],
+      "status": "historical-rule-requires-current-revalidation",
+      "appliesToRuntime": false,
+      "checkedOn": "2026-10-27",
+      "notes": "這是歷史公告內容；找到適用 2026-10-27 的完整官方規則前，不套用到遊戲邏輯。"
+    },
+    {
+      "id": "historical-third-job-requires-reborn-second",
+      "topic": "transfer-requirement",
+      "claim": "2022/03/22 公告曾記載三轉職業需轉生二轉職業才可轉職。",
+      "evidenceExcerpt": "三轉職業：需轉生二轉才可進行轉職",
+      "sourceIds": [
+        "official-job-transfer-rules-2022-03-22"
+      ],
+      "status": "historical-rule-requires-current-revalidation",
+      "appliesToRuntime": false,
+      "checkedOn": "2026-10-27",
+      "notes": "公告也指出當時部分經驗值調整不包含擴充職業，不可將該通則直接泛化到全部職系。"
+    },
+    {
+      "id": "historical-fourth-job-requires-reborn-third",
+      "topic": "transfer-requirement",
+      "claim": "2022/03/22 四轉改版公告曾記載僅有轉生三轉職業可進行四轉。",
+      "evidenceExcerpt": "僅有轉生三轉職業可進行四轉",
+      "sourceIds": [
+        "official-job-transfer-rules-2022-03-22"
+      ],
+      "status": "historical-rule-requires-current-revalidation",
+      "appliesToRuntime": false,
+      "checkedOn": "2026-10-27",
+      "notes": "只記錄該日期公告原文，不當成 2026 年所有職系的完整轉職條件。"
+    },
+    {
+      "id": "historical-nonreborn-third-job-special-route",
+      "topic": "transfer-requirement",
+      "claim": "2022/03/22 公告曾記載非轉生三轉職業在 Base Lv.200 時可辦理特殊轉生流程。",
+      "evidenceExcerpt": "非轉生三轉職業Base LV200時，可至普隆德拉戶政事務所辦理特殊轉生流程",
+      "sourceIds": [
+        "official-job-transfer-rules-2022-03-22"
+      ],
+      "status": "historical-rule-requires-current-revalidation",
+      "appliesToRuntime": false,
+      "checkedOn": "2026-10-27",
+      "notes": "需要核對此流程後續是否仍適用及各職業範圍，因此不寫入執行邏輯。"
+    },
+    {
+      "id": "historical-quick-change-fruit-amounts",
+      "topic": "quick-transfer-service",
+      "claim": "2022/03/22 公告曾記載當時二轉、三轉、四轉快速轉職分別需要獼猴桃果實 4、30、70 個。",
+      "evidenceExcerpt": "二轉職業：獼猴桃果實*4 / 三轉職業：獼猴桃果實*30 / 四轉職業：獼猴桃果實*70",
+      "sourceIds": [
+        "official-job-transfer-rules-2022-03-22"
+      ],
+      "status": "historical-rule-requires-current-revalidation",
+      "appliesToRuntime": false,
+      "checkedOn": "2026-10-27",
+      "notes": "這是快速轉職服務的歷史成本，不等於一般任務轉職條件，也不代表 2026 年現行費用。"
+    },
+    {
+      "id": "fourth-and-expanded-job-families-confirmed",
+      "topic": "job-family-coverage",
+      "claim": "官方 2025/11/03 公告涵蓋四轉及擴充次上位職業技能調整，且列出多個相關職業名稱。",
+      "evidenceExcerpt": "2025四轉、擴充次上位技能調整",
+      "sourceIds": [
+        "official-fourth-expanded-job-adjustment-2025-11-03"
+      ],
+      "status": "official-evidence-of-prototype-coverage-gap",
+      "appliesToRuntime": false,
+      "checkedOn": "2026-10-27",
+      "notes": "足以證明原型僅有 tier 0/1/2 的職業表不完整，但不能用此公告重建完整職業樹。"
+    }
+  ],
+  "jobDatasetAudit": {
+    "sourcePath": "src/data.js",
+    "currentPrototypeRecordCount": 13,
+    "currentPrototypeTiers": [
+      0,
+      1,
+      2
+    ],
+    "currentPrototypeFields": [
+      "name",
+      "tier",
+      "parent",
+      "family"
+    ],
+    "requiredOfficialFields": [
+      "officialName",
+      "jobTier",
+      "parentJob",
+      "baseLevelCap",
+      "jobLevelCap",
+      "transferRequirements",
+      "applicableVersion"
+    ],
+    "status": "incomplete-and-unverified",
+    "notes": [
+      "prototypeFields 是現存原型快照，不代表正服已核實。",
+      "每個職業名稱、tier、parent 仍未完成逐筆官方來源確認。",
+      "目前資料只呈現 tier 0/1/2；官方公告明確涵蓋四轉與擴充次上位職業，故現有職業清單不是正服完整職業清單。",
+      "本輪只登錄官方直接支持的通則／歷史公告，沒有新增或改寫任何遊戲職業內容。"
+    ]
+  }
 }
