@@ -24,7 +24,8 @@
     const play = $(".play-column");
     const side = $(".side-column");
     const api = window.RO_GAME_API;
-    if (!shell || !layout || !play || !side || !api || shell.dataset.oneScreen === "true") return;
+    // A hidden prototype must stay inert: do not move panels out of the locked root.
+    if (!shell || !layout || layout.hidden || layout.getAttribute("aria-hidden") === "true" || !play || !side || !api || shell.dataset.oneScreen === "true") return;
     shell.dataset.oneScreen = "true";
 
     // The core game stays visible. All long-form tools are moved into lightweight overlays.

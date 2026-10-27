@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "ro-offline-adventure-v14";
+const CACHE_NAME = "ro-offline-adventure-v15";
 const APP_SHELL = [
   "./",
   "./index.html",

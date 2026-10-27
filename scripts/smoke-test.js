@@ -135,6 +135,7 @@ for (const feature of ["character", "equipment", "save", "mapQuickSelect"]) {
   assert.ok(ui.includes(feature), "integrated menu section missing: " + feature);
 }
 assert.ok(ui.includes("quarantinedPanels"), "unverified panels must be quarantined in hidden DOM");
+assert.ok(ui.includes("layout.hidden || layout.getAttribute(\"aria-hidden\") === \"true\""), "the UI shell must not reparent panels out of a locked prototype");
 assert.ok(!ui.includes('{ id: "pets", label: "寵物"'), "custom pet menu must not be exposed");
 assert.ok(!ui.includes('{ id: "quests", label: "任務"'), "custom NPC/quest menu must not be exposed");
 assert.ok(!ui.includes('{ id: "hunt", label: "狩獵"'), "unverified auto-hunt menu must not be exposed");
@@ -161,7 +162,7 @@ assert.ok(!sw.includes('"./src/expansion.js"'), "offline cache must not precache
 assert.ok(!sw.includes('"./src/pets.js"'), "offline cache must not precache the quarantined pet module");
 assert.ok(sw.includes('"./src/visual-effects.js"'), "offline cache shell must include visual effects");
 assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
-assert.ok(sw.includes("ro-offline-adventure-v14"), "service worker cache must be invalidated after the direct-transfer UI change");
+assert.ok(sw.includes("ro-offline-adventure-v15"), "service worker cache must be invalidated after the direct-transfer UI change");
 
 assert.ok(!html.includes('src/pets.js'), "unverified pet module must not be loaded");
 assert.ok(!html.includes('src/expansion.js'), "unverified expansion module must not be loaded");
