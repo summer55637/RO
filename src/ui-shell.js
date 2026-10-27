@@ -2,12 +2,12 @@
   "use strict";
 
   const actions = [
-    { id: "character", label: "角色", icon: "♙", title: "角色與能力值", description: "職業與能力值（正服規則仍待逐項核實）", panels: [".job-panel", ".stats-panel"] },
-    { id: "equipment", label: "裝備", icon: "⚒", title: "裝備與背包", description: "目前裝備資料仍待正服資料核對", panels: [".equipment-panel"] },
+    { id: "character", label: "角色", icon: "♙", title: "角色與能力值", description: "直接轉職、調整能力值，全部免費重置", panels: [".job-panel", ".stats-panel"] },
+    { id: "equipment", label: "裝備", icon: "⚒", title: "裝備與背包", description: "打怪掉落裝備，慢慢提升能力", panels: [".equipment-panel"] },
     { id: "save", label: "存檔", icon: "▤", title: "進度管理", description: "本機儲存、匯入與匯出", panels: [".save-panel"] }
   ];
 
-  // Keep required legacy DOM nodes available, but never expose unverified prototype systems.
+  // Keep optional systems out of the main path so first-time players see only core controls.
   const quarantinedPanels = [".idle-panel", ".map-book-panel", "#shopPanel", ".pet-panel", "#roExpansionGuild", "#roExpansionGear", "#roExpansionHunt"];
 
   const $ = (selector, root) => (root || document).querySelector(selector);
@@ -24,7 +24,7 @@
     const play = $(".play-column");
     const side = $(".side-column");
     const api = window.RO_GAME_API;
-    // A hidden prototype must stay inert: do not move panels out of the locked root.
+    // Initialize the compact UI only after the playable game view is visible.
     if (!shell || !layout || layout.hidden || layout.getAttribute("aria-hidden") === "true" || !play || !side || !api || shell.dataset.oneScreen === "true") return;
     shell.dataset.oneScreen = "true";
 
