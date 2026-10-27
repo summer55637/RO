@@ -3,6 +3,7 @@
 
   const actions = [
     { id: "character", label: "角色", icon: "♙", title: "角色養成", description: "職業與能力值", panels: [".job-panel", ".stats-panel"] },
+    { id: "pets", label: "寵物", icon: "🐾", title: "寵物與夥伴", description: "捕捉、餵食、親密度與輔助戰鬥", panels: [".pet-panel"] },
     { id: "quests", label: "任務", icon: "✦", title: "冒險委託", description: "NPC、主線與每日任務", panels: ["#roExpansionGuild"] },
     { id: "equipment", label: "裝備", icon: "⚒", title: "裝備與收藏", description: "背包、精煉、卡片、圖鑑與商店", panels: [".equipment-panel", "#roExpansionGear", ".map-book-panel", "#shopPanel"] },
     { id: "hunt", label: "狩獵", icon: "⚔", title: "狩獵設定", description: "自動戰鬥、Boss 篩選與狩獵紀錄", panels: [".idle-panel", "#roExpansionHunt", ".log-panel"] },
