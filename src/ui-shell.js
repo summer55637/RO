@@ -171,7 +171,7 @@
       });
       select.addEventListener("change", () => api.switchMap(select.value));
       quickNav.append(label, select);
-      side.querySelector(".play-column")?.insertBefore(quickNav, oldMapTabs);
+      document.querySelector(".play-column")?.insertBefore(quickNav, oldMapTabs);
       oldMapTabs.hidden = true;
 
       const syncMap = (event) => {

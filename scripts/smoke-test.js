@@ -72,6 +72,8 @@ for (const feature of ["character", "quests", "equipment", "hunt", "save", "mapQ
   assert.ok(ui.includes(feature), "integrated menu section missing: " + feature);
 }
 assert.ok(ui.includes('setAttribute("role", "tablist")'), "integrated menu should expose accessible tabs");
+assert.ok(ui.includes('document.querySelector(".play-column")?.insertBefore(quickNav, oldMapTabs)'), "compact map selector must be inserted into the play column");
+assert.ok(!ui.includes('side.querySelector(".play-column")'), "play column is a sibling of the menu side bar");
 const css = read("style.css");
 assert.ok(css.includes(".game-menu-tabs"), "integrated menu styling must exist");
 assert.ok(css.includes(".map-quicknav"), "compact map selector styling must exist");
