@@ -50,6 +50,7 @@ for (const dataset of registry.datasets) {
 const html = read("index.html");
 const css = read("style.css");
 const main = read("src/main.js");
+const visual = read("src/visual-effects.js");
 assert.ok(html.includes('<main id="roPrototype" class="layout">'), "mini game must be unlocked");
 assert.ok(!html.includes('id="roContentAuditNotice"'), "blocking notice must not return");
 assert.ok(!css.includes("#roPrototype { display: none !important; }"), "CSS must not hide the game");
@@ -79,5 +80,8 @@ assert.equal(registry.jobTransferUxAudit.playablePrototypeUnlocked, true, "regis
 assert.equal(registry.resetUxAudit.playablePrototypeUnlocked, true, "registry must match free-reset UX");
 assert.ok(read("MINI_RO_DESIGN.md").includes("不宣稱完整對齊台灣 RO PC 正服"), "mini game scope must be stated clearly");
 assert.ok(read("src/ui-shell.js").includes("renderHuntGuide()") && read("src/ui-shell.js").includes('window.addEventListener("ro:level-up", renderHuntGuide)'), "hunting guide must update when the player levels up");
+assert.ok(main.includes('detail: { target: monster.type, critical: critical, damage: damage }'), "combat event must expose accurate damage and critical state");
+assert.ok(visual.includes('addEffect("critical"') && visual.includes('addEffect("reward"'), "combat visuals must distinguish critical hits and defeat rewards");
+assert.ok(css.includes(".game-frame.combat-shake") && css.includes("prefers-reduced-motion"), "combat animation must be short and motion-accessible");
 
 console.log("Mini RO audit passed: " + total + " gameplay data rows inventoried; " + unverified + " still marked unverified for official-source research. Unverified rows are tracked transparently and no longer block playability; this is not an official parity certification.");
