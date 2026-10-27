@@ -68,7 +68,7 @@ for (const path of ["src/pets.js", "src/visual-effects.js"]) assert.ok(fs.exists
 for (const path of scriptPaths) assert.ok(fs.existsSync(root + "/" + path), "missing script file: " + path);
 
 const main = read("src/main.js");
-for (const feature of ["attackMonster", "performSkill", "changeJob", "equipmentBonuses", "saveGame", "applySave", "applyOfflineProgress", "handleWorldClick"]) {
+for (const feature of ["attackMonster", "performSkill", "changeJob", "equipmentBonuses", "saveGame", "applySave", "applyOfflineProgress", "handleWorldClick", "drawMonster", "drawPlayer"]) {
   assert.ok(main.includes("function " + feature + "("), "main gameplay pathway missing: " + feature);
 }
 assert.ok(main.includes('new CustomEvent("ro:monster-killed"'), "quest progress combat event missing");
@@ -79,6 +79,11 @@ assert.ok(main.includes('targetId: state.targetId'), "snapshot must expose the c
 assert.ok(main.includes('ro:player-hurt'), "player hurt animation event must be emitted");
 assert.ok(main.includes('ro:target-change'), "pet capture selection must receive live target changes");
 assert.ok(main.includes('ro:monster-hurt'), "monster hit effect event must be emitted");
+assert.ok(main.includes("player._facing = dx < -0.08"), "player movement must update sprite facing");
+assert.ok(main.includes("monster._walkFrame = (monster._walkFrame || 0) + dt * 11"), "monster chase motion must drive a walk cycle");
+assert.ok(main.includes("const swingAngle = attacking ?"), "player weapons must animate through the attack window");
+assert.ok(main.includes("const palette = {"), "job families must have distinct pixel sprite palettes");
+assert.ok(main.includes("for (let piece = 0; piece < 10; piece++)"), "monster death should dissolve into pixel fragments");
 
 const ui = read("src/ui-shell.js");
 for (const feature of ["character", "pets", "quests", "equipment", "hunt", "save", "mapQuickSelect", "roExpansionGuild", "roExpansionGear", "roExpansionHunt", "pet-panel"]) {
@@ -109,10 +114,10 @@ assert.ok(sw.includes('"./src/expansion.js"'), "offline cache shell must include
 assert.ok(sw.includes('"./src/pets.js"'), "offline cache shell must include pet system");
 assert.ok(sw.includes('"./src/visual-effects.js"'), "offline cache shell must include visual effects");
 assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
-assert.ok(sw.includes("ro-offline-adventure-v8"), "service worker cache version should be bumped for new modules");
+assert.ok(sw.includes("ro-offline-adventure-v9"), "service worker cache version should be bumped for evolution and animation updates");
 
 const pets = read("src/pets.js");
-for (const feature of ["pet-treat", "pet-snack", "captureTarget", "feedPet", "function tick(dt)", "function bonuses()", "ro:monster-killed", "ro:target-change", "localStorage"]) assert.ok(pets.includes(feature), "pet system feature missing: " + feature);
+for (const feature of ["pet-treat", "pet-snack", "captureTarget", "feedPet", "evolvePet", "canEvolve", "evolutionProgress", "usePetSkill", "skillMultiplier", "skillCooldown", "rare:rare", "ro:pet-skill", "ro:pet-evolved", "function tick(dt)", "function bonuses()", "ro:monster-killed", "ro:target-change", "localStorage"]) assert.ok(pets.includes(feature), "pet evolution / exclusive skill feature missing: " + feature);
 const visuals = read("src/visual-effects.js");
-for (const feature of ["game-visual-overlay", "drawParticles", "drawPet", "drawEffects", "ro:player-hurt", "ro:monster-hurt", "ro:pet-attack", "ro:level-up"]) assert.ok(visuals.includes(feature), "visual effect feature missing: " + feature);
-console.log("Smoke tests passed: game data and map references, combat API, pet supplies/taming/feeding/bonding/assist attacks, companion visuals, combat feedback effects, script order, and offline cache assets.");
+for (const feature of ["game-visual-overlay", "drawParticles", "drawPet", "drawEffects", "ro:player-hurt", "ro:monster-hurt", "ro:pet-attack", "ro:pet-skill", "ro:pet-evolved", "pet.evolved", "pet.rare", "level-up"]) assert.ok(visuals.includes(feature), "visual effect feature missing: " + feature);
+console.log("Smoke tests passed: game data and map references, combat API, pet taming/feeding/rarity/evolution/unique skills, job-specific pixel sprites, player weapon swings, monster gait/hit/death animation, companion visuals, script order, and offline cache assets.");
