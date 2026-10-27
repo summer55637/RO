@@ -29,6 +29,8 @@ jobs:
           node --check src/data.js
           node --check src/main.js
           node --check src/expansion.js
+          node --check src/pets.js
+          node --check src/visual-effects.js
           node --check src/ui-shell.js
           node scripts/smoke-test.js
           node -e "JSON.parse(require('node:fs').readFileSync('assets/manifest.json', 'utf8'))"
