@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1d2932">
-  <meta name="description" content="免費、純前端、可離線的 RO 風格單機冒險遊戲。">
-  <title>RO：米德加爾特小冒險</title>
+  <meta name="description" content="迷你 RO 風格單機冒險：點擊打怪、升級配點、直接轉職、免費重置。">
+  <title>迷你 RO：米德加爾特小冒險</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./style.css">
@@ -15,16 +15,12 @@
     <header class="topbar">
       <div class="brand-mark" aria-hidden="true">RO</div>
       <div class="brand-copy">
-        <h1>米德加爾特小冒險</h1>
-        <p>正服內容校對中 · 未核實系統已停用</p>
+        <h1>迷你 RO：米德加爾特小冒險</h1>
+        <p>點擊打怪 · 升級配點 · 直接轉職</p>
       </div>
-      <div class="topbar-status"><span class="status-dot"></span><span id="connectionStatus">正服資料校對中</span></div>
+      <div class="topbar-status"><span class="status-dot"></span><span id="connectionStatus">迷你版可直接遊玩</span></div>
     </header>
-    <section id="roContentAuditNotice" role="status" aria-live="polite">
-      <strong>正服內容嚴格校對中</strong>
-      <p>未經台灣 RO PC 正服官方資料核實的自訂模組已停用。由於核心職業門檻、技能／戰鬥公式、魔物能力與掉落、地圖配置、裝備數值及美術仍未逐項核對，為避免把不確定內容冒充正服，整個可玩原型暫時鎖定。只有完成官方來源核對與測試的內容才會重新開放。<a href="./RO_OFFICIAL_CONTENT_POLICY.md">查看硬性規則</a></p>
-    </section>
-    <main id="roPrototype" class="layout" hidden aria-hidden="true">
+    <main id="roPrototype" class="layout">
       <section class="play-column" aria-label="遊戲畫面">
         <div class="field-heading">
           <div><span class="eyebrow">ADVENTURE FIELD</span><h2 id="mapTitle">普隆德拉南門</h2></div>
@@ -66,11 +62,12 @@
         </section>
         <section class="panel job-panel">
           <div class="panel-title"><h2>職業與轉職</h2><span class="panel-subtitle">JOB CHANGE</span></div>
-          <p class="small-note">在轉職表選擇目標後按「直接轉職」，不跑轉職任務、不收原型操作費用。這是原型操作簡化，不代表正服可任意跳階；既有父職業與等級條件照舊，職業資料與現行門檻仍待官方核實。</p>
+          <p class="small-note">達到遊戲內等級條件後，直接在這裡選職業並轉職；不用任務、不收費。這是迷你版的簡化規則。</p>
           <div class="job-options" id="jobOptions" aria-live="polite"></div>
         </section>
         <section class="panel stats-panel">
           <div class="panel-title"><h2>能力值配點</h2><div class="panel-title-actions"><span class="points-pill">可用 <strong id="statPoints">5</strong> 點</span><button type="button" class="text-button reset-action-button" id="resetStatsButton">免費初始化</button></div></div>
+          <p class="small-note">每次提升能力值只花 1 點；每次升級獲得 3 點。想換玩法可免費初始化。</p>
           <div class="stats-list" id="statsList"></div>
         </section>
         <section class="panel skills-panel">
@@ -125,7 +122,7 @@
         </section>
       </aside>
     </main>
-    <footer class="footer"><span>RO · OFFLINE ADVENTURE</span><span>本機存檔 · 無需帳號或伺服器</span></footer>
+    <footer class="footer"><span>迷你 RO · 單機冒險</span><span>點擊即玩 · 本機存檔</span></footer>
   </div>
   <script src="./src/data.js" defer></script>
   <script src="./src/main.js" defer></script>
