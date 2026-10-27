@@ -28,6 +28,10 @@
   const monsterInfo = (type) => DATA.monsters[type] || DATA.monsters.poring;
   const itemInfo = (id) => DATA.items[id] || { id, name: id, icon: "📦", description: "未知物品", price: 0 };
   const skillInfo = (id) => DATA.skills[id] || null;
+  const skillKindLabel = (kind) => ({
+    damage: "單體攻擊", magic: "魔法攻擊", aoe: "範圍攻擊",
+    heal: "治療", buff: "輔助", passive: "被動"
+  }[kind] || "技能");
 
   const defaultPlayer = () => ({
     x: 466, y: 345, hp: 100, maxHp: 100, sp: 100, maxSp: 100,
@@ -454,7 +458,7 @@
     eligibleJobs.forEach((job) => {
       const option = document.createElement("option");
       option.value = job.id;
-      option.textContent = job.name + "（" + (job.tier === 1 ? "一轉" : "二轉") + "）";
+      option.textContent = job.name + "（" + (job.tier === 1 ? "一轉" : "二轉") + "） · " + (job.role || "冒險者");
       select.appendChild(option);
     });
 
@@ -579,11 +583,18 @@
       footer.className = "skill-footer";
       const level = document.createElement("span");
       level.className = "skill-level";
-      level.textContent = hasLearned(skillId) ? "已習得" : "未習得";
+      level.textContent = hasLearned(skillId)
+        ? (skill.kind === "passive" ? "被動生效" : "點擊施放")
+        : "點擊學習";
       const cost = document.createElement("span");
-      cost.textContent = skill.kind === "passive" ? "被動" : "SP " + (skill.sp || 0);
+      cost.textContent = hasLearned(skillId)
+        ? (skill.kind === "passive" ? "被動" : "SP " + (skill.sp || 0))
+        : "需 1 點";
       footer.append(level, cost);
-      button.append(name, desc, footer);
+      const category = document.createElement("span");
+      category.className = "skill-kind";
+      category.textContent = skillKindLabel(skill.kind);
+      button.append(name, category, desc, footer);
       button.addEventListener("click", () => clickSkill(skillId));
       container.appendChild(button);
     });
@@ -806,7 +817,7 @@
       ? "城鎮是安全區，可以補給、轉職與調整能力。"
       : "點擊怪物即可自動追擊並攻擊；使用技能能更快打敗怪物。";
     $("jobLabel").textContent = "Lv. " + p.level + " " + job.name + (job.tier === 2 ? "（二轉）" : job.tier === 1 ? "（一轉）" : "");
-    $("jobExpLabel").textContent = "Job Lv. " + p.jobLevel + " · " + fmt(p.jobExp) + " / " + fmt(jobExpNeeded());
+    $("jobExpLabel").textContent = "職業定位：" + (job.role || "新手冒險者");
     $("goldLabel").textContent = fmt(p.gold);
     $("hpText").textContent = Math.ceil(p.hp) + " / " + hpMax;
     $("hpFill").style.width = (100 * p.hp / hpMax) + "%";
@@ -881,8 +892,8 @@
       button.classList.toggle("ready", learned && (state.cooldowns[id] || 0) <= 0);
       const levelNode = button.querySelector(".skill-level");
       const costNode = button.querySelector(".skill-footer span:last-child");
-      if (levelNode) levelNode.textContent = learned ? (skill.kind === "passive" ? "被動生效" : "已習得") : "點擊學習";
-      if (costNode) costNode.textContent = !learned ? "技能點 1" : skill.kind === "passive" ? "被動" : (state.cooldowns[id] > 0 ? state.cooldowns[id].toFixed(1) + " 秒" : "SP " + (skill.sp || 0));
+      if (levelNode) levelNode.textContent = learned ? (skill.kind === "passive" ? "被動生效" : "點擊施放") : "點擊學習";
+      if (costNode) costNode.textContent = !learned ? "需 1 點" : skill.kind === "passive" ? "被動" : (state.cooldowns[id] > 0 ? "冷卻 " + state.cooldowns[id].toFixed(1) + " 秒" : "SP " + (skill.sp || 0));
       button.disabled = !learned && p.skillPoints <= 0;
     });
     const activeBuffs = Object.keys(state.buffs).filter((key) => state.buffs[key] > 0);
