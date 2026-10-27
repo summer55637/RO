@@ -120,7 +120,7 @@ assert.ok(main.includes('state.learnedSkills = ["basic-strike"];'), "skill reset
 assert.ok(ui.includes("game-dashboard") && ui.includes("game-modal") && ui.includes("mapQuickSelect"), "compact dashboard and menus must exist");
 assert.ok(ui.includes("renderHuntGuide()") && ui.includes("activeHuntRecommendation"), "hunting advice should update from current player level");
 assert.ok(ui.includes('window.addEventListener("ro:level-up", renderHuntGuide)'), "hunting recommendation should refresh after level-up");
-assert.ok(ui.includes("api.trackMonster(activeHuntRecommendation.monsterIds[0])"), "new players should be able to track a recommended monster in one click");
+assert.ok(ui.includes("api.switchMap(activeHuntRecommendation.mapId);\n        api.trackMonster(activeHuntRecommendation.monsterIds[0])"), "tracking a recommended monster should first open its recommended map");
 assert.ok(css.includes(".game-dock") && css.includes(".game-modal") && css.includes(".map-quicknav"), "compact UI styles must exist");
 assert.ok(css.includes(".hunt-guide {") && css.includes(".hunt-guide-actions"), "level-based hunting recommendation should be easy to distinguish");
 assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v5";'), "browser cache must be refreshed for the hunting guide and level recommendations");
