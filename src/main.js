@@ -20,7 +20,8 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   const fmt = (number) => Math.floor(number).toLocaleString();
-  const baseExpNeeded = () => 30 + (state.player.level - 1) * 20;
+  const MINI_BALANCE = Object.freeze({ baseExpStart: 25, baseExpPerLevel: 10, potionHeal: 45 });
+  const baseExpNeeded = () => MINI_BALANCE.baseExpStart + (state.player.level - 1) * MINI_BALANCE.baseExpPerLevel;
   const jobExpNeeded = () => 20 + state.player.jobLevel * 8;
   const currentMap = () => DATA.maps[state.mapId] || DATA.maps.field;
   const currentJob = () => DATA.jobs.find((job) => job.id === state.player.jobId) || DATA.jobs[0];
@@ -179,11 +180,12 @@
   function attackPower() {
     const gear = equipmentBonuses();
     const job = currentJob();
-    return Math.max(1, Math.floor(2 + state.player.level * 0.55 + totalStat("str") * 1.15 + totalStat("dex") * 0.28 + (job.atk || 0) + gear.attack));
+    // One predictable formula: level + STR + a small DEX bonus + job and weapon.
+    return Math.max(1, 3 + state.player.level + totalStat("str") + Math.floor(totalStat("dex") / 4) + (job.atk || 0) + gear.attack);
   }
 
   function attackInterval() {
-    return clamp(0.98 - (totalStat("agi") - 5) * 0.025 - (currentJob().agi || 0) * 0.015, 0.32, 1.15);
+    return clamp(0.9 - (totalStat("agi") - 5) * 0.02 - (currentJob().agi || 0) * 0.015, 0.4, 1.0);
   }
 
   function critChance() {
@@ -976,7 +978,8 @@
       return false;
     }
     player.potions -= 1;
-    const restored = Math.min(35, hpMax - player.hp);
+    const healing = (DATA.items["red-potion"] && DATA.items["red-potion"].healing) || MINI_BALANCE.potionHeal;
+    const restored = Math.min(healing, hpMax - player.hp);
     player.hp += restored;
     logMessage((automatic ? "自動使用" : "使用") + "紅色藥水，恢復 " + Math.round(restored) + " HP。", automatic ? "muted" : undefined);
     updateUI();
@@ -1075,7 +1078,7 @@
     if (!skill || !hasSkill(skillId)) return;
     if (hasLearned(skillId)) return;
     if (state.player.skillPoints <= 0) {
-      logMessage("技能點不足，提升 Job Level 可以獲得技能點。", "muted");
+      logMessage("技能點不足，提升 Base Level 就能獲得技能點。", "muted");
       return;
     }
     state.player.skillPoints -= 1;
@@ -1175,7 +1178,7 @@
         : [target];
       const stat = skill.kind === "magic" ? totalStat("int") : attackPower();
       targetList.forEach((monster) => {
-        let damage = Math.max(1, Math.floor(stat * (skill.multiplier || 1.5) + rand(0, 4) - monster.defense));
+        let damage = Math.max(1, Math.floor(stat * (skill.multiplier || 1.5) - monster.defense));
         if (state.buffs.focus) damage = Math.floor(damage * 1.18);
         if (skill.dot) monster.poisonUntil = Date.now() + 4000;
         applyDamage(monster, damage, skill.name);
@@ -1297,15 +1300,11 @@
     state.player._attackUntil = state.player._attackStart + 260;
     spawnEffect(monster.x, monster.y - (monster.boss ? 34 : 14), "slash", "#ffe6a3", "");
     window.dispatchEvent(new CustomEvent("ro:attack", { detail: { target: monster.type } }));
-    const accuracy = clamp(82 + totalStat("dex") * 1.4 + state.player.level - monster.level * 2.1 + (state.buffs.focus ? 10 : 0), 40, 99);
-    if (Math.random() * 100 > accuracy) {
-      if (Math.random() < 0.45) logMessage("攻擊落空。", "muted");
-      return;
-    }
     const critical = Math.random() * 100 < critChance();
-    let damage = Math.max(1, Math.floor(attackPower() * rand(0.82, 1.18) - monster.defense));
-    if (state.buffs.focus) damage = Math.floor(damage * 1.15);
-    if (critical) damage = Math.floor(damage * 1.65);
+    // Basic attacks always connect; damage is predictable apart from occasional critical hits.
+    let damage = Math.max(1, Math.floor(attackPower() - monster.defense));
+    if (state.buffs.focus) damage = Math.floor(damage * 1.1);
+    if (critical) damage = Math.floor(damage * 1.5);
     applyDamage(monster, damage, critical ? "暴擊" : "普通攻擊");
     if (critical && monster.hp > 0) logMessage("暴擊！造成 " + damage + " 傷害。", "muted");
   }
