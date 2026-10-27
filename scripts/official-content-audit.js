@@ -45,6 +45,11 @@ assert.ok(!html.includes('id="roContentAuditNotice"'), "blocking notice must not
 assert.ok(!css.includes("#roPrototype { display: none !important; }"), "CSS must not hide the game");
 assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "direct transfer action must remain");
 assert.ok(main.includes("function resetStats()") && main.includes("function resetSkills()"), "both free reset handlers must exist");
+assert.equal(data.monsters.poring.hp, 20, "beginner monster HP must match mini balance");
+assert.equal(data.monsters.poring.exp, 17, "beginner monster EXP must match mini balance");
+assert.equal(data.items["red-potion"].healing, 45, "red potion heal must match mini balance");
+assert.ok(main.includes("baseExpStart: 25, baseExpPerLevel: 10"), "level progression should use a fixed, simple EXP curve");
+assert.ok(!main.includes("const accuracy = clamp("), "normal attacks should not have frustrating miss checks");
 assert.ok(html.includes('id="newPlayerGuide"') && html.includes('id="newPlayerGuideText"'), "a first-action hint must be visible on the play screen");
 assert.ok(read("src/ui-shell.js").includes('title: "新手推薦"'), "beginner maps must be listed first");
 assert.ok(read("src/ui-shell.js").includes('guideText.textContent = "升級了！點底部「角色」加點，或在技能欄學新技能。"'), "level-up should direct players to their next meaningful action");
