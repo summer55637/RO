@@ -33,7 +33,7 @@
     heal: "治療", buff: "輔助", passive: "被動"
   }[kind] || "技能");
   function huntDifficultyLabel(monster) {
-    if (monster.boss) return "Boss 挑戰 · 建議 Lv. " + Math.max(1, monster.level - 3) + "+";
+    if (monster.boss) return "Boss 挑戰 · 建議 Lv. " + monster.level + "+";
     if (monster.level <= 3) return "新手 · 建議 Lv. 1–4";
     if (monster.level <= 7) return "初階 · 建議 Lv. 5–9";
     if (monster.level <= 13) return "中階 · 建議 Lv. 10–14";
