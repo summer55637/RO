@@ -366,7 +366,7 @@
   }
 
   function statCost(value) {
-    return 1 + Math.floor(Math.max(0, value - 1) / 10);
+    return 1;
   }
 
   function allocateStat(statId) {
@@ -404,8 +404,8 @@
       logMessage("一轉需要 Base Lv. 5，且目前職業必須是初心者。", "muted");
       return;
     }
-    if (job.tier === 2 && (state.player.jobId !== job.parent || state.player.level < 20 || state.player.jobLevel < 10)) {
-      logMessage("二轉需要 Base Lv. 20、Job Lv. 10，並且先完成對應的一轉。", "muted");
+    if (job.tier === 2 && (state.player.jobId !== job.parent || state.player.level < 20)) {
+      logMessage("二轉需要 Base Lv. 20，並且先完成對應的一轉。", "muted");
       return;
     }
     const hpBefore = maxHp();
@@ -429,10 +429,10 @@
     const container = $("jobOptions");
     container.replaceChildren();
 
-    // Keep the existing prototype gates unchanged; only simplify the selection UI.
+    // The mini version keeps only clear Base Lv. and matching-job requirements.
     const eligibleJobs = DATA.jobs.filter((job) => (
       (job.tier === 1 && state.player.jobId === "novice" && state.player.level >= 5)
-      || (job.tier === 2 && state.player.jobId === job.parent && state.player.level >= 20 && state.player.jobLevel >= 10)
+      || (job.tier === 2 && state.player.jobId === job.parent && state.player.level >= 20)
     ));
 
     const controls = document.createElement("div");
@@ -480,8 +480,10 @@
     const status = document.createElement("p");
     status.className = "job-transfer-status";
     status.textContent = eligibleJobs.length
-      ? "目前職業：" + currentJob().name + "。只列出符合現有原型條件的目標；官方現行門檻與快速轉職費用尚未完整核實。"
-      : "目前職業：" + currentJob().name + "。依現有原型條件，暫無可直接轉職的目標；此條件仍未核實。";
+      ? "選擇職業後按「直接轉職」，不用任務，也不收費。"
+      : (state.player.jobId === "novice" && state.player.level < 5
+        ? "Base Lv. 5 後即可直接一轉；不用任務、不收費。"
+        : "Base Lv. 20 後可轉為對應二轉職業；不用任務、不收費。");
 
     controls.append(label, select, transferButton, status);
     container.appendChild(controls);
@@ -807,7 +809,7 @@
     $("miniMapLabel").textContent = currentMap().shortName;
     $("mapHint").textContent = currentMap().type === "town"
       ? "城鎮是安全區，可以補給、轉職與調整能力。"
-      : "點擊怪物會自動追擊；放置模式可自動尋找下一個目標。";
+      : "點擊怪物即可自動追擊並攻擊；使用技能能更快打敗怪物。";
     $("jobLabel").textContent = "Lv. " + p.level + " " + job.name + (job.tier === 2 ? "（二轉）" : job.tier === 1 ? "（一轉）" : "");
     $("jobExpLabel").textContent = "Job Lv. " + p.jobLevel + " · " + fmt(p.jobExp) + " / " + fmt(jobExpNeeded());
     $("goldLabel").textContent = fmt(p.gold);
