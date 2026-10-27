@@ -45,6 +45,10 @@ assert.ok(!html.includes('id="roContentAuditNotice"'), "blocking notice must not
 assert.ok(!css.includes("#roPrototype { display: none !important; }"), "CSS must not hide the game");
 assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "direct transfer action must remain");
 assert.ok(main.includes("function resetStats()") && main.includes("function resetSkills()"), "both free reset handlers must exist");
+assert.ok(html.includes('id="newPlayerGuide"') && html.includes('id="newPlayerGuideText"'), "a first-action hint must be visible on the play screen");
+assert.ok(read("src/ui-shell.js").includes('title: "新手推薦"'), "beginner maps must be listed first");
+assert.ok(read("src/ui-shell.js").includes('guideText.textContent = "升級了！點底部「角色」加點，或在技能欄學新技能。"'), "level-up should direct players to their next meaningful action");
+assert.ok(main.includes('potionButton.disabled = p.potions <= 0;'), "the potion button should clearly disable when supplies run out");
 assert.equal(registry.jobTransferUxAudit.playablePrototypeUnlocked, true, "registry must match playable state");
 assert.equal(registry.resetUxAudit.playablePrototypeUnlocked, true, "registry must match free-reset UX");
 assert.ok(read("MINI_RO_DESIGN.md").includes("不宣稱完整對齊台灣 RO PC 正服"), "mini game scope must be stated clearly");
