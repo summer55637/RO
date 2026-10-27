@@ -72,6 +72,7 @@ for (const [id, map] of Object.entries(data.maps)) {
 const html = read("index.html");
 const css = read("style.css");
 const main = read("src/main.js");
+const visual = read("src/visual-effects.js");
 const ui = read("src/ui-shell.js");
 const sw = read("sw.js");
 const scriptPaths = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((m) => m[1].replace(/^\.\//, ""));
@@ -123,5 +124,10 @@ assert.ok(ui.includes('window.addEventListener("ro:level-up", renderHuntGuide)')
 assert.ok(ui.includes("api.switchMap(activeHuntRecommendation.mapId);\n        api.trackMonster(activeHuntRecommendation.monsterIds[0])"), "tracking a recommended monster should first open its recommended map");
 assert.ok(css.includes(".game-dock") && css.includes(".game-modal") && css.includes(".map-quicknav"), "compact UI styles must exist");
 assert.ok(css.includes(".hunt-guide {") && css.includes(".hunt-guide-actions"), "level-based hunting recommendation should be easy to distinguish");
-assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v6";'), "browser cache must be refreshed for the hunting guide and level recommendations");
-console.log("Smoke tests passed: playable mini RO, simple stat costs, direct job progression, free resets, core combat, data references, compact UI, and optional-system isolation.");
+assert.ok(main.includes('detail: { target: monster.type, critical: critical, damage: damage }'), "attack events must include the actual damage and critical-hit state");
+assert.ok(main.includes('source: source || "普通攻擊", critical: source === "暴擊"'), "monster-hit events must carry readable impact metadata");
+assert.ok(visual.includes('addEffect("critical"') && visual.includes('addEffect("reward"'), "critical hits and monster defeats should have dedicated visual feedback");
+assert.ok(visual.includes('triggerShake("player")') && visual.includes('combat-player-flash'), "player hits should have a clear but brief reaction");
+assert.ok(css.includes("@keyframes combat-shake") && css.includes("prefers-reduced-motion"), "impact motion must be styled and respect reduced-motion preferences");
+assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v7";'), "combat-feedback assets must invalidate the previous offline cache");
+console.log("Smoke tests passed: playable mini RO, intuitive combat feedback, reduced-motion support, simple progression, data references, compact UI, and optional-system isolation.");
