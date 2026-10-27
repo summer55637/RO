@@ -83,5 +83,10 @@ assert.ok(read("src/ui-shell.js").includes("renderHuntGuide()") && read("src/ui-
 assert.ok(main.includes('detail: { target: monster.type, critical: critical, damage: damage }'), "combat event must expose accurate damage and critical state");
 assert.ok(visual.includes('addEffect("critical"') && visual.includes('addEffect("reward"'), "combat visuals must distinguish critical hits and defeat rewards");
 assert.ok(css.includes(".game-frame.combat-shake") && css.includes("prefers-reduced-motion"), "combat animation must be short and motion-accessible");
+assert.ok(main.includes('button.textContent = item.slot ? "購買並裝備" : "購買"'), "store must clearly show immediate equipment behavior");
+assert.ok(main.includes('const spDelta = (item.spBonus || 0)'), "equipment comparisons must include SP bonuses as well as attack and other stats");
+assert.ok(main.includes('if (item.slot) {\n      equipItem(itemId, true);\n      logMessage("購買並裝備了"'), "purchasing equipment must equip it and keep the replaced item in the inventory");
+assert.ok(read("src/ui-shell.js").includes('panels: [".equipment-panel", "#shopPanel"]') && !read("src/ui-shell.js").includes('const quarantinedPanels = [".idle-panel", ".map-book-panel", "#shopPanel"'), "shop must be placed in the primary equipment modal instead of hidden");
+assert.ok(html.includes("還差 ") || main.includes('"還差 " + fmt(price - state.player.gold) + " Zeny"'), "unaffordable purchases must explain how much Zeny is missing");
 
 console.log("Mini RO audit passed: " + total + " gameplay data rows inventoried; " + unverified + " still marked unverified for official-source research. Unverified rows are tracked transparently and no longer block playability; this is not an official parity certification.");
