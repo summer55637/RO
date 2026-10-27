@@ -100,5 +100,5 @@ assert.ok(main.includes('player.stats[stat.id] = 5;'), "stat reset should restor
 assert.ok(main.includes('state.learnedSkills = ["basic-strike"];'), "skill reset should restore the starter skill");
 assert.ok(ui.includes("game-dashboard") && ui.includes("game-modal") && ui.includes("mapQuickSelect"), "compact dashboard and menus must exist");
 assert.ok(css.includes(".game-dock") && css.includes(".game-modal") && css.includes(".map-quicknav"), "compact UI styles must exist");
-assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v3";'), "browser cache must be refreshed for the mini RO balance changes");
+assert.ok(sw.includes('const CACHE_NAME = "ro-mini-ro-v4";'), "browser cache must be refreshed for the job and skill UI changes");
 console.log("Smoke tests passed: playable mini RO, simple stat costs, direct job progression, free resets, core combat, data references, compact UI, and optional-system isolation.");
