@@ -1251,7 +1251,7 @@
     if (!monster || monster.hp <= 0) return;
     monster.hp = Math.max(0, monster.hp - damage);
     monster._hurtUntil = performance.now() + 260;
-    window.dispatchEvent(new CustomEvent("ro:monster-hurt", { detail: { id: monster.id, type: monster.type, x: monster.x, y: monster.y, damage: damage } }));
+    window.dispatchEvent(new CustomEvent("ro:monster-hurt", { detail: { id: monster.id, type: monster.type, name: monster.name, x: monster.x, y: monster.y, damage: damage, source: source || "普通攻擊", critical: source === "暴擊", boss: monster.boss === true } }));
     spawnEffect(monster.x, monster.y - (monster.boss ? 42 : 22), "text", "#fff0bd", String(damage));
     if (monster.hp > 0) {
       if (source && Math.random() < 0.28) logMessage(source + "造成 " + damage + " 傷害。", "muted");
@@ -1318,14 +1318,14 @@
     state.player._attackStart = performance.now();
     state.player._attackUntil = state.player._attackStart + 260;
     spawnEffect(monster.x, monster.y - (monster.boss ? 34 : 14), "slash", "#ffe6a3", "");
-    window.dispatchEvent(new CustomEvent("ro:attack", { detail: { target: monster.type } }));
     const critical = Math.random() * 100 < critChance();
     // Basic attacks always connect; damage is predictable apart from occasional critical hits.
     let damage = Math.max(1, Math.floor(attackPower() - monster.defense));
     if (state.buffs.focus) damage = Math.floor(damage * 1.1);
     if (critical) damage = Math.floor(damage * 1.5);
+    window.dispatchEvent(new CustomEvent("ro:attack", { detail: { target: monster.type, critical: critical, damage: damage } }));
     applyDamage(monster, damage, critical ? "暴擊" : "普通攻擊");
-    if (critical && monster.hp > 0) logMessage("暴擊！造成 " + damage + " 傷害。", "muted");
+    if (critical) logMessage("暴擊！造成 " + damage + " 傷害。", "muted");
   }
 
   function update(dt) {
