@@ -17,8 +17,6 @@ const unique = (values, label) => {
 unique(data.jobs.map((x) => x.id), "job ids");
 unique(Object.keys(data.skills), "skill ids");
 unique(Object.keys(data.items), "item ids");
-assert.ok(data.items["pet-treat"], "pet taming treat must exist in item data");
-assert.ok(data.items["pet-snack"], "pet feeding snack must exist in item data");
 unique(Object.keys(data.monsters), "monster ids");
 unique(Object.keys(data.maps), "map ids");
 
@@ -56,15 +54,13 @@ for (const id of ["osiris", "moonlight-flower", "baphomet"]) assert.equal(data.m
 const html = read("index.html");
 const scriptPaths = [...html.matchAll(/<script\s+src="([^"]+)"/g)].map((m) => m[1].replace(/^\.\//, ""));
 assert.ok(scriptPaths.includes("src/main.js"), "main runtime script must be included");
-assert.ok(scriptPaths.includes("src/expansion.js"), "expansion runtime script must be included");
-assert.ok(scriptPaths.indexOf("src/main.js") < scriptPaths.indexOf("src/expansion.js"), "game API must load before expansion");
-assert.ok(scriptPaths.includes("src/pets.js"), "pet system module must be included");
+assert.ok(!scriptPaths.includes("src/expansion.js"), "unverified custom quests/NPC/refine/card module must remain disabled");
+assert.ok(!scriptPaths.includes("src/pets.js"), "unverified custom pet evolution/skill module must remain disabled");
 assert.ok(scriptPaths.includes("src/visual-effects.js"), "visual effect module must be included");
 assert.ok(scriptPaths.includes("src/ui-shell.js"), "integrated UI shell must be included");
-assert.ok(scriptPaths.indexOf("src/expansion.js") < scriptPaths.indexOf("src/pets.js"), "pet system must load after game and expansion APIs");
-assert.ok(scriptPaths.indexOf("src/pets.js") < scriptPaths.indexOf("src/visual-effects.js"), "visual effects must load after the pet rendering API");
-assert.ok(scriptPaths.indexOf("src/visual-effects.js") < scriptPaths.indexOf("src/ui-shell.js"), "UI shell must load after pet and visual modules");
-for (const path of ["src/pets.js", "src/visual-effects.js"]) assert.ok(fs.existsSync(root + "/" + path), "missing module: " + path);
+assert.ok(scriptPaths.indexOf("src/visual-effects.js") < scriptPaths.indexOf("src/ui-shell.js"), "UI shell must load after the visual effects module");
+assert.ok(!data.items["pet-treat"] && !data.items["pet-snack"], "invented pet snack items must not be present in the game database");
+for (const path of ["src/visual-effects.js"]) assert.ok(fs.existsSync(root + "/" + path), "missing module: " + path);
 for (const path of scriptPaths) assert.ok(fs.existsSync(root + "/" + path), "missing script file: " + path);
 
 const main = read("src/main.js");
@@ -86,14 +82,16 @@ assert.ok(main.includes("const palette = {"), "job families must have distinct p
 assert.ok(main.includes("for (let piece = 0; piece < 10; piece++)"), "monster death should dissolve into pixel fragments");
 
 const ui = read("src/ui-shell.js");
-for (const feature of ["character", "pets", "quests", "equipment", "hunt", "save", "mapQuickSelect", "roExpansionGuild", "roExpansionGear", "roExpansionHunt", "pet-panel"]) {
+for (const feature of ["character", "equipment", "save", "mapQuickSelect"]) {
   assert.ok(ui.includes(feature), "integrated menu section missing: " + feature);
 }
+assert.ok(ui.includes("quarantinedPanels"), "unverified panels must be quarantined in hidden DOM");
+assert.ok(!ui.includes('{ id: "pets", label: "寵物"'), "custom pet menu must not be exposed");
+assert.ok(!ui.includes('{ id: "quests", label: "任務"'), "custom NPC/quest menu must not be exposed");
+assert.ok(!ui.includes('{ id: "hunt", label: "狩獵"'), "unverified auto-hunt menu must not be exposed");
 assert.ok(ui.includes('setAttribute("aria-label", "主要功能選單")'), "single-screen dock should expose an accessible navigation label");
 assert.ok(ui.includes('make("div", "game-dashboard")'), "compact always-visible game dashboard must exist");
 assert.ok(ui.includes("const panelNodes = new Map()"), "secondary panels must be preserved while moving to modals");
-assert.ok(ui.includes('{ id: "pets", label: "寵物"'), "pet management must be accessible from the compact dock");
-assert.ok(ui.includes('window.RO_PETS.refresh()'), "pet management modal must refresh target state when opened");
 assert.ok(ui.includes('[".character-panel", ".skills-panel", ".target-panel"].forEach((selector) => {'), "all three core panels must be cached before the dashboard is built");
 assert.ok(ui.includes('make("div", "game-modal")'), "secondary panels should open in modal overlays");
 assert.ok(ui.includes('play.insertBefore(quickNav, oldMapTabs)'), "compact map selector must be inserted into the play column");
@@ -105,19 +103,23 @@ assert.ok(css.includes("overflow: hidden"), "page-level scrolling should be disa
 assert.ok(css.includes("100dvh"), "layout should fit the dynamic viewport height");
 assert.ok(css.includes(".map-quicknav"), "compact map selector styling must exist");
 assert.ok(css.includes(".game-visual-overlay"), "ambient visual overlay styling must exist");
-assert.ok(css.includes(".pet-collection"), "pet collection UI styling must exist");
-assert.ok(css.includes("grid-template-columns: repeat(6,minmax(0,1fr))"), "bottom dock must fit six feature buttons");
+assert.ok(css.includes("grid-template-columns: repeat(3,minmax(0,1fr))"), "bottom dock must fit the three active controls");
 assert.ok(css.includes("@media (max-width: 620px)"), "responsive layout rules must exist");
 assert.ok(css.includes(".expansion-gear-row"), "expansion mobile styles must be present");
 const sw = read("sw.js");
-assert.ok(sw.includes('"./src/expansion.js"'), "offline cache shell must include expansion module");
-assert.ok(sw.includes('"./src/pets.js"'), "offline cache shell must include pet system");
+assert.ok(!sw.includes('"./src/expansion.js"'), "offline cache must not precache the quarantined expansion module");
+assert.ok(!sw.includes('"./src/pets.js"'), "offline cache must not precache the quarantined pet module");
 assert.ok(sw.includes('"./src/visual-effects.js"'), "offline cache shell must include visual effects");
 assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
-assert.ok(sw.includes("ro-offline-adventure-v9"), "service worker cache version should be bumped for evolution and animation updates");
+assert.ok(sw.includes("ro-offline-adventure-v10"), "service worker cache must be invalidated after quarantining unverified modules");
 
-const pets = read("src/pets.js");
-for (const feature of ["pet-treat", "pet-snack", "captureTarget", "feedPet", "evolvePet", "canEvolve", "evolutionProgress", "usePetSkill", "skillMultiplier", "skillCooldown", "rare:rare", "ro:pet-skill", "ro:pet-evolved", "function tick(dt)", "function bonuses()", "ro:monster-killed", "ro:target-change", "localStorage"]) assert.ok(pets.includes(feature), "pet evolution / exclusive skill feature missing: " + feature);
+assert.ok(!html.includes('src/pets.js'), "unverified pet module must not be loaded");
+assert.ok(!html.includes('src/expansion.js'), "unverified expansion module must not be loaded");
+assert.ok(html.includes('class="panel idle-panel" hidden'), "unverified auto-hunt panel must be hidden");
+assert.ok(main.includes("state.idleEnabled = false; // Strict mode"), "old saves must not restore auto-hunt");
+assert.ok(main.includes("offline hunting is not enabled until verified"), "offline rewards must be disabled pending source verification");
+const policy = read("RO_OFFICIAL_CONTENT_POLICY.md");
+assert.ok(policy.includes("不得新增"), "official content policy must explicitly prohibit unverified additions");
 const visuals = read("src/visual-effects.js");
-for (const feature of ["game-visual-overlay", "drawParticles", "drawPet", "drawEffects", "ro:player-hurt", "ro:monster-hurt", "ro:pet-attack", "ro:pet-skill", "ro:pet-evolved", "pet.evolved", "pet.rare", "level-up"]) assert.ok(visuals.includes(feature), "visual effect feature missing: " + feature);
-console.log("Smoke tests passed: game data and map references, combat API, pet taming/feeding/rarity/evolution/unique skills, job-specific pixel sprites, player weapon swings, monster gait/hit/death animation, companion visuals, script order, and offline cache assets.");
+for (const feature of ["game-visual-overlay", "drawParticles", "drawEffects", "ro:player-hurt", "ro:monster-hurt", "level-up"]) assert.ok(visuals.includes(feature), "visual effect feature missing: " + feature);
+console.log("Smoke tests passed: data references, core combat API, strict-mode module quarantine, disabled unverified pet/offline systems, UI controls, pixel animation paths, and offline cache.");

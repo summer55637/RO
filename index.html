@@ -16,10 +16,14 @@
       <div class="brand-mark" aria-hidden="true">RO</div>
       <div class="brand-copy">
         <h1>米德加爾特小冒險</h1>
-        <p>純前端單機 · 點擊操作 · 支援離線</p>
+        <p>正服內容校對中 · 未核實系統已停用</p>
       </div>
-      <div class="topbar-status"><span class="status-dot"></span><span id="connectionStatus">正在啟動</span></div>
+      <div class="topbar-status"><span class="status-dot"></span><span id="connectionStatus">正服資料校對中</span></div>
     </header>
+    <section id="roContentAuditNotice" role="status" aria-live="polite">
+      <strong>正服內容嚴格校對中</strong>
+      <p>未經台灣 RO PC 正服資料核實的自創模組已暫停載入：自訂 NPC／任務、簡化精煉與卡片數值、寵物稀有度／自訂進化／專屬主動技能，以及放置狩獵和離線收益。核心職業、地圖、魔物、裝備與戰鬥數值仍待逐項核對；目前版本不宣稱等同正服。<a href="./RO_OFFICIAL_CONTENT_POLICY.md">查看硬性規則</a></p>
+    </section>
     <main class="layout">
       <section class="play-column" aria-label="遊戲畫面">
         <div class="field-heading">
@@ -75,7 +79,7 @@
           <div class="skills-grid" id="skillsGrid"></div>
           <div class="buff-status" id="buffStatus">目前沒有生效中的增益。</div>
         </section>
-        <section class="panel idle-panel">
+        <section class="panel idle-panel" hidden aria-hidden="true">
           <div class="panel-title"><h2>放置狩獵</h2><span class="idle-badge" id="idleStateBadge">未啟動</span></div>
           <p class="small-note idle-intro">啟動後自動找怪、戰鬥及使用藥水。再次進入遊戲時結算離線收益，每次最多 8 小時。</p>
           <button type="button" class="primary-button full-button idle-toggle" id="idleToggleButton">▶ 開啟放置狩獵</button>
@@ -125,8 +129,6 @@
   </div>
   <script src="./src/data.js" defer></script>
   <script src="./src/main.js" defer></script>
-  <script src="./src/expansion.js" defer></script>
-  <script src="./src/pets.js" defer></script>
   <script src="./src/visual-effects.js" defer></script>
   <script src="./src/ui-shell.js" defer></script>
 </body>

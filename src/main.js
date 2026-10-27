@@ -243,7 +243,7 @@
       savedAt: new Date().toISOString(),
       player: state.player,
       mapId: state.mapId,
-      idleEnabled: state.idleEnabled,
+      idleEnabled: false,
       idleSettings: state.idleSettings,
       idleStats: state.idleStats,
       lastOfflineSummary: state.lastOfflineSummary,
@@ -316,7 +316,7 @@
     };
     state.learnedSkills = Array.isArray(data.learnedSkills) ? data.learnedSkills.filter((id) => DATA.skills[id]) : ["basic-strike"];
     if (!state.learnedSkills.includes("basic-strike")) state.learnedSkills.unshift("basic-strike");
-    state.idleEnabled = data.idleEnabled === true;
+    state.idleEnabled = false; // Strict mode: never restore unverified auto-hunt state.
     state.idleSettings = Object.assign({ autoPotion: true, potionThreshold: 45, priority: "nearest" }, data.idleSettings || {});
     state.idleSettings.autoPotion = state.idleSettings.autoPotion !== false;
     state.idleSettings.potionThreshold = safeNum(state.idleSettings.potionThreshold, 45, 30, 75);
@@ -1866,49 +1866,9 @@
   }
 
   function applyOfflineProgress(savedAt) {
-    if (!state.idleEnabled) return;
-    const timestamp = Date.parse(savedAt);
-    if (!Number.isFinite(timestamp)) return;
-    const elapsed = Math.max(0, (Date.now() - timestamp) / 1000);
-    if (elapsed < 15) return;
-    const seconds = Math.min(elapsed, MAX_OFFLINE_SECONDS);
-    const spawns = currentMap().spawns;
-    if (!spawns.length) {
-      state.lastOfflineSummary = { seconds: Math.floor(seconds), kills: 0, exp: 0, gold: 0, potions: 0 };
-      logMessage("離線結算：目前地圖是安全城鎮，沒有狩獵收益。", "muted");
-      return;
-    }
-    const kills = Math.floor(seconds / 15);
-    let earnedExp = 0;
-    let earnedGold = 0;
-    let potions = 0;
-    const report = { items: [] };
-    for (let i = 0; i < kills; i += 1) {
-      const spawn = spawns[i % spawns.length];
-      const info = monsterInfo(spawn.type);
-      earnedExp += info.exp;
-      const gold = Math.floor(rand(info.gold[0], info.gold[1] + 1));
-      const bonus = currentJob().family === "merchant" || hasLearned("discount");
-      earnedGold += Math.floor(gold * (bonus ? 1.15 : 1));
-      potions += rollOfflineDrops({ type: spawn.type }, report);
-    }
-    state.player.gold += earnedGold;
-    expReward(earnedExp, true);
-    jobExpReward(Math.max(1, Math.floor(earnedExp * 0.65)), true);
-    state.idleStats.kills += kills;
-    state.idleStats.exp += earnedExp;
-    state.idleStats.gold += earnedGold;
-    state.lastOfflineSummary = { seconds: Math.floor(seconds), kills, exp: earnedExp, gold: earnedGold, potions };
-    state.monsters.forEach((monster) => {
-      monster.hp = monster.maxHp;
-      monster.x = monster.spawnX;
-      monster.y = monster.spawnY;
-      monster.respawnAt = 0;
-      monster._rewarded = false;
-    });
-    logMessage("離線放置結算：擊倒 " + kills + " 隻，獲得 " + fmt(earnedExp) + " EXP、" + fmt(earnedGold) + " Zeny。");
-    if (potions) logMessage("離線期間取得紅色藥水 ×" + potions + "。", "muted");
-    if (elapsed > MAX_OFFLINE_SECONDS) logMessage("離線時間超過上限，本次最多結算 8 小時。", "muted");
+    // Strict mode: offline hunting is not enabled until verified as a Taiwan PC RO rule.
+    // Do not grant simulated EXP, Zeny, drops, or consumables from previous prototype saves.
+    return;
   }
 
   function startNewGame() {
@@ -2000,12 +1960,10 @@
   canvas.addEventListener("pointerdown", handleWorldClick);
   miniCanvas.addEventListener("pointerdown", (event) => { event.preventDefault(); handleMiniMapClick(event); });
   $("potionButton").addEventListener("click", () => usePotion(false));
+  $("idleToggleButton").disabled = true;
   $("idleToggleButton").addEventListener("click", () => {
-    state.idleEnabled = !state.idleEnabled;
-    state.targetId = null;
-    state.pendingSkillId = null;
-    state.moveTarget = null;
-    logMessage(state.idleEnabled ? "放置狩獵已啟動！角色會自動尋找怪物。" : "放置狩獵已停止。");
+    state.idleEnabled = false;
+    logMessage("放置狩獵已停用：尚未核實為台灣 RO PC 正服規則。", "muted");
     updateUI();
     saveGame(false);
   });
@@ -2133,7 +2091,7 @@
     getSkillInfo: (id) => skillInfo(id),
     getMonsterInfo: (id) => monsterInfo(id),
     isTown: () => currentMap().type === "town",
-    setIdleEnabled: (value) => { state.idleEnabled = value === true; updateUI(); saveGame(false); }
+    setIdleEnabled: (_value) => { state.idleEnabled = false; updateUI(); saveGame(false); }
   };
   requestAnimationFrame(frame);
 })();

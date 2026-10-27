@@ -2,13 +2,13 @@
   "use strict";
 
   const actions = [
-    { id: "character", label: "角色", icon: "♙", title: "角色養成", description: "職業與能力值", panels: [".job-panel", ".stats-panel"] },
-    { id: "pets", label: "寵物", icon: "🐾", title: "寵物與夥伴", description: "捕捉、餵食、親密度與輔助戰鬥", panels: [".pet-panel"] },
-    { id: "quests", label: "任務", icon: "✦", title: "冒險委託", description: "NPC、主線與每日任務", panels: ["#roExpansionGuild"] },
-    { id: "equipment", label: "裝備", icon: "⚒", title: "裝備與收藏", description: "背包、精煉、卡片、圖鑑與商店", panels: [".equipment-panel", "#roExpansionGear", ".map-book-panel", "#shopPanel"] },
-    { id: "hunt", label: "狩獵", icon: "⚔", title: "狩獵設定", description: "自動戰鬥、Boss 篩選與狩獵紀錄", panels: [".idle-panel", "#roExpansionHunt", ".log-panel"] },
+    { id: "character", label: "角色", icon: "♙", title: "角色與能力值", description: "職業與能力值（正服規則仍待逐項核實）", panels: [".job-panel", ".stats-panel"] },
+    { id: "equipment", label: "裝備", icon: "⚒", title: "裝備與背包", description: "目前裝備資料仍待正服資料核對", panels: [".equipment-panel"] },
     { id: "save", label: "存檔", icon: "▤", title: "進度管理", description: "本機儲存、匯入與匯出", panels: [".save-panel"] }
   ];
+
+  // Keep required legacy DOM nodes available, but never expose unverified prototype systems.
+  const quarantinedPanels = [".idle-panel", ".map-book-panel", "#shopPanel", ".pet-panel", "#roExpansionGuild", "#roExpansionGear", "#roExpansionHunt"];
 
   const $ = (selector, root) => (root || document).querySelector(selector);
   function make(tag, className, text) {
@@ -37,11 +37,22 @@
         if (!panelNodes.has(selector)) panelNodes.set(selector, $(selector, side));
       });
     });
+    quarantinedPanels.forEach((selector) => {
+      if (!panelNodes.has(selector)) panelNodes.set(selector, $(selector, side));
+    });
 
     const characterPanel = panelNodes.get(".character-panel");
     const skillsPanel = panelNodes.get(".skills-panel");
     const targetPanel = panelNodes.get(".target-panel");
     if (!characterPanel || !skillsPanel || !targetPanel) return;
+
+    const quarantined = make("div", "quarantined-panels");
+    quarantined.hidden = true;
+    quarantined.setAttribute("aria-hidden", "true");
+    quarantinedPanels.forEach((selector) => {
+      const panel = panelNodes.get(selector);
+      if (panel) quarantined.appendChild(panel);
+    });
 
     const dashboard = make("div", "game-dashboard");
     dashboard.setAttribute("aria-label", "即時遊戲狀態");
@@ -49,7 +60,7 @@
     skillsPanel.classList.add("dashboard-skills");
     targetPanel.classList.add("dashboard-target");
     dashboard.append(characterPanel, skillsPanel, targetPanel);
-    side.replaceChildren(dashboard);
+    side.replaceChildren(dashboard, quarantined);
 
     const dock = make("nav", "game-dock");
     dock.setAttribute("aria-label", "主要功能選單");
@@ -98,9 +109,6 @@
         const panel = panelNodes.get(selector);
         if (panel) body.appendChild(panel);
       });
-      if (action.id === "quests" && !$("#roExpansionGuild", body)) {
-        body.appendChild(make("p", "menu-empty-note", "任務模組載入中，請稍後重新整理。"));
-      }
 
       dialog.append(header, body);
       overlay.appendChild(dialog);
@@ -124,7 +132,6 @@
       dockButtons.get(id).classList.add("active");
       dockButtons.get(id).setAttribute("aria-expanded", "true");
       document.body.classList.add("modal-open");
-      if (id === "pets" && window.RO_PETS && typeof window.RO_PETS.refresh === "function") window.RO_PETS.refresh();
       record.close.focus({ preventScroll: true });
     }
     function closeModal(id, restoreFocus) {
