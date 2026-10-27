@@ -655,3 +655,25 @@ body.modal-open { overflow: hidden; }
   .canvas-hint { gap: 5px; font-size: 9px; }
   .guide-mark { padding: 2px 5px; font-size: 8px; }
 }
+
+
+/* Responsive combat feedback: short impacts stay inside the game frame. */
+.game-frame.combat-shake { animation: combat-shake .14s linear; }
+.game-frame.combat-shake-heavy { animation: combat-shake-heavy .22s ease-out; }
+.game-frame.combat-player-flash { border-color: rgba(255,102,120,.9); box-shadow: 0 0 0 2px rgba(255,82,105,.24), 0 0 26px rgba(255,69,91,.3); }
+@keyframes combat-shake {
+  0%,100% { transform: translate3d(0,0,0); }
+  25% { transform: translate3d(-2px,1px,0); }
+  50% { transform: translate3d(2px,-1px,0); }
+  75% { transform: translate3d(-1px,0,0); }
+}
+@keyframes combat-shake-heavy {
+  0%,100% { transform: translate3d(0,0,0); }
+  20% { transform: translate3d(-4px,2px,0); }
+  45% { transform: translate3d(4px,-2px,0); }
+  70% { transform: translate3d(-2px,1px,0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-frame.combat-shake, .game-frame.combat-shake-heavy { animation: none; }
+  .game-frame.combat-player-flash { box-shadow: none; }
+}
