@@ -4,7 +4,7 @@ A free, static, browser-based, Ragnarok Online-inspired single-player prototype.
 
 ## Play
 
-After GitHub Actions finishes its first deployment, open the repository's **Settings → Pages** and choose **GitHub Actions** as the deployment source if it is not already selected. The workflow in `.github/workflows/deploy.yml` publishes the static game.
+Before the first successful deployment, open the repository's **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**. The connected automation cannot enable Pages on your behalf, so this one-time setting must be done by a repository owner. Then open **Actions**, select the latest **Deploy static game to GitHub Pages** run, and choose **Re-run jobs** (or push another commit). The workflow in `.github/workflows/deploy.yml` publishes the static game.
 
 ## Current prototype features
 
