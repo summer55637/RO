@@ -71,6 +71,7 @@ assert.ok(html.includes('id="newPlayerGuide"') && html.includes('id="newPlayerGu
 assert.ok(html.includes('id="huntGuide"') && html.includes('id="huntMapButton"') && html.includes('id="huntMonsterButton"'), "a visible level-based hunting guide must offer map and monster actions");
 assert.ok(main.includes("function huntDifficultyLabel(monster)") && main.includes("statLine.textContent = huntDifficultyLabel(monster)"), "monster book must show simple difficulty and suggested level");
 assert.ok(main.includes("trackMonster: (type) => trackMonster(type),"), "hunt guide must be able to track the target monster");
+assert.ok(read("src/ui-shell.js").includes("api.switchMap(activeHuntRecommendation.mapId);\n        api.trackMonster(activeHuntRecommendation.monsterIds[0])"), "hunting target button should open the intended map before tracking");
 assert.ok(read("src/ui-shell.js").includes('title: "新手推薦"'), "beginner maps must be listed first");
 assert.ok(read("src/ui-shell.js").includes('guideText.textContent = "升級了！點底部「角色」加點，或在技能欄學新技能。"'), "level-up should direct players to their next meaningful action");
 assert.ok(main.includes('potionButton.disabled = p.potions <= 0;'), "the potion button should clearly disable when supplies run out");
