@@ -35,6 +35,11 @@ for (const [id, monster] of Object.entries(data.monsters)) {
   assert.ok(monster.hp > 0 && monster.level >= 1 && monster.attack >= 0, "invalid combat stats: " + id);
   for (const drop of monster.drops || []) assert.ok(data.items[drop.id], "invalid monster drop: " + id + " -> " + drop.id);
 }
+assert.equal(data.monsters.poring.hp, 20, "Poring should have a beginner-friendly HP value");
+assert.equal(data.monsters.poring.attack, 2, "Poring attacks should be gentler");
+assert.equal(data.monsters.poring.exp, 17, "early EXP rewards should be higher");
+assert.equal(data.monsters.osiris.hp, 833, "bosses should remain tougher than normal monsters but less grindy");
+assert.equal(data.items["red-potion"].healing, 45, "red potions should restore the documented 45 HP");
 for (const [id, map] of Object.entries(data.maps)) {
   assert.equal(map.id, id, "map object id mismatch: " + id);
   assert.ok(map.spawn && map.spawn.x >= 0 && map.spawn.x <= 960 && map.spawn.y >= 0 && map.spawn.y <= 600, "invalid player spawn: " + id);
@@ -74,6 +79,11 @@ assert.ok(main.includes('select.id = "jobTargetSelect"'), "job choice should use
 assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "job transfer must be one clear action");
 assert.ok(main.includes("function statCost(value) {\n    return 1;\n  }"), "each stat increase should cost exactly one point");
 assert.ok(!main.includes("state.player.jobLevel < 10") && !main.includes("state.player.jobLevel >= 10"), "Job Lv. should not block the simplified transfer path");
+assert.ok(main.includes("const MINI_BALANCE = Object.freeze({ baseExpStart: 25, baseExpPerLevel: 10, potionHeal: 45 });"), "leveling and potion values should use one simple balance profile");
+assert.ok(main.includes("const baseExpNeeded = () => MINI_BALANCE.baseExpStart + (state.player.level - 1) * MINI_BALANCE.baseExpPerLevel;"), "EXP needed per level should grow by a simple fixed amount");
+assert.ok(main.includes('return Math.max(1, 3 + state.player.level + totalStat("str") + Math.floor(totalStat("dex") / 4) + (job.atk || 0) + gear.attack);'), "basic attack should use a readable additive formula");
+assert.ok(!main.includes("const accuracy = clamp(") && !main.includes("攻擊落空。"), "basic attacks should no longer randomly miss");
+assert.ok(main.includes("Math.floor(attackPower() - monster.defense)"), "basic attack damage should be predictable");
 assert.ok(!main.includes("p.jobLevel % 2 === 0") && !main.includes("Job 升級！"), "skill points should follow Base Level only in the mini game");
 assert.ok(main.includes('player.stats[stat.id] = 5;'), "stat reset should restore starter values");
 assert.ok(main.includes('state.learnedSkills = ["basic-strike"];'), "skill reset should restore the starter skill");
