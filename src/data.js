@@ -66,7 +66,7 @@
       "sage-clip": { id: "sage-clip", name: "學者髮夾", icon: "📿", slot: "accessory", spBonus: 20, stats: { int: 2 }, price: 200, description: "INT +2、SP +20。" },
       "red-potion": { id: "red-potion", name: "紅色藥水", icon: "🧪", kind: "consumable", healing: 35, price: 18, description: "恢復 35 HP。" },
       "green-herb": { id: "green-herb", name: "綠色藥草", icon: "🌿", kind: "consumable", healing: 18, price: 9, description: "恢復 18 HP。" },
-      "blue-potion": { id: "blue-potion", name: "藍色藥水", icon: "🧴", kind: "consumable", spHealing: 30, price: 30, description: "恢復 30 SP。" }
+      "blue-potion": { id: "blue-potion", name: "藍色藥水", icon: "🧴", kind: "consumable", spHealing: 30, price: 30, description: "恢復 30 SP。" },
       "geffen-staff": { id: "geffen-staff", name: "吉芬魔導杖", icon: "🪄", slot: "weapon", attack: 10, stats: { int: 5 }, spBonus: 28, price: 650, description: "古老魔法武器。INT +5、SP +28。" },
       "moonlight-dagger": { id: "moonlight-dagger", name: "月夜短刃", icon: "🗡", slot: "weapon", attack: 16, stats: { agi: 4, luk: 2 }, price: 1200, description: "月夜花留下的稀有短刃。攻擊 +16、AGI +4、LUK +2。" },
       "osiris-crown": { id: "osiris-crown", name: "冥王冠冕", icon: "👑", slot: "accessory", hpBonus: 45, spBonus: 25, stats: { vit: 3, int: 3 }, price: 1800, description: "古王的稀有飾品。HP +45、SP +25、VIT +3、INT +3。" },
@@ -81,7 +81,7 @@
       "willow": { id: "willow", name: "柳樹", level: 7, hp: 78, attack: 9, defense: 3, exp: 43, gold: [10, 20], color: "#9cbb72", sprite: "willow", drops: [{ id: "green-herb", chance: 0.22 }, { id: "wand", chance: 0.035 }, { id: "sage-clip", chance: 0.018 }] },
       "wolf": { id: "wolf", name: "森林狼", level: 9, hp: 102, attack: 12, defense: 4, exp: 57, gold: [12, 24], color: "#9da4a9", sprite: "wolf", drops: [{ id: "red-potion", chance: 0.24 }, { id: "dagger", chance: 0.04 }, { id: "leather-armor", chance: 0.018 }] },
       "skeleton": { id: "skeleton", name: "骷髏兵", level: 13, hp: 148, attack: 17, defense: 6, exp: 85, gold: [18, 32], color: "#dbd9c8", sprite: "skeleton", drops: [{ id: "blue-potion", chance: 0.18 }, { id: "iron-sword", chance: 0.035 }, { id: "battle-axe", chance: 0.016 }] },
-      "familiar": { id: "familiar", name: "吸血蝙蝠", level: 11, hp: 125, attack: 15, defense: 5, exp: 72, gold: [15, 28], color: "#8469a1", sprite: "familiar", drops: [{ id: "blue-potion", chance: 0.15 }, { id: "sage-clip", chance: 0.03 }, { id: "dagger", chance: 0.025 }] }
+      "familiar": { id: "familiar", name: "吸血蝙蝠", level: 11, hp: 125, attack: 15, defense: 5, exp: 72, gold: [15, 28], color: "#8469a1", sprite: "familiar", drops: [{ id: "blue-potion", chance: 0.15 }, { id: "sage-clip", chance: 0.03 }, { id: "dagger", chance: 0.025 }] },
       "muka": { id: "muka", name: "摩卡", level: 6, hp: 67, attack: 8, defense: 2, exp: 36, gold: [8, 18], color: "#c69b61", sprite: "muka", drops: [{ id: "green-herb", chance: 0.23 }, { id: "cotton-tunic", chance: 0.04 }] },
       "orc-warrior": { id: "orc-warrior", name: "獸人戰士", level: 15, hp: 190, attack: 20, defense: 7, exp: 105, gold: [20, 38], color: "#79a36c", sprite: "orc-warrior", drops: [{ id: "red-potion", chance: 0.22 }, { id: "iron-sword", chance: 0.045 }, { id: "leather-armor", chance: 0.025 }] },
       "mummy": { id: "mummy", name: "木乃伊", level: 18, hp: 245, attack: 24, defense: 9, exp: 145, gold: [24, 44], color: "#cbbd9b", sprite: "mummy", drops: [{ id: "blue-potion", chance: 0.22 }, { id: "ancient-robe", chance: 0.02 }, { id: "sage-clip", chance: 0.04 }] },
