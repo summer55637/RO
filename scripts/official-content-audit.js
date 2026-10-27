@@ -33,6 +33,37 @@ for (const source of registry.sources) {
   assert.equal(source.official, true, "all registered official sources must identify as official");
 }
 
+const officialQuickTransferSource = sourceMap.get("official-expanded-quick-transfer-update-2025-11-04");
+assert.ok(officialQuickTransferSource && officialQuickTransferSource.official, "expanded quick-transfer rules need a Taiwan RO official source");
+assert.equal(officialQuickTransferSource.url, "https://ro.gnjoy.com.tw/notice/notice_view.aspx?id=217960");
+assert.equal(officialQuickTransferSource.publishedDate, "2025-11-03");
+assert.equal(officialQuickTransferSource.effectiveDate, "2025-11-04");
+assert.equal(officialQuickTransferSource.recordLevelEvidenceAllowed, false, "quick-transfer costs must not be used as a job-lineage source");
+assert.ok(officialQuickTransferSource.supportedClaims.some((claim) => claim.includes("獼猴桃果實*4")));
+assert.ok(officialQuickTransferSource.supportedClaims.some((claim) => claim.includes("獼猴桃果實*30")));
+assert.ok(officialQuickTransferSource.supportedClaims.some((claim) => claim.includes("獼猴桃果實*70")));
+assert.ok(officialQuickTransferSource.notSupported.some((claim) => claim.includes("任意跳過所有職業階段")));
+const officialQuickTransferRule = registry.jobSystemRules.find((rule) => rule.id === "official-expanded-quick-transfer-update-2025-11-04");
+assert.ok(officialQuickTransferRule, "official quick-transfer scope rule must be recorded");
+assert.equal(officialQuickTransferRule.status, "official-announcement-confirmed-scope-unclear");
+assert.equal(officialQuickTransferRule.appliesToRuntime, false);
+assert.deepEqual(officialQuickTransferRule.sourceIds, ["official-expanded-quick-transfer-update-2025-11-04"]);
+
+const transferUxAudit = registry.jobTransferUxAudit;
+assert.ok(transferUxAudit && transferUxAudit.status === "ui-simplification-only; playable-prototype-remains-locked");
+assert.equal(transferUxAudit.eligibleTargetOnly, true, "direct select must only offer the existing eligible choices");
+assert.equal(transferUxAudit.allowsArbitraryJobSkip, false, "do not implement unsupported arbitrary class jumping");
+assert.equal(transferUxAudit.quickTransferFruitCostsAppliedToRuntime, false, "official fruit costs must not be simulated with unverified inventory/job data");
+assert.equal(transferUxAudit.runtimeJobDataChanged, false);
+assert.equal(transferUxAudit.playablePrototypeUnlocked, false);
+assert.ok(main.includes('select.id = "jobTargetSelect"'), "target selection must use one direct selection control");
+assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "direct transfer action must be explicit");
+assert.ok(main.includes("if (select.value) changeJob(select.value)"), "direct action must route to the existing transfer function");
+assert.ok(main.includes('state.player.level < 5'), "existing prototype first-stage gate must remain unchanged");
+assert.ok(main.includes('state.player.level < 20 || state.player.jobLevel < 10'), "existing prototype second-stage gate must remain unchanged");
+assert.ok(!main.includes("獼猴桃果實"), "unverified prototype runtime must not simulate official item costs");
+assert.ok(html.includes("這是原型操作簡化，不代表正服可任意跳階"), "UI must explicitly distinguish itself from official rules");
+
 const expectedRecords = {
   jobs: data.jobs.map((record) => ({ id: record.id, name: record.name, tier: record.tier, parent: record.parent, family: record.family })),
   skills: Object.entries(data.skills).map(([id, record]) => ({ id, name: record.name })),

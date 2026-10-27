@@ -261,6 +261,32 @@
         "活動所述 BaseLv/JobLv 範例值不是所有職業通用上限或轉職條件。",
         "不提供三轉完整名單或逐職業父職業關係。"
       ]
+    },
+    {
+      "id": "official-expanded-quick-transfer-update-2025-11-04",
+      "title": "2025/11/04(二)維護關機公告：擴充職業快速轉職系統更新",
+      "url": "https://ro.gnjoy.com.tw/notice/notice_view.aspx?id=217960",
+      "publisher": "台灣 RO 官方網站",
+      "official": true,
+      "publishedDate": "2025-11-03",
+      "effectiveDate": "2025-11-04",
+      "checkedOn": "2026-10-27",
+      "scope": "official-expanded-job-quick-transfer-costs-and-task-skip-only",
+      "recordLevelEvidenceAllowed": false,
+      "supportedClaims": [
+        "原文：「各階段可使用獼猴桃果實進行快速轉職，無須進行相關任務。」",
+        "原文：「一轉擴充職業：獼猴桃果實*4」",
+        "原文：「二轉擴充職業：獼猴桃果實*4」",
+        "原文：「擴充上位職業：獼猴桃果實*30」",
+        "原文：「擴充次上位職業：獼猴桃果實*70」",
+        "原文：「各職業快速轉職NPC設置於職業轉職任務起始點旁，使用快速轉職將不會獲得任何轉職完成獎勵。」"
+      ],
+      "notSupported": [
+        "這是擴充職業快速轉職更新公告，沒有列出完整可選職業清單或逐職業父職業關係。",
+        "不得推論可任意跳過所有職業階段、任意選任何職業或不需獼猴桃果實。",
+        "公告未重列一般職業的完整費用與限制，也未明示這份費用表涵蓋所有普通職系。",
+        "截至 2026-10-27 的完整可用職業名單、目前 NPC／條件及所有職系的現行規則仍需另行核實。"
+      ]
     }
   ],
   "confirmedFacts": [
@@ -1474,6 +1500,19 @@
       "appliesToRuntime": false,
       "checkedOn": "2026-10-27",
       "notes": "足以證明原型僅有 tier 0/1/2 的職業表不完整，但不能用此公告重建完整職業樹。"
+    },
+    {
+      "id": "official-expanded-quick-transfer-update-2025-11-04",
+      "topic": "quick-transfer-service",
+      "claim": "台灣 RO 官方 2025-11-04 公告記載擴充職業可使用獼猴桃果實快速轉職、免做相關任務，並列出各擴充階段費用與無轉職完成獎勵；此證據不授權任意跳階或完整轉職清單。",
+      "evidenceExcerpt": "各階段可使用獼猴桃果實進行快速轉職，無須進行相關任務。一轉擴充職業：獼猴桃果實*4；二轉擴充職業：獼猴桃果實*4；擴充上位職業：獼猴桃果實*30；擴充次上位職業：獼猴桃果實*70。使用快速轉職將不會獲得任何轉職完成獎勵。",
+      "sourceIds": [
+        "official-expanded-quick-transfer-update-2025-11-04"
+      ],
+      "status": "official-announcement-confirmed-scope-unclear",
+      "appliesToRuntime": false,
+      "checkedOn": "2026-10-27",
+      "notes": "只記錄官方公告原文及擴充職業費用表。未經完整核實前，不把果實成本、NPC、職業範圍或跳階能力套用到原型執行邏輯。"
     }
   ],
   "jobDatasetAudit": {
@@ -2465,5 +2504,25 @@
       "official-fourth-expanded-job-adjustment-2025-11-03"
     ],
     "note": "Search results identify no directly stating official Taiwan RO PC source for complete first-to-second or per-class second-to-third parent edges. Do not fill those fields from common knowledge, other regions, emulator data, or inferred class pairs."
+  },
+  "jobTransferUxAudit": {
+    "status": "ui-simplification-only; playable-prototype-remains-locked",
+    "updatedOn": "2026-10-27",
+    "requestedBehavior": "select an eligible target job and activate one direct-transfer button",
+    "implementation": "single-select target dropdown plus one action button",
+    "eligibilitySource": "existing prototype eligibility checks retained unchanged",
+    "eligibleTargetOnly": true,
+    "allowsArbitraryJobSkip": false,
+    "quickTransferFruitCostsAppliedToRuntime": false,
+    "officialQuickTransferSourceId": "official-expanded-quick-transfer-update-2025-11-04",
+    "currentOfficialCatalogComplete": false,
+    "runtimeJobDataChanged": false,
+    "playablePrototypeUnlocked": false,
+    "notes": [
+      "This change simplifies the dormant prototype UI only; it does not claim that this UI is an official client feature.",
+      "Only target jobs that pass the existing prototype conditions are listed. That condition set remains unverified and is unchanged.",
+      "No kiwi-fruit inventory/costs or transfer-completion rewards are simulated because the job data and current complete requirements have not been verified.",
+      "The global prototype remains locked while core data are unverified."
+    ]
   }
 }

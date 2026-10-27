@@ -428,30 +428,63 @@
   function renderJobs() {
     const container = $("jobOptions");
     container.replaceChildren();
-    DATA.jobs.filter((job) => job.tier > 0).forEach((job) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "job-option";
-      const isCurrent = job.id === state.player.jobId;
-      const canChange = (job.tier === 1 && state.player.jobId === "novice" && state.player.level >= 5)
-        || (job.tier === 2 && state.player.jobId === job.parent && state.player.level >= 20 && state.player.jobLevel >= 10);
-      if (isCurrent) button.classList.add("active");
-      if (canChange) button.classList.add("available");
-      button.disabled = !isCurrent && !canChange;
-      const title = document.createElement("strong");
-      title.textContent = (isCurrent ? "✓ " : canChange ? "✦ " : "🔒 ") + job.name;
-      const note = document.createElement("small");
-      note.textContent = isCurrent ? "目前職業" : canChange ? (job.tier === 1 ? "可進行一轉" : "可進行二轉") : (job.tier === 1 ? "需 Lv. 5 且為初心者" : "需對應一轉、Base 20 / Job 10");
-      button.append(title, note);
-      if (canChange) button.addEventListener("click", () => changeJob(job.id));
-      container.appendChild(button);
+
+    // Keep the existing prototype gates unchanged; only simplify the selection UI.
+    const eligibleJobs = DATA.jobs.filter((job) => (
+      (job.tier === 1 && state.player.jobId === "novice" && state.player.level >= 5)
+      || (job.tier === 2 && state.player.jobId === job.parent && state.player.level >= 20 && state.player.jobLevel >= 10)
+    ));
+
+    const controls = document.createElement("div");
+    controls.className = "job-transfer-controls";
+
+    const label = document.createElement("label");
+    label.className = "job-transfer-label";
+    label.htmlFor = "jobTargetSelect";
+    label.textContent = "直接選擇目標職業";
+
+    const select = document.createElement("select");
+    select.className = "job-transfer-select";
+    select.id = "jobTargetSelect";
+    select.setAttribute("aria-label", "選擇可直接轉職的目標職業");
+    select.disabled = eligibleJobs.length === 0;
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.textContent = eligibleJobs.length ? "請選擇目標職業" : "目前沒有可直接轉職的目標";
+    select.appendChild(placeholder);
+
+    eligibleJobs.forEach((job) => {
+      const option = document.createElement("option");
+      option.value = job.id;
+      option.textContent = job.name + "（" + (job.tier === 1 ? "一轉" : "二轉") + "）";
+      select.appendChild(option);
     });
-    if (state.player.jobId === "novice") {
-      const note = document.createElement("p");
-      note.className = "small-note";
-      note.textContent = "目前是初心者。狩獵升級後即可解鎖一轉職業。";
-      container.appendChild(note);
-    }
+
+    const transferButton = document.createElement("button");
+    transferButton.type = "button";
+    transferButton.className = "primary-button full-button job-transfer-button";
+    transferButton.id = "jobTransferButton";
+    transferButton.textContent = "直接轉職";
+    transferButton.disabled = eligibleJobs.length === 0;
+
+    select.addEventListener("change", () => {
+      transferButton.disabled = !select.value;
+    });
+    transferButton.addEventListener("click", () => {
+      if (select.value) changeJob(select.value);
+    });
+
+    const status = document.createElement("p");
+    status.className = "job-transfer-status";
+    status.textContent = eligibleJobs.length
+      ? "目前職業：" + currentJob().name + "。只列出符合現有原型條件的目標；官方現行門檻與快速轉職費用尚未完整核實。"
+      : "目前職業：" + currentJob().name + "。依現有原型條件，暫無可直接轉職的目標；此條件仍未核實。";
+
+    controls.append(label, select, transferButton, status);
+    container.appendChild(controls);
   }
 
   function renderStats() {

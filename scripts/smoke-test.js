@@ -111,6 +111,13 @@ assert.ok(main.includes("player._facing = dx < -0.08"), "player movement must up
 assert.ok(main.includes("monster._walkFrame = (monster._walkFrame || 0) + dt * 11"), "monster chase motion must drive a walk cycle");
 assert.ok(main.includes("const swingAngle = attacking ?"), "player weapons must animate through the attack window");
 assert.ok(main.includes("const palette = {"), "job families must have distinct pixel sprite palettes");
+assert.ok(main.includes('select.id = "jobTargetSelect"'), "job selection should be simplified to a direct target selector");
+assert.ok(main.includes('transferButton.textContent = "直接轉職"'), "job selection should have an explicit direct-transfer button");
+assert.ok(main.includes("if (select.value) changeJob(select.value)"), "direct-transfer action should call the existing gated changeJob function");
+assert.ok(main.includes('job.tier === 1 && state.player.jobId === "novice" && state.player.level >= 5'), "first-job prototype gate must remain unchanged");
+assert.ok(main.includes('job.tier === 2 && state.player.jobId === job.parent && state.player.level >= 20 && state.player.jobLevel >= 10'), "second-job prototype gate must remain unchanged");
+assert.ok(html.includes("這是原型操作簡化，不代表正服可任意跳階"), "direct-transfer UI must not promise unsupported arbitrary job skipping");
+assert.ok(css.includes(".job-transfer-select"), "direct-transfer selector styling must exist");
 assert.ok(main.includes("for (let piece = 0; piece < 10; piece++)"), "monster death should dissolve into pixel fragments");
 
 const ui = read("src/ui-shell.js");
@@ -143,7 +150,7 @@ assert.ok(!sw.includes('"./src/expansion.js"'), "offline cache must not precache
 assert.ok(!sw.includes('"./src/pets.js"'), "offline cache must not precache the quarantined pet module");
 assert.ok(sw.includes('"./src/visual-effects.js"'), "offline cache shell must include visual effects");
 assert.ok(sw.includes('"./src/ui-shell.js"'), "offline cache shell must include integrated UI module");
-assert.ok(sw.includes("ro-offline-adventure-v12"), "service worker cache must be invalidated after enforcing the prototype lock");
+assert.ok(sw.includes("ro-offline-adventure-v13"), "service worker cache must be invalidated after the direct-transfer UI change");
 
 assert.ok(!html.includes('src/pets.js'), "unverified pet module must not be loaded");
 assert.ok(!html.includes('src/expansion.js'), "unverified expansion module must not be loaded");

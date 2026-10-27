@@ -96,12 +96,13 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .points-pill { color: #a4c6b0; border: 1px solid rgba(127,219,172,.25); background: rgba(58,110,77,.15); border-radius: 30px; padding: 4px 8px; font-size: 9px; white-space: nowrap; }
 .points-pill strong { color: #c5f5d6; }
 .small-note { margin: 5px 0 11px; color: #8398a4; font-size: 10px; line-height: 1.55; }
-.job-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.job-option { text-align: left; display: flex; flex-direction: column; gap: 4px; min-width: 0; border: 1px solid #344853; border-radius: 8px; padding: 9px; color: #c8d7dd; background: #1b2932; }
-.job-option strong { font-size: 11px; }.job-option small { font-size: 9px; color: #8299a5; line-height: 1.4; }
-.job-option.active { border-color: #82bb98; background: rgba(61,112,79,.32); }
-.job-option.available { border-color: #d4b876; }
-.job-option.available small { color: #d7c08a; }
+.job-options { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.job-transfer-controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.job-transfer-label { color: #c8d7dd; font-size: 11px; font-weight: 700; }
+.job-transfer-select { width: 100%; min-height: 42px; padding: 10px; border: 1px solid #425b69; border-radius: 8px; color: #e3edf1; background: #1b2932; font: inherit; }
+.job-transfer-select:focus-visible,.job-transfer-button:focus-visible { outline: 2px solid #d4b876; outline-offset: 2px; }
+.job-transfer-select:disabled,.job-transfer-button:disabled { opacity: .5; cursor: not-allowed; }
+.job-transfer-status { margin: 0; color: #8398a4; font-size: 10px; line-height: 1.55; }
 .stats-list { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 .stat-entry { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; background: rgba(12,21,27,.28); min-width: 0; }
 .stat-code { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 7px; background: #2e414c; color: #e1c782; font-weight: 800; font-size: 9px; flex: 0 0 auto; }
@@ -181,7 +182,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   .map-info-row { gap: 9px; }.minimap-frame { width: 48%; padding: 6px; }.field-summary { gap: 9px; padding-top: 4px; }.field-summary p { font-size: 9px; }
   .side-column { grid-template-columns: 1fr; gap: 10px; }
   .panel { padding: 13px; }
-  .job-options { grid-template-columns: 1fr 1fr; }
+  .job-options { grid-template-columns: 1fr; }
   .stats-list { grid-template-columns: 1fr 1fr; }
   .idle-stats > div { padding: 8px 6px; }.idle-stats strong { font-size: 11px; }
   .footer { font-size: 8px; }
